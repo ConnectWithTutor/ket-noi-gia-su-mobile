@@ -14,7 +14,7 @@ import {
 } from "lucide-react-native";
 
 import colors from "@/constants/Colors";
-import { BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS, SPACING } from "@/constants/Theme";
+import { BORDER_RADIUS, FONT_SIZE, SHADOWS, SPACING } from "@/constants/Theme";
 import StatusBar from "@/components/ui/StatusBar";
 import ProfileItem from "@/components/profile/ProfileItem";
 import { useAuthStore } from "@/store/auth-store";
@@ -35,16 +35,6 @@ export default function ProfileScreen() {
     router.push("/change-password");
   };
 
-  const handlePersonalInfo = () => {
-    triggerHaptic('light');
-    router.push("/personal-info");
-  };
-
-  const handleNotifications = () => {
-    triggerHaptic('light');
-    router.push("/notifications");
-  };
-
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor={colors.primary} />
@@ -59,10 +49,7 @@ export default function ProfileScreen() {
           <View style={styles.userInfo}>
             <Text style={styles.userName}>{user?.name}</Text>
             <Text style={styles.userRole}>{user?.role === "tutor" ? "Gia sư" : "Học viên"}</Text>
-            <TouchableOpacity 
-              style={styles.editButton} 
-              onPress={handlePersonalInfo}
-            >
+            <TouchableOpacity style={styles.editButton} onPress={() => {}}>
               <Text style={styles.editButtonText}>Chỉnh sửa</Text>
             </TouchableOpacity>
           </View>
@@ -78,7 +65,7 @@ export default function ProfileScreen() {
               icon={<User size={20} color={colors.primary} />}
               title="Thông tin cá nhân"
               subtitle="Cập nhật thông tin cá nhân của bạn"
-              onPress={handlePersonalInfo}
+              onPress={() => {}}
             />
             
             <ProfileItem
@@ -92,7 +79,7 @@ export default function ProfileScreen() {
               icon={<Bell size={20} color={colors.primary} />}
               title="Thông báo"
               subtitle="Quản lý thông báo"
-              onPress={handleNotifications}
+              onPress={() => {}}
             />
           </View>
         </View>
@@ -118,6 +105,26 @@ export default function ProfileScreen() {
             </View>
           </View>
         )}
+        
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Bài đăng</Text>
+          
+          <View style={styles.sectionContent}>
+            <ProfileItem
+              icon={<FileText size={20} color={colors.primary} />}
+              title="Bài đăng của tôi"
+              subtitle="Quản lý bài đăng của bạn"
+              onPress={() => router.push("/(app)/(tabs)/posts")}
+            />
+            
+            <ProfileItem
+              icon={<FileText size={20} color={colors.primary} />}
+              title="Tạo bài đăng mới"
+              subtitle="Đăng bài tìm gia sư"
+              onPress={() => router.push("/create-post")}
+            />
+          </View>
+        </View>
         
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Hỗ trợ</Text>
@@ -182,7 +189,7 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: 700,
+    fontWeight: '700',
     color: colors.white,
     marginBottom: SPACING.xs,
   },
@@ -202,7 +209,7 @@ const styles = StyleSheet.create({
   editButtonText: {
     color: colors.white,
     fontSize: FONT_SIZE.sm,
-    fontWeight: 500,
+    fontWeight: '500',
   },
   content: {
     flex: 1,
@@ -213,7 +220,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: 600,
+    fontWeight: '600',
     color: colors.text,
     marginBottom: SPACING.md,
   },
@@ -235,7 +242,7 @@ const styles = StyleSheet.create({
   logoutText: {
     fontSize: FONT_SIZE.md,
     color: colors.danger,
-    fontWeight: 600,
+    fontWeight: '600',
     marginLeft: SPACING.sm,
   },
 });

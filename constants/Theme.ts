@@ -21,10 +21,11 @@ export const FONT_SIZE = {
 };
 
 export const FONT_WEIGHT = {
-  regular: '400',
-  medium: '500',
-  semibold: '600',
-  bold: '700',
+  regular: 'regular',
+  medium: 'medium',
+  light: '300',
+  semibold: 'semibold',
+  bold: 'bold',
 };
 
 export const BORDER_RADIUS = {
@@ -45,7 +46,7 @@ export const SHADOWS = {
       shadowRadius: 2,
     },
     android: {
-      elevation: 2,
+      elevation: 1,
     },
     default: {
       shadowColor: colors.text,

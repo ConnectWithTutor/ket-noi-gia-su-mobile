@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { Lock } from "lucide-react-native";
-import * as Haptics from "expo-haptics";
 
 import colors from "@/constants/Colors";
 import { BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS, SPACING } from "@/constants/Theme";
@@ -11,6 +10,7 @@ import Button from "@/components/ui/Button";
 import StatusBar from "@/components/ui/StatusBar";
 import Header from "@/components/ui/Header";
 import { useAuthStore } from "@/store/auth-store";
+import { triggerHaptic } from "@/utils/haptics";
 
 export default function ChangePasswordScreen() {
   const router = useRouter();
@@ -46,7 +46,7 @@ export default function ChangePasswordScreen() {
   };
   
   const handleChangePassword = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    triggerHaptic('medium');
     
     if (!validateForm()) return;
     

@@ -16,6 +16,7 @@ export default  {
   textLight: '#BDBDBD',
   border: '#E0E0E0',
   divider: '#EEEEEE',
+  noticeMark: '#EBF5FE',
   placeholder: '#9E9E9E',
   disabled: '#BDBDBD',
   white: '#FFFFFF',

@@ -7,7 +7,7 @@ interface AuthHeaderProps {
   title: string;
   showLogo?: boolean;
 }
-
+ 
 export default function AuthHeader({ title, showLogo = true }: AuthHeaderProps) {
   return (
     <View style={styles.container}>

@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, View, FlatList, KeyboardAvoidingView, Platform } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import * as Haptics from "expo-haptics";
 
 import colors from "@/constants/Colors";
 import StatusBar from "@/components/ui/StatusBar";
@@ -11,6 +10,7 @@ import ChatInput from "@/components/chat/ChatInput";
 import { useChatStore } from "@/store/chat-store";
 import { formatTime } from "@/utils/date-utils";
 import { Message } from "@/types/chat";
+import { triggerHaptic } from "@/utils/haptics";
 
 export default function ConversationScreen() {
   const { id } = useLocalSearchParams();
@@ -26,7 +26,7 @@ export default function ConversationScreen() {
   } = useChatStore();
   
   const [conversationMessages, setConversationMessages] = useState<Message[]>([]);
-  const flatListRef = useRef<FlatList>(null);
+  const flatListRef = useRef<FlatList<Message>>(null);
   
   useEffect(() => {
     if (conversationId) {
@@ -42,7 +42,7 @@ export default function ConversationScreen() {
   }, [messages, conversationId]);
   
   const handleSendMessage = async (content: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    triggerHaptic('light');
     await sendMessage(conversationId, content);
     
     // Scroll to bottom after sending message

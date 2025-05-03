@@ -11,6 +11,8 @@ import ClassCard from "@/components/schedule/ClassCard";
 import CalendarDay from "@/components/schedule/CalendarDay";
 import { useScheduleStore } from "@/store/schedule-store";
 import { formatDate, getDayName, getMonthName } from "@/utils/date-utils";
+import { router } from "expo-router";
+import { triggerHaptic } from "@/utils/haptics";
 
 export default function ScheduleScreen() {
   const { classes, fetchClasses, isLoading } = useScheduleStore();
@@ -83,11 +85,14 @@ export default function ScheduleScreen() {
       );
     });
   };
-
+  const handleNotificationPress = () => {
+    triggerHaptic('light');
+    router.push('/notification-list' as any);
+  };
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor={colors.primary} />
-      <Header title="Lịch học" showNotification />
+      <Header title="Lịch học" showNotification onNotificationPress={handleNotificationPress}/>
       
       <View style={styles.content}>
         <View style={styles.calendarHeader}>
@@ -151,7 +156,7 @@ export default function ScheduleScreen() {
         <ScrollView style={styles.classesContainer} showsVerticalScrollIndicator={false}>
           <View style={styles.classesHeader}>
             <Text style={styles.classesTitle}>
-              {getMonthName(selectedDate)} {selectedDate.getDate()}, {selectedDate.getFullYear()}
+              {getMonthName(selectedDate.getMonth())} {selectedDate.getDate()}, {selectedDate.getFullYear()}
             </Text>
             <View style={styles.legendContainer}>
               <View style={styles.legendItem}>

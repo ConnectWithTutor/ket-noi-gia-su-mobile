@@ -1,12 +1,12 @@
 import React from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, ViewStyle } from 'react-native';
-import { useRouter } from 'expo-router';
+import { router, useRouter } from 'expo-router';
 import { ArrowLeft, Bell } from 'lucide-react-native';
 import colors from '@/constants/Colors';
 import { FONT_SIZE, FONT_WEIGHT, SPACING } from '@/constants/Theme';
 
-// Ensure these constants are correctly defined in the imported files.
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { triggerHaptic } from '@/utils/haptics';
 
 interface HeaderProps {
   title: string;

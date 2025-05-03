@@ -11,6 +11,7 @@ import { useChatStore } from "@/store/chat-store";
 import { getRelativeTime } from "@/utils/date-utils";
 import { useRouter } from "expo-router";
 import { Conversation } from "@/types/chat";
+import { triggerHaptic } from "@/utils/haptics";
 
 export default function ChatScreen() {
   const router = useRouter();
@@ -26,7 +27,10 @@ export default function ChatScreen() {
     setActiveConversation(conversationId);
     router.push(`/conversation/${conversationId}`);
   };
-  
+  const handleNotificationPress = () => {
+      triggerHaptic('light');
+      router.push('/notification-list' as any);
+    };
   const filteredConversations = searchQuery
     ? conversations.filter(conv => 
         conv.lastMessage.content.toLowerCase().includes(searchQuery.toLowerCase())
@@ -36,7 +40,7 @@ export default function ChatScreen() {
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor={colors.primary} />
-      <Header title="Trò Chuyện" showNotification />
+      <Header title="Trò Chuyện" showNotification onNotificationPress={handleNotificationPress}/>
       
       <View style={styles.content}>
         <View style={styles.searchContainer}>

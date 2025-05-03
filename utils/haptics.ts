@@ -1,12 +1,17 @@
 import { Platform } from 'react-native';
-import * as Haptics from 'expo-haptics';
+
+// Import Haptics only on native platforms
+let Haptics: any = null;
+if (Platform.OS !== 'web') {
+  Haptics = require('expo-haptics');
+}
 
 // Helper function to safely use haptics only on native platforms
 export const triggerHaptic = (
   type: 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error' | 'selection'
 ) => {
-  if (Platform.OS === 'web') {
-    // Skip haptics on web
+  if (Platform.OS === 'web' || !Haptics) {
+    // Skip haptics on web or if not available
     return;
   }
 

@@ -1,23 +1,31 @@
 import React, { useEffect } from "react";
 import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Image } from "react-native";
 import { useRouter } from "expo-router";
-import { Bell, Search, BookOpen, Users, Calendar, MessageSquare } from "lucide-react-native";
-import * as Haptics from "expo-haptics";
+import { Bell, Search, BookOpen, Users, Calendar, MessageSquare, FileText } from "lucide-react-native";
 
 import colors from "@/constants/Colors";
 import { BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS, SPACING } from "@/constants/Theme";
 import StatusBar from "@/components/ui/StatusBar";
 import { useAuthStore } from "@/store/auth-store";
 import { useScheduleStore } from "@/store/schedule-store";
+import { usePostStore } from "@/store/post-store";
+import { useTutorStore } from "@/store/tutor-store";
 import { formatTime } from "@/utils/date-utils";
+import { triggerHaptic } from "@/utils/haptics";
+import PostCard from "@/components/posts/PostCard";
+import TutorCard from "@/components/tutors/TutorCard";
 
 export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const { classes, fetchClasses, isLoading } = useScheduleStore();
+  const { classes, fetchClasses } = useScheduleStore();
+  const { posts, fetchPosts } = usePostStore();
+  const { tutors, fetchTutors } = useTutorStore();
   
   useEffect(() => {
     fetchClasses();
+    fetchPosts();
+    fetchTutors();
   }, []);
   
   const upcomingClasses = classes
@@ -25,33 +33,52 @@ export default function HomeScreen() {
     .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
     .slice(0, 3);
   
+  const recentPosts = posts
+    .filter(p => p.status === "active")
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 2);
+  
+  const recommendedTutors = tutors.slice(0, 4);
+  
   const handleFeaturePress = (feature: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    triggerHaptic('light');
     
     switch (feature) {
       case "schedule":
-        router.push("/(app)/(tabs)/schedule");
+        router.push("/(app)/(tabs)/schedule" as any);
         break;
       case "tutors":
-        // Navigate to tutors screen
+        router.push("/(app)/(tabs)/posts" as any);
         break;
       case "chat":
-        router.push("/(app)/(tabs)/chat");
+        router.push("/(app)/(tabs)/chat" as any);
         break;
-      case "subjects":
-        // Navigate to subjects screen
-        break;
-      case "resources":
-        // Navigate to resources screen
-        break;
-      case "settings":
-        router.push("/(app)/(tabs)/profile");
+      case "posts":
+        router.push("/(app)/(tabs)/posts" as any);
         break;
       default:
         break;
     }
   };
-
+  
+  const handlePostPress = (postId: string) => {
+    triggerHaptic('light');
+    router.push(`/post/${postId}` as any);
+  };
+  
+  const handleTutorPress = (tutorId: string) => {
+    triggerHaptic('light');
+    router.push(`/tutor/${tutorId}` as any);
+  };
+  
+  const handleCreatePost = () => {
+    triggerHaptic('medium');
+    router.push('/create-post' as any);
+  };
+ const handleNotificationPress = () => {
+      triggerHaptic('light');
+      router.push('/notification-list' as any);
+    };
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor={colors.primary} />
@@ -65,7 +92,7 @@ export default function HomeScreen() {
           
           <TouchableOpacity 
             style={styles.notificationButton}
-            onPress={() => {}}
+            onPress={() => {handleNotificationPress()}}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Bell size={24} color={colors.white} />
@@ -115,14 +142,45 @@ export default function HomeScreen() {
             
             <TouchableOpacity 
               style={styles.featureItem} 
-              onPress={() => handleFeaturePress("subjects")}
+              onPress={() => handleFeaturePress("posts")}
             >
               <View style={[styles.featureIcon, { backgroundColor: "#E8F5E9" }]}>
-                <BookOpen size={24} color="#4CAF50" />
+                <FileText size={24} color="#4CAF50" />
               </View>
-              <Text style={styles.featureText}>Môn học</Text>
+              <Text style={styles.featureText}>Bài đăng</Text>
             </TouchableOpacity>
           </View>
+        </View>
+        
+        <View style={styles.recentPostsContainer}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Bài đăng mới nhất</Text>
+            <TouchableOpacity onPress={() => router.push("/(app)/(tabs)/posts" as any)}>
+              <Text style={styles.seeAllText}>Xem tất cả</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {recentPosts.length > 0 ? (
+            recentPosts.map(post => (
+              <PostCard 
+                key={post.id} 
+                post={post} 
+                onPress={() => handlePostPress(post.id)} 
+              />
+            ))
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Không có bài đăng mới</Text>
+            </View>
+          )}
+          
+          <TouchableOpacity 
+            style={styles.createPostButton}
+            onPress={handleCreatePost}
+          >
+            <FileText size={18} color={colors.primary} />
+            <Text style={styles.createPostText}>Đăng bài tìm gia sư</Text>
+          </TouchableOpacity>
         </View>
         
         <View style={styles.upcomingClassesContainer}>
@@ -133,11 +191,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
           
-          {isLoading ? (
-            <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>Đang tải...</Text>
-            </View>
-          ) : upcomingClasses.length > 0 ? (
+          {upcomingClasses.length > 0 ? (
             upcomingClasses.map((classItem) => (
               <TouchableOpacity 
                 key={classItem.id} 
@@ -176,31 +230,19 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
           
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.tutorsScrollContent}
-          >
-            {[1, 2, 3, 4].map((item) => (
-              <TouchableOpacity key={item} style={styles.tutorCard} onPress={() => {}}>
-                <Image
-                  source={{ uri: `https://images.unsplash.com/photo-${item === 1 ? "1535713875002-d1d0cf377fde" : item === 2 ? "1494790108377-be9c29b29330" : item === 3 ? "1599566150163-29194dcaad36" : "1472099645785-5658abf4ff4e"}?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80` }}
-                  style={styles.tutorCardAvatar}
-                />
-                <Text style={styles.tutorCardName}>
-                  {item === 1 ? "Nguyễn Văn A" : item === 2 ? "Trần Thị B" : item === 3 ? "Lê Văn C" : "Phạm Thị D"}
-                </Text>
-                <Text style={styles.tutorCardSubjects}>
-                  {item === 1 ? "Toán, Lý, Hóa" : item === 2 ? "Văn, Sử, Địa" : item === 3 ? "Tiếng Anh" : "Sinh học"}
-                </Text>
-                <View style={styles.tutorCardRating}>
-                  <Text style={styles.tutorCardRatingText}>
-                    {item === 1 ? "4.9" : item === 2 ? "4.7" : item === 3 ? "4.8" : "4.6"} ⭐
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          {recommendedTutors.length > 0 ? (
+            recommendedTutors.map(tutor => (
+              <TutorCard 
+                key={tutor.id} 
+                tutor={tutor} 
+                onPress={() => handleTutorPress(tutor.id)} 
+              />
+            ))
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Không có gia sư gợi ý</Text>
+            </View>
+          )}
         </View>
       </ScrollView>
     </View>
@@ -233,7 +275,7 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: 700,
+    fontWeight: '700',
     color: colors.white,
   },
   notificationButton: {
@@ -273,14 +315,14 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: 700,
+    fontWeight: '700',
     color: colors.text,
     marginBottom: SPACING.md,
   },
   seeAllText: {
     fontSize: FONT_SIZE.sm,
     color: colors.primary,
-    fontWeight: 600,
+    fontWeight: '600',
   },
   featuresGrid: {
     flexDirection: "row",
@@ -307,7 +349,10 @@ const styles = StyleSheet.create({
   featureText: {
     fontSize: FONT_SIZE.md,
     color: colors.text,
-    fontWeight: 600,
+    fontWeight: '600',
+  },
+  recentPostsContainer: {
+    marginBottom: SPACING.xl,
   },
   upcomingClassesContainer: {
     marginBottom: SPACING.xl,
@@ -344,7 +389,7 @@ const styles = StyleSheet.create({
   },
   classTitle: {
     fontSize: FONT_SIZE.md,
-    fontWeight: 600,
+    fontWeight: '600',
     color: colors.text,
     marginBottom: SPACING.xs,
   },
@@ -376,46 +421,22 @@ const styles = StyleSheet.create({
   recommendedTutorsContainer: {
     marginBottom: SPACING.xl,
   },
-  tutorsScrollContent: {
-    paddingRight: SPACING.lg,
-  },
-  tutorCard: {
-    width: 150,
+  createPostButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: colors.white,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
-    marginRight: SPACING.md,
-    alignItems: "center",
-    ...SHADOWS.small,
+    marginTop: SPACING.sm,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderStyle: 'dashed',
   },
-  tutorCardAvatar: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    marginBottom: SPACING.sm,
-  },
-  tutorCardName: {
+  createPostText: {
     fontSize: FONT_SIZE.md,
-    fontWeight: 600,
-    color: colors.text,
-    marginBottom: SPACING.xs,
-    textAlign: "center",
-  },
-  tutorCardSubjects: {
-    fontSize: FONT_SIZE.xs,
-    color: colors.textSecondary,
-    marginBottom: SPACING.sm,
-    textAlign: "center",
-  },
-  tutorCardRating: {
-    backgroundColor: colors.primaryLight,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.xs,
-    borderRadius: BORDER_RADIUS.sm,
-  },
-  tutorCardRatingText: {
-    fontSize: FONT_SIZE.xs,
     color: colors.primary,
-    fontWeight: 600,
+    fontWeight: '600',
+    marginLeft: SPACING.sm,
   },
 });
