@@ -4,11 +4,11 @@ import { MapPin, Users, Clock, DollarSign } from 'lucide-react-native';
 
 import colors from '@/constants/Colors';
 import { BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS, SPACING } from '@/constants/Theme';
-import { Post } from '@/types/post';
+import { StudentRequest } from '@/types/student-request';
 import { getRelativeTime } from '@/utils/date-utils';
 
 interface PostCardProps {
-  post: Post;
+  post: StudentRequest;
   onPress: () => void;
 }
 
@@ -16,7 +16,7 @@ export default function PostCard({ post, onPress }: PostCardProps) {
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.8}>
       <View style={styles.header}>
-        <View style={styles.userInfo}>
+        {/* <View style={styles.userInfo}>
           <Image 
             source={{ uri: post.userAvatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80' }} 
             style={styles.avatar} 
@@ -25,8 +25,8 @@ export default function PostCard({ post, onPress }: PostCardProps) {
             <Text style={styles.userName}>{post.userName}</Text>
             <Text style={styles.postTime}>{getRelativeTime(post.createdAt)}</Text>
           </View>
-        </View>
-        <View style={[
+        </View> */}
+        {/* <View style={[
           styles.statusBadge, 
           { 
             backgroundColor: post.status === 'active' 
@@ -48,10 +48,10 @@ export default function PostCard({ post, onPress }: PostCardProps) {
           ]}>
             {post.status === 'active' ? 'Đang tìm' : post.status === 'closed' ? 'Đã đóng' : 'Đang xét duyệt'}
           </Text>
-        </View>
+        </View> */}
       </View>
       
-      <Text style={styles.title}>{post.title}</Text>
+      <Text style={styles.title}>title</Text>
       <Text style={styles.description} numberOfLines={2}>{post.description}</Text>
       
       <View style={styles.infoContainer}>
@@ -62,12 +62,12 @@ export default function PostCard({ post, onPress }: PostCardProps) {
         
         <View style={styles.infoItem}>
           <Users size={16} color={colors.textSecondary} />
-          <Text style={styles.infoText}>{post.studentCount} học sinh</Text>
+          <Text style={styles.infoText}>2 học sinh</Text>
         </View>
         
         <View style={styles.infoItem}>
           <Clock size={16} color={colors.textSecondary} />
-          <Text style={styles.infoText}>{post.schedule}</Text>
+          <Text style={styles.infoText}>{post.preferredSchedule}</Text>
         </View>
         
         <View style={styles.infoItem}>
@@ -78,12 +78,12 @@ export default function PostCard({ post, onPress }: PostCardProps) {
       
       <View style={styles.footer}>
         <View style={styles.subjectBadge}>
-          <Text style={styles.subjectText}>{post.subject}</Text>
+          <Text style={styles.subjectText}>{post.subjectId}</Text>
         </View>
         
-        {post.applicants !== undefined && post.applicants > 0 && (
+        {/* {post.applicants !== undefined && post.applicants > 0 && (
           <Text style={styles.applicantsText}>{post.applicants} gia sư đã ứng tuyển</Text>
-        )}
+        )} */}
       </View>
     </TouchableOpacity>
   );

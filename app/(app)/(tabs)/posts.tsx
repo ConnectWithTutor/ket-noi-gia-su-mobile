@@ -10,13 +10,13 @@ import Header from "@/components/ui/Header";
 import PostCard from "@/components/posts/PostCard";
 import PostFilter from "@/components/posts/PostFilter";
 import { usePostStore } from "@/store/post-store";
-import { Post } from "@/types/post";
+import { StudentRequest } from "@/types/student-request";
 import { triggerHaptic } from "@/utils/haptics";
 
 export default function PostsScreen() {
   const router = useRouter();
   const { posts, fetchPosts, isLoading } = usePostStore();
-  const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
+  const [filteredPosts, setFilteredPosts] = useState<StudentRequest[]>([]);
   
   useEffect(() => {
     fetchPosts();
@@ -27,14 +27,14 @@ export default function PostsScreen() {
   }, [posts]);
   
   const handleFilterChange = (filters: {
-    subject?: string;
+    subjectId?: string;
     location?: string;
     status?: string;
   }) => {
     let filtered = [...posts];
     
-    if (filters.subject) {
-      filtered = filtered.filter(post => post.subject === filters.subject);
+    if (filters.subjectId) {
+      filtered = filtered.filter(post => post.subjectId === filters.subjectId);
     }
     
     if (filters.location) {
@@ -76,11 +76,11 @@ export default function PostsScreen() {
       ) : filteredPosts.length > 0 ? (
         <FlatList
           data={filteredPosts}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.requestId}
           renderItem={({ item }) => (
             <PostCard
               post={item}
-              onPress={() => handlePostPress(item.id)}
+              onPress={() => handlePostPress(item.requestId)}
             />
           )}
           contentContainerStyle={styles.listContent}

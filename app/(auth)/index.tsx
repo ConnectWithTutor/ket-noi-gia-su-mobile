@@ -8,7 +8,6 @@ import { FONT_SIZE, FONT_WEIGHT, SPACING } from "@/constants/Theme";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Checkbox from "@/components/ui/Checkbox";
-import AuthHeader from "@/components/auth/AuthHeader";
 import SocialButton from "@/components/auth/SocialButton";
 import { useAuthStore } from "@/store/auth-store";
 import { triggerHaptic } from "@/utils/haptics";
@@ -16,8 +15,8 @@ import { triggerHaptic } from "@/utils/haptics";
 export default function LoginScreen() {
   const router = useRouter();
   const { login, isLoading, error } = useAuthStore();
-  
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [formError, setFormError] = useState("");
@@ -25,13 +24,13 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     triggerHaptic('medium');
     
-    if (!phone || !password) {
-      setFormError("Vui lòng nhập số điện thoại và mật khẩu");
+    if (!email || !phoneNumber || !password) {
+      setFormError("Vui lòng nhập đầy đủ");
       return;
     }
     
     try {
-      await login(phone, password);
+      await login({ email, phoneNumber, password });
       router.replace("/(app)/(tabs)/home");
     } catch (error) {
       console.error("Login error:", error);
@@ -62,14 +61,22 @@ export default function LoginScreen() {
             style={styles.illustration}
             resizeMode="contain"
           />
-          
+          <Input
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            icon={<Mail size={20} color={colors.textSecondary} />}
+            error={formError && !email ? "Vui lòng nhập email" : ""}
+          />
           <Input
             placeholder="Số điện thoại"
-            value={phone}
-            onChangeText={setPhone}
+            value={phoneNumber}
+            onChangeText={setPhoneNumber}
             keyboardType="phone-pad"
             icon={<User size={20} color={colors.textSecondary} />}
-            error={formError && !phone ? "Vui lòng nhập số điện thoại" : ""}
+            error={formError && !phoneNumber ? "Vui lòng nhập số điện thoại" : ""}
           />
           
           <Input

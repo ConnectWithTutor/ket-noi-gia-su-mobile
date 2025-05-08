@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { Link, useRouter } from "expo-router";
 import { Mail, Lock, User, Phone, Facebook } from "lucide-react-native";
@@ -11,47 +11,141 @@ import RadioButton from "@/components/ui/RadioButton";
 import AuthHeader from "@/components/auth/AuthHeader";
 import SocialButton from "@/components/auth/SocialButton";
 import { useAuthStore } from "@/store/auth-store";
-import { UserRole } from "@/types/user";
+import { useRoleStore } from "@/store/roleStore";
 import { triggerHaptic } from "@/utils/haptics";
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { register, isLoading, error } = useAuthStore();
+  const { register, isLoading, error, isAuthenticated, clearError } = useAuthStore();
+  const { roles, loading: rolesLoading, error: rolesError, fetchRoles } = useRoleStore();
   
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [username, setUsername] = useState("");
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [gender, setGender] = useState<"male" | "female">("male");
-  const [role, setRole] = useState<UserRole>("student");
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [selectedRoleId, setSelectedRoleId] = useState<string>("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [usernameError, setUsernameError] = useState("");
+  const [fullNameError, setFullNameError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [roleError, setRoleError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  useEffect(() => {
+    // Clear any previous errors when component mounts
+    clearError();
+    // Fetch roles
+    fetchRoles();
+  }, []);
 
-  const validateForm = () => {
-    const errors: Record<string, string> = {};
-    
-    if (!name) errors.name = "Vui lòng nhập họ tên";
-    if (!phone) errors.phone = "Vui lòng nhập số điện thoại";
-    if (!email) errors.email = "Vui lòng nhập email";
-    else if (!/\S+@\S+\.\S+/.test(email)) errors.email = "Email không hợp lệ";
-    
-    if (!password) errors.password = "Vui lòng nhập mật khẩu";
-    else if (password.length < 6) errors.password = "Mật khẩu phải có ít nhất 6 ký tự";
-    
-    if (!confirmPassword) errors.confirmPassword = "Vui lòng xác nhận mật khẩu";
-    else if (password !== confirmPassword) errors.confirmPassword = "Mật khẩu không khớp";
-    
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
+ 
+  const validateUsername = () => {
+    if (!username) {
+      setUsernameError("Tên đăng nhập là bắt buộc");
+      return false;
+    } else if (username.length < 3) {
+      setUsernameError("Tên đăng nhập phải có ít nhất 3 ký tự");
+      return false;
+    }
+    setUsernameError("");
+    return true;
+  };
+
+  const validateFullName = () => {
+    if (!fullName) {
+      setFullNameError("Họ và tên là bắt buộc");
+      return false;
+    } else if (fullName.length < 2) {
+      setFullNameError("Họ và tên phải có ít nhất 2 ký tự");
+      return false;
+    }
+    setFullNameError("");
+    return true;
+  };
+
+  const validateEmail = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      setEmailError("Email là bắt buộc");
+      return false;
+    } else if (!emailRegex.test(email)) {
+      setEmailError("Vui lòng nhập email hợp lệ");
+      return false;
+    }
+    setEmailError("");
+    return true;
+  };
+
+  const validatePhone = () => {
+    if (!phoneNumber) {
+      setPhoneError("Số điện thoại là bắt buộc");
+      return false;
+    } else if (phoneNumber.length < 10) {
+      setPhoneError("Vui lòng nhập số điện thoại hợp lệ");
+      return false;
+    }
+    setPhoneError("");
+    return true;
+  };
+
+  const validateConfirmPassword = () => {
+    if (!confirmPassword) {
+      setConfirmPasswordError("Vui lòng xác nhận mật khẩu");
+      return false;
+    } else if (confirmPassword !== password) {
+      setConfirmPasswordError("Mật khẩu không khớp");
+      return false;
+    }
+    setConfirmPasswordError("");
+    return true;
+  };
+
+  const validatePassword = () => {
+    if (!password) {
+      setPasswordError("Mật khẩu là bắt buộc");
+      return false;
+    } else if (password.length < 6) {
+      setPasswordError("Mật khẩu phải có ít nhất 6 ký tự");
+      return false;
+    }
+    setPasswordError("");
+    return true;
+  };
+
+  const validateRole = () => {
+    if (!selectedRoleId) {
+      setRoleError("Vui lòng chọn vai trò");
+      return false;
+    }
+    setRoleError("");
+    return true;
   };
 
   const handleRegister = async () => {
     triggerHaptic('medium');
     
-    if (!validateForm()) return;
+    const isUsernameValid = validateUsername();
+    const isFullNameValid = validateFullName();
+    const isEmailValid = validateEmail();
+    const isPhoneValid = validatePhone();
+    const isPasswordValid = validatePassword();
+    const isRoleValid = validateRole();
+    if (!isUsernameValid || !isFullNameValid || !isEmailValid || !isPhoneValid || !isPasswordValid || !isRoleValid) {
+      return;
+    }
     
     try {
-      await register(name, phone, email, password, role);
+      await register({
+        username,
+        fullName,
+        email,
+        phoneNumber,
+        password,
+        roleId: selectedRoleId
+      });
       router.replace("/(app)/(tabs)/home");
     } catch (error) {
       console.error("Register error:", error);
@@ -80,20 +174,27 @@ export default function RegisterScreen() {
           <Text style={styles.title}>Đăng ký</Text>
           
           <Input
-            placeholder="Họ và tên"
-            value={name}
-            onChangeText={setName}
+            placeholder="Tên đăng nhập"
+            value={username}
+            onChangeText={setUsername}
             icon={<User size={20} color={colors.textSecondary} />}
-            error={formErrors.name}
+            error={usernameError}
+          />
+          <Input
+            placeholder="Họ và tên"
+            value={fullName}
+            onChangeText={setFullName}
+            icon={<User size={20} color={colors.textSecondary} />}
+            error={fullNameError}
           />
           
           <Input
             placeholder="Số điện thoại"
-            value={phone}
-            onChangeText={setPhone}
+            value={phoneNumber}
+            onChangeText={setPhoneNumber}
             keyboardType="phone-pad"
             icon={<Phone size={20} color={colors.textSecondary} />}
-            error={formErrors.phone}
+            error={phoneError}
           />
           
           <Input
@@ -103,7 +204,7 @@ export default function RegisterScreen() {
             keyboardType="email-address"
             autoCapitalize="none"
             icon={<Mail size={20} color={colors.textSecondary} />}
-            error={formErrors.email}
+            error={emailError}
           />
           
           <Input
@@ -112,7 +213,7 @@ export default function RegisterScreen() {
             onChangeText={setPassword}
             secureTextEntry
             icon={<Lock size={20} color={colors.textSecondary} />}
-            error={formErrors.password}
+            error={passwordError}
           />
           
           <Input
@@ -121,42 +222,20 @@ export default function RegisterScreen() {
             onChangeText={setConfirmPassword}
             secureTextEntry
             icon={<Lock size={20} color={colors.textSecondary} />}
-            error={formErrors.confirmPassword}
+            error={confirmPasswordError}
           />
-          
-          <View style={styles.optionContainer}>
-            <Text style={styles.optionLabel}>Giới tính</Text>
-            <View style={styles.optionGroup}>
-              <RadioButton
-                selected={gender === "male"}
-                onSelect={() => setGender("male")}
-                label="Nam"
-                style={styles.radioButton}
-              />
-              <RadioButton
-                selected={gender === "female"}
-                onSelect={() => setGender("female")}
-                label="Nữ"
-                style={styles.radioButton}
-              />
-            </View>
-          </View>
-          
           <View style={styles.optionContainer}>
             <Text style={styles.optionLabel}>Vai trò</Text>
             <View style={styles.optionGroup}>
+            {roles.map(role => (
               <RadioButton
-                selected={role === "tutor"}
-                onSelect={() => setRole("tutor")}
-                label="Gia sư"
+                key={role.roleId}
+                selected={role.roleId === selectedRoleId}
+                onSelect={() => setSelectedRoleId(role.roleId)}
+                label={role.roleName}
                 style={styles.radioButton}
               />
-              <RadioButton
-                selected={role === "student"}
-                onSelect={() => setRole("student")}
-                label="Học viên"
-                style={styles.radioButton}
-              />
+            ))}
             </View>
           </View>
           

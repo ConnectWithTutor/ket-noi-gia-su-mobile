@@ -24,7 +24,7 @@ export default function HomeScreen() {
   
   useEffect(() => {
     fetchClasses();
-    fetchPosts();
+    // fetchPosts();
     fetchTutors();
   }, []);
   
@@ -34,8 +34,6 @@ export default function HomeScreen() {
     .slice(0, 3);
   
   const recentPosts = posts
-    .filter(p => p.status === "active")
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 2);
   
   const recommendedTutors = tutors.slice(0, 4);
@@ -87,7 +85,7 @@ export default function HomeScreen() {
         <View style={styles.headerContent}>
           <View>
             <Text style={styles.greeting}>Xin chào,</Text>
-            <Text style={styles.userName}>{user?.name}</Text>
+            <Text style={styles.userName}>{user?.fullName}</Text>
           </View>
           
           <TouchableOpacity 
@@ -163,9 +161,9 @@ export default function HomeScreen() {
           {recentPosts.length > 0 ? (
             recentPosts.map(post => (
               <PostCard 
-                key={post.id} 
+                key={post.requestId} 
                 post={post} 
-                onPress={() => handlePostPress(post.id)} 
+                onPress={() => handlePostPress(post.requestId)} 
               />
             ))
           ) : (

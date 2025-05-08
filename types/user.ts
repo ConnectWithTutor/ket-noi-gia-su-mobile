@@ -1,21 +1,26 @@
-export type UserRole = 'tutor' | 'student';
-
 export interface User {
-  id: string;
-  name: string;
+  userId: string;
+  username: string;
+  fullName: string;
+  birthDate: string | null; 
+  phoneNumber: string;
+  address: string | null;
   email: string;
-  phone: string;
-  avatar?: string;
-  role: UserRole;
-  bio?: string;
-  subjects?: string[];
-  rating?: number;
-  createdAt: string;
+  avatarUrl: string | null;
+  averageRating: number | null;
+  roleId: string;
+  isVerified: boolean | null;
+  createdAt: string | null;
+  updatedAt: string | null;
 }
 
-export interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
+export interface UserUpdateRequest {
+  username?: string;
+  fullName?: string;
+  birthDate?: string;
+  phoneNumber?: string;
+  address?: string;
+  email?: string;
+  avatarUrl?: string;
+  isVerified?: boolean;
 }
