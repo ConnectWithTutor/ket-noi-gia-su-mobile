@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { StyleSheet, View, Text, Image, ScrollView, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { 
@@ -19,12 +19,20 @@ import StatusBar from "@/components/ui/StatusBar";
 import ProfileItem from "@/components/profile/ProfileItem";
 import { useAuthStore } from "@/store/auth-store";
 import { triggerHaptic } from "@/utils/haptics";
-
+import { useRoleStore } from "@/store/roleStore";
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
-  
+  const { roles,fetchRoles } = useRoleStore();
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      await fetchRoles();
+    };
+    fetchUserRole();
+  }, []);
+  const role =roles.find((role) => role.roleId === user?.roleId);
   const handleLogout = () => {
+    
     triggerHaptic('medium');
     logout();
     router.replace("/");
@@ -52,13 +60,13 @@ export default function ProfileScreen() {
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Image
-            source={{ uri: user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80" }}
+            source={{ uri: user?.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80" }}
             style={styles.avatar}
           />
           
           <View style={styles.userInfo}>
-            <Text style={styles.userName}>{user?.name}</Text>
-            <Text style={styles.userRole}>{user?.role === "tutor" ? "Gia sư" : "Học viên"}</Text>
+            <Text style={styles.userName}>{user?.fullName}</Text>
+            <Text style={styles.userRole}>{role?.roleName === "Tutor" ? "Gia sư" : "Học viên"}</Text>
             <TouchableOpacity 
               style={styles.editButton} 
               onPress={handlePersonalInfo}
@@ -97,18 +105,12 @@ export default function ProfileScreen() {
           </View>
         </View>
         
-        {user?.role === "tutor" && (
+        {role?.roleName === "Tutor" && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Gia sư</Text>
             
             <View style={styles.sectionContent}>
-              <ProfileItem
-                icon={<BookOpen size={20} color={colors.primary} />}
-                title="Môn học"
-                subtitle="Quản lý môn học của bạn"
-                onPress={() => {}}
-              />
-              
+             
               <ProfileItem
                 icon={<Star size={20} color={colors.primary} />}
                 title="Đánh giá"

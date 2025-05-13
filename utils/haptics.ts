@@ -11,7 +11,6 @@ export const triggerHaptic = (
   type: 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error' | 'selection'
 ) => {
   if (Platform.OS === 'web' || !Haptics) {
-    // Skip haptics on web or if not available
     return;
   }
 

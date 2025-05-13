@@ -4,15 +4,10 @@ export
 export * from './auth';
 export * from './user';
 
-
-
-// export * from './subject';
-// export * from './qualification';
-
-// export * from './class';
-// export * 
-// from 
-// './booking';
-// export * from './rating';
-// export * from './message';
 export * from './role';
+export * from './student-request';
+export * from './tutor';
+export * from './student';
+export * from './status';
+export * from './subject';
+export * from './tutorApplication';

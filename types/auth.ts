@@ -1,15 +1,10 @@
 
 
-export interface ApiResponse<T> {
-    success: boolean;
-    message: string;
-    data: T;
-}
+
 
 
 export interface LoginRequest {
     email: string;
-    phoneNumber: string;
     password: string;
 }
 

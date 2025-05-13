@@ -28,33 +28,38 @@ import Header from "@/components/ui/Header";
 import Button from "@/components/ui/Button";
 import { useTutorStore } from "@/store/tutor-store";
 import { useChatStore } from "@/store/chat-store";
-import { useAuthStore } from "@/store/auth-store";
 import { triggerHaptic } from "@/utils/haptics";
+import { useUserProfileStore } from "@/store/profile-store"
+import { TutorProfile } from "@/types";
 
 export default function TutorProfileScreen() {
   const { id } = useLocalSearchParams();
-  const tutorId = Array.isArray(id) ? id[0] : id;
-  
+  const userId = id as string;
   const router = useRouter();
-  const { fetchTutors, getTutorById } = useTutorStore();
-  const { user } = useAuthStore();
+  const {  getTutorById } = useTutorStore();
   const { conversations, setActiveConversation } = useChatStore();
   
-  const [tutor, setTutor] = useState(getTutorById(tutorId));
-  
+  const [tutor, setTutor] = useState<TutorProfile | undefined>();
+  const { user, fetchUserById } = useUserProfileStore();
+
   useEffect(() => {
-    if (!tutor) {
-      fetchTutors().then(() => {
-        setTutor(getTutorById(tutorId));
-      });
-    }
-  }, [tutorId]);
-  
-  useEffect(() => {
-    if (!tutor && !useTutorStore.getState().isLoading) {
-      router.back();
-    }
-  }, [tutor]);
+    const fetchTutorData = async () => {
+      try {
+        const tutorData = await getTutorById(userId);
+        if (tutorData) {
+          setTutor(tutorData);
+        } else {
+          Alert.alert("Thông báo", "Không tìm thấy gia sư.");
+        }
+      } catch (error) {
+        console.error("Error fetching tutor data:", error);
+        Alert.alert("Thông báo", "Đã xảy ra lỗi khi lấy dữ liệu.");
+      }
+    };
+
+    fetchTutorData();
+    fetchUserById(userId);
+  }, [userId]);
   
   if (!tutor) {
     return null;
@@ -62,17 +67,15 @@ export default function TutorProfileScreen() {
   
   const handleMessage = () => {
     triggerHaptic('medium');
-    // Find existing conversation or create new one
     const existingConversation = conversations.find(conv => 
-      conv.participants.includes(user?.id || '') && 
-      conv.participants.includes(tutorId)
+      conv.participants.includes(user?.userId || '') && 
+      conv.participants.includes(userId)
     );
     
     if (existingConversation) {
       setActiveConversation(existingConversation.id);
       router.push(`/conversation/${existingConversation.id}`);
     } else {
-      // In a real app, you would create a new conversation here
       Alert.alert(
         "Thông báo",
         "Tính năng nhắn tin sẽ được cập nhật trong phiên bản tiếp theo."
@@ -96,26 +99,20 @@ export default function TutorProfileScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.profileHeader}>
           <Image 
-            source={{ uri: tutor.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80' }} 
+            source={{ uri: user?.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80' }} 
             style={styles.avatar} 
           />
           
-          <Text style={styles.name}>{tutor.name}</Text>
+          <Text style={styles.name}>{user?.fullName }</Text>
           
           <View style={styles.ratingContainer}>
             <Star size={18} color="#FFB400" fill="#FFB400" />
             <Text style={styles.rating}>
-              {tutor.rating} ({tutor.reviewCount} đánh giá)
+              {tutor.degree} 
             </Text>
           </View>
           
-          <View style={styles.subjectsContainer}>
-            {tutor.subjects.map((subject, index) => (
-              <View key={index} style={styles.subjectBadge}>
-                <Text style={styles.subjectText}>{subject}</Text>
-              </View>
-            ))}
-          </View>
+         
         </View>
         
         <View style={styles.infoCard}>
@@ -123,30 +120,18 @@ export default function TutorProfileScreen() {
             <View style={styles.infoItem}>
               <MapPin size={18} color={colors.textSecondary} />
               <Text style={styles.infoLabel}>Khu vực:</Text>
-              <Text style={styles.infoValue}>{tutor.location}</Text>
+              <Text style={styles.infoValue}>{user?.address}</Text>
             </View>
           </View>
           
-          <View style={styles.infoRow}>
-            <View style={styles.infoItem}>
-              <DollarSign size={18} color={colors.textSecondary} />
-              <Text style={styles.infoLabel}>Học phí:</Text>
-              <Text style={styles.infoValue}>{tutor.hourlyRate.toLocaleString('vi-VN')}đ/giờ</Text>
-            </View>
-          </View>
           
-          <View style={styles.infoRow}>
-            <View style={styles.infoItem}>
-              <Clock size={18} color={colors.textSecondary} />
-              <Text style={styles.infoLabel}>Lịch dạy:</Text>
-              <Text style={styles.infoValue}>{tutor.availability}</Text>
-            </View>
-          </View>
+          
+          
         </View>
         
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Giới thiệu</Text>
-          <Text style={styles.bioText}>{tutor.bio}</Text>
+          <Text style={styles.bioText}>{tutor.description}</Text>
         </View>
         
         <View style={styles.section}>
@@ -154,7 +139,7 @@ export default function TutorProfileScreen() {
             <Award size={20} color={colors.primary} />
             <Text style={styles.sectionTitle}>Học vấn</Text>
           </View>
-          <Text style={styles.educationText}>{tutor.education}</Text>
+          <Text style={styles.educationText}>{tutor.certificate}</Text>
         </View>
         
         <View style={styles.section}>
@@ -162,12 +147,7 @@ export default function TutorProfileScreen() {
             <Briefcase size={20} color={colors.primary} />
             <Text style={styles.sectionTitle}>Kinh nghiệm</Text>
           </View>
-          {tutor.experience.map((exp, index) => (
-            <View key={index} style={styles.experienceItem}>
-              <View style={styles.bulletPoint} />
-              <Text style={styles.experienceText}>{exp}</Text>
-            </View>
-          ))}
+           <Text style={styles.bioText}>{tutor.experience}</Text>
         </View>
         
         <View style={styles.actionsContainer}>

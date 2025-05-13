@@ -227,15 +227,17 @@ export default function RegisterScreen() {
           <View style={styles.optionContainer}>
             <Text style={styles.optionLabel}>Vai trò</Text>
             <View style={styles.optionGroup}>
-            {roles.map(role => (
-              <RadioButton
-                key={role.roleId}
-                selected={role.roleId === selectedRoleId}
-                onSelect={() => setSelectedRoleId(role.roleId)}
-                label={role.roleName}
-                style={styles.radioButton}
-              />
-            ))}
+            {roles.map(role => 
+              role.roleName === "Admin" ? null : (
+                <RadioButton
+                  key={role.roleId}
+                  selected={role.roleId === selectedRoleId}
+                  onSelect={() => setSelectedRoleId(role.roleId)}
+                  label={role.roleName}
+                  style={styles.radioButton}
+                />
+              )
+            )}
             </View>
           </View>
           

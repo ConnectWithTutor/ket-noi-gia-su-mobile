@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Image } from "react-native";
+import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { Bell, Search, BookOpen, Users, Calendar, MessageSquare, FileText } from "lucide-react-native";
 
@@ -8,36 +8,42 @@ import { BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS, SPACING } from "@/const
 import StatusBar from "@/components/ui/StatusBar";
 import { useAuthStore } from "@/store/auth-store";
 import { useScheduleStore } from "@/store/schedule-store";
-import { usePostStore } from "@/store/post-store";
+import { useStudentRequestStore } from "@/store/post-store";
 import { useTutorStore } from "@/store/tutor-store";
 import { formatTime } from "@/utils/date-utils";
 import { triggerHaptic } from "@/utils/haptics";
 import PostCard from "@/components/posts/PostCard";
 import TutorCard from "@/components/tutors/TutorCard";
+import { StudentRequest } from "@/types";
 
 export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { classes, fetchClasses } = useScheduleStore();
-  const { posts, fetchPosts } = usePostStore();
-  const { tutors, fetchTutors } = useTutorStore();
-  
-  useEffect(() => {
+  const {
+    recentRequests,
+    loading,
+    fetchRecentStudentRequests
+  } = useStudentRequestStore();
+  const { users, fetchTutors } = useTutorStore();
+    useEffect(() => {
     fetchClasses();
-    // fetchPosts();
+    fetchRecentStudentRequests();
     fetchTutors();
   }, []);
+  
   
   const upcomingClasses = classes
     .filter(c => c.status === "upcoming")
     .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
     .slice(0, 3);
+   const handleRequestPress = (request: StudentRequest) => {
+
+    router.push(`/student-request/${request.requestId}` as any);
+  };
+
   
-  const recentPosts = posts
-    .slice(0, 2);
-  
-  const recommendedTutors = tutors.slice(0, 4);
-  
+  const recommendedTutors = users.slice(0, 4);
   const handleFeaturePress = (feature: string) => {
     triggerHaptic('light');
     
@@ -59,19 +65,16 @@ export default function HomeScreen() {
     }
   };
   
-  const handlePostPress = (postId: string) => {
-    triggerHaptic('light');
-    router.push(`/post/${postId}` as any);
-  };
   
-  const handleTutorPress = (tutorId: string) => {
+  
+  const handleTutorPress = (userid: string) => {
     triggerHaptic('light');
-    router.push(`/tutor/${tutorId}` as any);
+    router.push(`/tutor/${userid}` as any);
   };
   
   const handleCreatePost = () => {
     triggerHaptic('medium');
-    router.push('/create-post' as any);
+    router.push('/student-request/create' as any);
   };
  const handleNotificationPress = () => {
       triggerHaptic('light');
@@ -158,12 +161,17 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
           
-          {recentPosts.length > 0 ? (
-            recentPosts.map(post => (
+           {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text style={styles.loadingText}>Đang tải bài đăng...</Text>
+            </View>
+          ) : recentRequests.length > 0 ? (
+            recentRequests.map(request => (
               <PostCard 
-                key={post.requestId} 
-                post={post} 
-                onPress={() => handlePostPress(post.requestId)} 
+                key={request.requestId} 
+                post={request} 
+                onPress={() => handleRequestPress(request)} 
               />
             ))
           ) : (
@@ -229,12 +237,12 @@ export default function HomeScreen() {
           </View>
           
           {recommendedTutors.length > 0 ? (
-            recommendedTutors.map(tutor => (
+            
+            recommendedTutors.map(user => (
               <TutorCard 
-                key={tutor.id} 
-                tutor={tutor} 
-                onPress={() => handleTutorPress(tutor.id)} 
-              />
+                key={user.userId}
+                user={user}
+                onPress={() => handleTutorPress(user.userId)}  />
             ))
           ) : (
             <View style={styles.emptyContainer}>

@@ -1,57 +1,63 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Image } from 'react-native';
-import { MapPin, Users, Clock, DollarSign } from 'lucide-react-native';
+import { MapPin, Users, Clock, DollarSign, Import } from 'lucide-react-native';
 
 import colors from '@/constants/Colors';
 import { BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS, SPACING } from '@/constants/Theme';
 import { StudentRequest } from '@/types/student-request';
+import { User } from '@/types/user';
 import { getRelativeTime } from '@/utils/date-utils';
-
+import { useUserProfileStore } from '@/store/profile-store';
+import PostStatus from './PostStatus';
+import { useSubjectStore } from '@/store/subjectStore';
+import { Subject } from '@/types';
 interface PostCardProps {
   post: StudentRequest;
   onPress: () => void;
 }
 
 export default function PostCard({ post, onPress }: PostCardProps) {
+   const { fetchUserById } = useUserProfileStore();
+   const [author, setAuthor] = React.useState<User | null>(null);
+   const { fetchSubjects, getSubjectById, subjects, loading}= useSubjectStore();
+   const [subject, setSubject] = React.useState<Subject | null>(null);
+   useEffect(() => {
+      fetchSubjects();
+      const fetchAuthor = async () => {
+      await fetchUserById(post.studentId) ;
+       setAuthor(useUserProfileStore.getState().user);
+     };
+     fetchAuthor();
+     
+   }, []);
+ useEffect(() => {
+ 
+  if (!loading && subjects.length > 0) {
+    const subject = getSubjectById(post.subjectId);
+    if (subject) {
+      setSubject(subject);
+    } else {
+      console.error(`Subject with ID ${post.subjectId} not found`);
+    }
+  }
+}, []);
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.8}>
       <View style={styles.header}>
-        {/* <View style={styles.userInfo}>
+        <View style={styles.userInfo}>
           <Image 
-            source={{ uri: post.userAvatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80' }} 
+            source={{ uri: author?.avatarUrl  || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80' }} 
             style={styles.avatar} 
           />
           <View>
-            <Text style={styles.userName}>{post.userName}</Text>
+            <Text style={styles.userName}>{author?.fullName}</Text>
             <Text style={styles.postTime}>{getRelativeTime(post.createdAt)}</Text>
           </View>
-        </View> */}
-        {/* <View style={[
-          styles.statusBadge, 
-          { 
-            backgroundColor: post.status === 'active' 
-              ? colors.primaryLight 
-              : post.status === 'closed' 
-                ? colors.danger + '20' 
-                : colors.warning + '20'
-          }
-        ]}>
-          <Text style={[
-            styles.statusText,
-            { 
-              color: post.status === 'active' 
-                ? colors.white 
-                : post.status === 'closed' 
-                  ? colors.danger 
-                  : colors.warning
-            }
-          ]}>
-            {post.status === 'active' ? 'Đang tìm' : post.status === 'closed' ? 'Đã đóng' : 'Đang xét duyệt'}
-          </Text>
-        </View> */}
+        </View>
+        <PostStatus statusId={post.status} />
       </View>
       
-      <Text style={styles.title}>title</Text>
+      <Text style={styles.title}>{post.title}</Text>
       <Text style={styles.description} numberOfLines={2}>{post.description}</Text>
       
       <View style={styles.infoContainer}>
@@ -72,18 +78,15 @@ export default function PostCard({ post, onPress }: PostCardProps) {
         
         <View style={styles.infoItem}>
           <DollarSign size={16} color={colors.textSecondary} />
-          <Text style={styles.infoText}>{post.tuitionFee.toLocaleString('vi-VN')}đ/giờ</Text>
+          <Text style={styles.infoText}>{post.tuitionFee}đ/giờ</Text>
         </View>
       </View>
       
       <View style={styles.footer}>
         <View style={styles.subjectBadge}>
-          <Text style={styles.subjectText}>{post.subjectId}</Text>
+          <Text style={styles.subjectText}>{subject?.subjectName_vi}</Text>
         </View>
         
-        {/* {post.applicants !== undefined && post.applicants > 0 && (
-          <Text style={styles.applicantsText}>{post.applicants} gia sư đã ứng tuyển</Text>
-        )} */}
       </View>
     </TouchableOpacity>
   );
@@ -116,7 +119,7 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: FONT_SIZE.md,
     fontWeight: '600',
-    color: colors.text,
+    color: colors.primary,
   },
   postTime: {
     fontSize: FONT_SIZE.xs,

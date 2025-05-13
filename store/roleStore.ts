@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { rolesApi } from "@/api/roles";
-import { Role, PaginatedData } from "@/types";
+import { Role } from "@/types";
 
 interface RoleState {
   roles: Role[];

@@ -1,18 +1,18 @@
+export interface Tutor {
+    tutorId: string;
+    userId: string;
+    degree: string;
+    certificate: string;
+    experience: string;
+    description: string;
+    introVideoUrl: string;
+    isApproved: boolean;
+  }
 export interface TutorProfile {
-    id: string;
-    name: string;
-    avatar?: string;
-    bio: string;
-    subjects: string[];
-    education: string;
-    experience: string[];
-    rating: number;
-    reviewCount: number;
-    hourlyRate: number;
-    availability: string;
-    location: string;
-    contactInfo?: {
-      email: string;
-      phone: string;
-    };
+     tutorId: string;
+    degree: string;
+    certificate: string;
+    experience: string;
+    description: string;
+    introVideoUrl: string;
   }

@@ -16,7 +16,6 @@ export default function LoginScreen() {
   const router = useRouter();
   const { login, isLoading, error } = useAuthStore();
   const [email, setEmail] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [formError, setFormError] = useState("");
@@ -24,13 +23,13 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     triggerHaptic('medium');
     
-    if (!email || !phoneNumber || !password) {
+    if (!email || !password) {
       setFormError("Vui lòng nhập đầy đủ");
       return;
     }
     
     try {
-      await login({ email, phoneNumber, password });
+      await login({ email,  password });
       router.replace("/(app)/(tabs)/home");
     } catch (error) {
       console.error("Login error:", error);
@@ -70,14 +69,7 @@ export default function LoginScreen() {
             icon={<Mail size={20} color={colors.textSecondary} />}
             error={formError && !email ? "Vui lòng nhập email" : ""}
           />
-          <Input
-            placeholder="Số điện thoại"
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-            keyboardType="phone-pad"
-            icon={<User size={20} color={colors.textSecondary} />}
-            error={formError && !phoneNumber ? "Vui lòng nhập số điện thoại" : ""}
-          />
+          
           
           <Input
             placeholder="Mật khẩu"

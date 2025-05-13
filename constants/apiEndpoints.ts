@@ -22,6 +22,7 @@ export const API_ENDPOINTS = {
     deleteUser: (user_id: string) => `${API_BASE_URL}/users/delete/${user_id}`,
 
     // Tutor Profile
+    tutorProfile: `${API_BASE_URL}/profiles/tutors`,
     tutorProfileById: (user_id: string) => `${API_BASE_URL}/profiles/tutors/${user_id}`,
     updateTutorProfiles: (user_id: string) => `${API_BASE_URL}/profiles/tutors/update/${user_id}`,
     approveTutorProfiles: (user_id: string) => `${API_BASE_URL}/profiles/tutors/approve/${user_id}`,
@@ -46,6 +47,7 @@ export const API_ENDPOINTS = {
 
     // Student Request
     studentRequest: `${API_BASE_URL}/student-request`,
+    studentRequestById: (id:string) => `${API_BASE_URL}/student-request/${id}`,
     studentRequestByLocation: (location: string) => `${API_BASE_URL}/student-request/get-by-location/${location}`,
     studentRequestByUser: (user_id: string) => `${API_BASE_URL}/student-request/get-by-user/${user_id}`,
     createStudentRequest: `${API_BASE_URL}/student-request/create`,
@@ -59,4 +61,34 @@ export const API_ENDPOINTS = {
     createTutorApplication: `${API_BASE_URL}/tutor-application/create`,
     updateTutorApplication: (application_id: string) => `${API_BASE_URL}/tutor-application/update/${application_id}`,
     deleteTutorApplication: (application_id: string) => `${API_BASE_URL}/tutor-application/delete/${application_id}`,
+
+    // status
+    // Payment Status
+    paymentStatus: `${API_BASE_URL}/status/payment`,
+    createPaymentStatus: `${API_BASE_URL}/status/payment/create`,
+    updatePaymentStatus: (status_id: string) => `${API_BASE_URL}/status/payment/update/${status_id}`,
+    deletePaymentStatus: (status_id: string) => `${API_BASE_URL}/status/payment/delete/${status_id}`,
+
+    // Schedule Status
+    scheduleStatus: `${API_BASE_URL}/status/schedule`,
+    createScheduleStatus: `${API_BASE_URL}/status/schedule/create`,
+    updateScheduleStatus: (status_id: string) => `${API_BASE_URL}/status/schedule/update/${status_id}`,
+    deleteScheduleStatus: (status_id: string) => `${API_BASE_URL}/status/schedule/delete/${status_id}`,
+
+    // Student Request Status
+    studentRequestStatus: `${API_BASE_URL}/status/student-request`,
+    createStudentRequestStatus: `${API_BASE_URL}/status/student-request/create`,
+    updateStudentRequestStatus: (status_id: string) => `${API_BASE_URL}/status/student-request/update/${status_id}`,
+    deleteStudentRequestStatus: (status_id: string) => `${API_BASE_URL}/status/student-request/delete/${status_id}`,
+
+    // Tutor Application Status
+    tutorApplicationStatus: `${API_BASE_URL}/status/tutor-application`,
+    createTutorApplicationStatus: `${API_BASE_URL}/status/tutor-application/create`,
+    updateTutorApplicationStatus: (status_id: string) => `${API_BASE_URL}/status/tutor-application/update/${status_id}`,
+    deleteTutorApplicationStatus: (status_id: string) => `${API_BASE_URL}/status/tutor-application/delete/${status_id}`,
+
+    // Class Status
+    createClassStatus: `${API_BASE_URL}/status/class/create`,
+    updateClassStatus: (status_id: string) => `${API_BASE_URL}/status/class/update/${status_id}`,
+    deleteClassStatus: (status_id: string) => `${API_BASE_URL}/status/class/delete/${status_id}`,
 }

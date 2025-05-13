@@ -7,6 +7,7 @@ import { Platform } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ErrorBoundary } from "./error-boundary";
 import { useAuthStore } from "@/store/auth-store";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 export const unstable_settings = {
   initialRouteName: "(auth)",
 };
@@ -43,7 +44,6 @@ export default function RootLayout() {
       setIsAuthenticated(auth);
       if (auth) {
         router.replace("/(app)/(tabs)/home");
-        console.log("Authenticated");
       }
     })();
   }, []);
@@ -52,7 +52,9 @@ export default function RootLayout() {
 return (
   <ErrorBoundary>
     <SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
       <RootLayoutNav isAuthenticated={isAuthenticated} />
+      </GestureHandlerRootView>
     </SafeAreaProvider>
   </ErrorBoundary>
 );

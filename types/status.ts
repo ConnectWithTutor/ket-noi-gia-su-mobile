@@ -4,3 +4,7 @@ export interface Status {
     name: string;
 }
 
+export interface StatusCreateRequest {
+    code: string;
+    name: string;
+}

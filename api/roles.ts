@@ -8,7 +8,7 @@ export const rolesApi = {
   },
   
   // Get role by ID
-  // getRoleById: async (id: string) => {
-  //   return api.get<ApiResponse<Role>>(`/roles/${id}`);
-  // }
+  getRoleById: async (id: string) => {
+    return api.get<ApiResponse<Role>>(`/roles/${id}`);
+  }
 };  

@@ -62,13 +62,13 @@ export default function TabsLayout() {
           tabBarIcon: ({ color }) => <Calendar size={24} color={color} />,
         }}
       />
-      {/* <Tabs.Screen
+      <Tabs.Screen
         name="posts"
         options={{
           title: 'Bài viết',
           tabBarIcon: ({ color }) => <FileText size={24} color={color} />,
         }}
-      /> */}
+      />
       <Tabs.Screen
         name="chat"
         options={{

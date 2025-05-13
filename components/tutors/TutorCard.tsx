@@ -1,54 +1,62 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Image } from 'react-native';
 import { MapPin, Star, DollarSign } from 'lucide-react-native';
 
 import colors from '@/constants/Colors';
 import { BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS, SPACING } from '@/constants/Theme';
-import { TutorProfile } from '@/types/tutor';
-
+import { Tutor,TutorProfile,User } from '@/types';
+import { useTutorStore } from '@/store/tutor-store';
 interface TutorCardProps {
-  tutor: TutorProfile;
+  user: User;
   onPress: () => void;
 }
 
-export default function TutorCard({ tutor, onPress }: TutorCardProps) {
+export default function TutorCard({ user, onPress }: TutorCardProps) {
+  const {getTutorById} = useTutorStore();
+  const [tutor, setTutor] = React.useState<TutorProfile | null>(null);
+  useEffect(() => {
+    getTutorById(user.userId);
+    const fetchTutor = async () => {
+      const tutorData = await getTutorById(user.userId);
+      if (tutorData) {
+        setTutor(tutorData);
+      }
+    };
+
+    fetchTutor();
+
+  }, [user.userId]);
+  if (!tutor) {
+    return null;
+  }
+
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.8}>
       <View style={styles.header}>
         <Image 
-          source={{ uri: tutor.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80' }} 
+          source={{ uri: user.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80' }} 
           style={styles.avatar} 
         />
         <View style={styles.headerInfo}>
-          <Text style={styles.name}>{tutor.name}</Text>
+          <Text style={styles.name}>{user.fullName}</Text>
           <View style={styles.ratingContainer}>
             <Star size={14} color="#FFB400" fill="#FFB400" />
+           
             <Text style={styles.rating}>
-              {tutor.rating} ({tutor.reviewCount} đánh giá)
+              {tutor.degree} ({tutor.degree} đánh giá)
             </Text>
           </View>
         </View>
       </View>
       
-      <View style={styles.subjectsContainer}>
-        {tutor.subjects.map((subject, index) => (
-          <View key={index} style={styles.subjectBadge}>
-            <Text style={styles.subjectText}>{subject}</Text>
-          </View>
-        ))}
-      </View>
+    
       
-      <Text style={styles.bio} numberOfLines={2}>{tutor.bio}</Text>
+      <Text style={styles.bio} numberOfLines={2}>{tutor.experience}</Text>
       
       <View style={styles.infoContainer}>
         <View style={styles.infoItem}>
           <MapPin size={16} color={colors.textSecondary} />
-          <Text style={styles.infoText}>{tutor.location}</Text>
-        </View>
-        
-        <View style={styles.infoItem}>
-          <DollarSign size={16} color={colors.textSecondary} />
-          <Text style={styles.infoText}>{tutor.hourlyRate.toLocaleString('vi-VN')}đ/giờ</Text>
+          <Text style={styles.infoText}>{user.address}</Text>
         </View>
       </View>
     </TouchableOpacity>

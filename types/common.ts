@@ -1,39 +1,34 @@
 // Common API response types
 
+export interface PaginatedResponse<T> {
+  success: boolean;
+  message?: string;
+  error?: string;
+  statusCode?: number;
+  detail?: ErrorResponse;
+  pagination: paginatedData;
+  data: T[];
+}
+export interface SingleItemResponse<T> {
+  detail?: ErrorResponse;
+  pagination: paginatedData;
+  data: T;
+}
+export interface ErrorResponse {
+    loc: (string | number)[];
+    msg: string;
+    type: string;
+  
+}
 
-  
-  export interface PaginatedResponse<T> {
-    pagination: {
-        currentPage: number;
-        totalPages: number;
-        totalItems: number;
-      };
-    data: T[];
-  }
-  
-  export interface PaginatedData<T> {
-    currentPage: number;
-    totalPages: number;
-    totalItems: number;
-  }
-  
-  export interface ErrorResponse {
-    success: false;
-    message: string;
-    error?: string;
-    statusCode?: number;
-  }
-  
+export interface paginatedData
+{
+  currentPage: number;
+  totalItems: number;
+  totalPages: number;
+}
+
   export interface SearchParams {
     page?: number;
     limit?: number;
   }
-export interface ValidationErrorDetail {
-    loc: (string | number)[];
-    msg: string;
-    type: string;
-}
-
-export interface ValidationErrorResponse {
-    detail: ValidationErrorDetail[];
-}

@@ -3,8 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { authApi } from "@/api/auth";
 import { 
-  ApiResponse, 
-  AuthResponse, 
+ 
   LoginRequest, 
   RegisterRequest, 
   User 
@@ -76,6 +75,18 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
         try {
           const response = await authApi.register(userData);
+          if (response) {
+           
+              set({
+                 isLoading: false,
+              });
+           
+          } else {
+            set({
+              isLoading: false,
+              error: "Registration failed",
+            });
+          }
         } catch (error: any) {
           set({
             isLoading: false,

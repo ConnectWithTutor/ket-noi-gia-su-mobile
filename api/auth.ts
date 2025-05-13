@@ -1,6 +1,5 @@
 import { api, getAuthToken } from "@/services/api";
 import { 
-  ApiResponse, 
   AuthResponse, 
   LoginRequest, 
   RegisterRequest, 
@@ -17,12 +16,12 @@ export const authApi = {
   },
   
   register: (userData: RegisterRequest) => {
-    return api.post<ApiResponse<AuthResponse>>("/auth/register", userData);
+    return api.post<AuthResponse>("/auth/register", userData);
   },
   
   logout: async () => {
     const token = await getAuthToken();
-    return api.post<ApiResponse<null>>("/auth/logout", {}, { headers: { Authorization: `Bearer ${token || ''}` } });
+    return api.post<null>("/auth/logout", {}, { headers: { Authorization: `Bearer ${token || ''}` } });
   },
   
   getCurrentUser: async () => {
@@ -32,11 +31,11 @@ export const authApi = {
   },
 
   forgotPassword: (email: string) => {
-    return api.post<ApiResponse<{ message: string }>>("/auth/forgot-password", { email });
+    return api.post<{ message: string }>("/auth/forgot-password", { email });
   },
 
   resetPassword: (token: string, password: string) => {
-    return api.post<ApiResponse<{ message: string }>>("/auth/reset-password", { 
+    return api.post<{ message: string }>("/auth/reset-password", { 
       token, 
       password 
     });
@@ -46,7 +45,7 @@ export const authApi = {
     const token = await getAuthToken();
     if (!token) throw new Error("No authentication token found");
     
-    return api.post<ApiResponse<{ message: string }>>("/auth/change-password", {
+    return api.post<{ message: string }>("/auth/change-password", {
       oldPassword,
       newPassword
     }, { headers: { Authorization: `Bearer ${token}` } });

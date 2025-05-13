@@ -1,168 +1,298 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { StudentRequest, StudentRequestCreateRequest,  } from '@/types/student-request';
-import { studentRequestsApi } from '@/api/studentRequests';
+import { create } from "zustand";
+import { studentRequestsApi } from "@/api/studentRequests";
+import { 
+  StudentRequest, 
+  StudentRequestCreateRequest, 
+  StudentRequestUpdateRequest, 
+  Status,
+  PaginatedResponse,
+} from "@/types";
+import { StatusApi } from "@/api/status";
 
-interface PostState {
-  posts: StudentRequest[];
-  userPosts: StudentRequest[];
-  isLoading: boolean;
+interface StudentRequestState {
+  requests: StudentRequest[];
+  myRequests: StudentRequest[];
+  recentRequests: StudentRequest[];
+  selectedRequest: StudentRequest | null;
+  loading: boolean;
   error: string | null;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+  fetchStudentRequests: (page?: number, limit?: number) => Promise<void>;
+  fetchRecentStudentRequests: (limit?: number) => Promise<void>;
+  fetchMyStudentRequests: (userId:string,page?: number, limit?: number) => Promise<void>;
+  fetchStudentRequestById: (id: string) => Promise<void>;
+  createStudentRequest: (data: StudentRequestCreateRequest) => Promise<boolean>;
+  updateStudentRequest: (id: string, data: StudentRequestUpdateRequest) => Promise<boolean>;
+  deleteStudentRequest: (id: string) => Promise<boolean>;
+  nextPage: () => Promise<void>;
+  prevPage: () => Promise<void>;
+  clearError: () => void;
 }
 
-interface PostStore extends PostState {
-  fetchPosts: () => Promise<void>;
-  // fetchUserPosts: (userId: string) => Promise<void>;
-  // getPostById: (id: string) => StudentRequest | undefined;
-  // createPost: (postData: StudentRequestCreateRequest, userId: string, userName: string, userAvatar?: string) => Promise<StudentRequest>;
-  // updatePost: (id: string, postData: Partial<StudentRequest>) => Promise<void>;
-  // deletePost: (id: string) => Promise<void>;
-  // closePost: (id: string) => Promise<void>;
-}
+export const useStudentRequestStore = create<StudentRequestState>((set, get) => ({
+  requests: [],
+  myRequests: [],
+  recentRequests: [],
+  selectedRequest: null,
+  loading: false,
+  error: null,
+  pagination: {
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0
+  },
+ 
+  fetchStudentRequests: async (page = 1, limit = 10) => {
+    set({ loading: true, error: null });
 
-export const usePostStore = create<PostStore>()(
-  persist(
-    (set, get) => ({
-      posts: [],
-      userPosts: [],
-      isLoading: false,
-      error: null,
+    try {
+      const response = await studentRequestsApi.getStudentRequests(page, limit);
+      if (response.data) {
 
-      fetchPosts: async () => {
-        set({ isLoading: true, error: null });
-        try {
-          // Simulate API call
-          const response = await studentRequestsApi.getStudentRequests();
-          console.log("Posts response:", response);
-          
-          set({ posts: response.data, isLoading: false });
-        } catch (error) {
-          set({ 
-            error: "Không thể tải danh sách bài đăng. Vui lòng thử lại sau.", 
-            isLoading: false 
-          });
-        }
-      },
-
-      // fetchUserPosts: async (userId) => {
-      //   set({ isLoading: true, error: null });
-      //   try {
-      //     // Simulate API call
-      //     await new Promise((resolve) => setTimeout(resolve, 1000));
-          
-      //     // Filter posts by userId
-      //     const userPosts = get().posts.filter(post => post.userId === userId);
-          
-      //     set({ userPosts, isLoading: false });
-      //   } catch (error) {
-      //     set({ 
-      //       error: "Không thể tải danh sách bài đăng của bạn. Vui lòng thử lại sau.", 
-      //       isLoading: false 
-      //     });
-      //   }
-      // },
-
-      // getPostById: (id) => {
-      //   return get().posts.find(post => post.id === id);
-      // },
-
-      // createPost: async (postData, userId, userName, userAvatar) => {
-      //   set({ isLoading: true, error: null });
-      //   try {
-      //     // Simulate API call
-      //     await new Promise((resolve) => setTimeout(resolve, 1000));
-          
-      //     const newPost: Post = {
-      //       id: Date.now().toString(),
-      //       ...postData,
-      //       userId,
-      //       userName,
-      //       userAvatar,
-      //       createdAt: new Date().toISOString(),
-      //       status: 'active' as PostStatus,
-      //       applicants: 0,
-      //     };
-          
-      //     set(state => ({
-      //       posts: [newPost, ...state.posts],
-      //       isLoading: false,
-      //     }));
-          
-      //     return newPost;
-      //   } catch (error) {
-      //     set({ 
-      //       error: "Không thể tạo bài đăng. Vui lòng thử lại sau.", 
-      //       isLoading: false 
-      //     });
-      //     throw error;
-      //   }
-      // },
-
-      // updatePost: async (id, postData) => {
-      //   set({ isLoading: true, error: null });
-      //   try {
-      //     // Simulate API call
-      //     await new Promise((resolve) => setTimeout(resolve, 1000));
-          
-      //     set(state => ({
-      //       posts: state.posts.map(post => 
-      //         post.id === id ? { ...post, ...postData } : post
-      //       ),
-      //       isLoading: false,
-      //     }));
-      //   } catch (error) {
-      //     set({ 
-      //       error: "Không thể cập nhật bài đăng. Vui lòng thử lại sau.", 
-      //       isLoading: false 
-      //     });
-      //     throw error;
-      //   }
-      // },
-
-      // deletePost: async (id) => {
-      //   set({ isLoading: true, error: null });
-      //   try {
-      //     // Simulate API call
-      //     await new Promise((resolve) => setTimeout(resolve, 1000));
-          
-      //     set(state => ({
-      //       posts: state.posts.filter(post => post.id !== id),
-      //       isLoading: false,
-      //     }));
-      //   } catch (error) {
-      //     set({ 
-      //       error: "Không thể xóa bài đăng. Vui lòng thử lại sau.", 
-      //       isLoading: false 
-      //     });
-      //     throw error;
-      //   }
-      // },
-
-      // closePost: async (id) => {
-      //   set({ isLoading: true, error: null });
-      //   try {
-      //     // Simulate API call
-      //     await new Promise((resolve) => setTimeout(resolve, 1000));
-          
-      //     set(state => ({
-      //       posts: state.posts.map(post => 
-      //         post.id === id ? { ...post, status: 'closed' as PostStatus } : post
-      //       ),
-      //       isLoading: false,
-      //     }));
-      //   } catch (error) {
-      //     set({ 
-      //       error: "Không thể đóng bài đăng. Vui lòng thử lại sau.", 
-      //       isLoading: false 
-      //     });
-      //     throw error;
-      //   }
-      // },
-    }),
-    {
-      name: 'post-storage',
-      storage: createJSONStorage(() => AsyncStorage),
+        const paginatedData = response as PaginatedResponse<StudentRequest>;
+        set({ 
+          requests: paginatedData.data || [],
+          pagination: {
+            page: paginatedData.pagination.currentPage,
+            limit: limit,
+            total: paginatedData.pagination.totalItems,
+            totalPages: paginatedData.pagination.totalPages
+          },
+          loading: false
+        });
+      } else {
+        set({ 
+          loading: false, 
+          error: response.detail?.msg || "Không thể lấy danh sách yêu cầu học sinh" 
+        });
+      }
+    } catch (error: any) {
+      set({ 
+        loading: false, 
+        error: error.message || "Không thể lấy danh sách yêu cầu học sinh" 
+      });
     }
-  )
-);
+  },
+  
+  fetchRecentStudentRequests: async (limit = 4) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await studentRequestsApi.getStudentRequests();
+      const sortedData = response.data.sort((a: StudentRequest, b: StudentRequest) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      
+      if (response.data) {
+        set({ 
+          recentRequests: sortedData.slice(0, 3) || [],
+          loading: false
+        });
+      } else {
+        set({ 
+          loading: false, 
+          error: response.message || "Không thể lấy danh sách yêu cầu gần đây" 
+        });
+      }
+    } catch (error: any) {
+      set({ 
+        loading: false, 
+        error: error.message || "Không thể lấy danh sách yêu cầu gần đây" 
+      });
+    }
+  },
+  
+  fetchMyStudentRequests: async (id ,page = 1, limit = 10) => {
+    set({ loading: true, error: null });
+    try {
+      
+      const response = await studentRequestsApi.getMyStudentRequests(id,page, limit);
+      if ( response.data) {
+        set({ 
+          myRequests: response.data || [],
+          loading: false
+        });
+      } else {
+        set({ 
+          loading: false, 
+          error: response.detail?.msg || "Không thể lấy danh sách yêu cầu của bạn" 
+        });
+      }
+    } catch (error: any) {
+      set({ 
+        loading: false, 
+        error: error.message || "Không thể lấy danh sách yêu cầu của bạn" 
+      });
+    }
+  },
+  
+  fetchStudentRequestById: async (id) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await studentRequestsApi.getStudentRequestById(id);
+      if (response.data) {
+        set({ 
+          selectedRequest: response.data,
+          loading: false
+        });
+      } else {
+        set({ 
+          loading: false, 
+          error: response.detail?.msg || "Không thể lấy thông tin yêu cầu học sinh" 
+        });
+      }
+    } catch (error: any) {
+      set({ 
+        loading: false, 
+        error: error.message || "Không thể lấy thông tin yêu cầu học sinh" 
+      });
+    }
+  },
+  
+  createStudentRequest: async (data) => {
+    set({ loading: true, error: null });
+    try {
+      const statusResponse = await StatusApi.getStatusStudentRequest(1, 20) ; 
+      const statusList = Array.isArray(statusResponse.data) ? (statusResponse.data as Status[]) : [];
+      const pendingStatus: Status | undefined = statusList.find(
+    (status) => status.code.toLowerCase() === "pending"
+      );
+
+      const response = await studentRequestsApi.createStudentRequest({
+        ...data,
+        status: pendingStatus?.statusId || ""
+      });
+      if (response) {
+        await get().fetchMyStudentRequests(data.studentId,1, 10);
+        set({ loading: false });
+        return true;
+      } else {
+        set({
+          loading: false, 
+          error: statusResponse.detail?.msg || "Không thể tạo yêu cầu học sinh"
+        });
+        return false;
+      }
+    } catch (error: any) {
+      set({ 
+        loading: false, 
+        error: error.message || "Không thể tạo yêu cầu học sinh" 
+      });
+      return false;
+    }
+  },
+  
+  updateStudentRequest: async (id, data) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await studentRequestsApi.updateStudentRequest(id, data);
+      if (response.success && response.data) {
+        set(state => ({
+          myRequests: state.myRequests.map(r => 
+            r.requestId === id ? { ...r, ...response.data } : r
+          ),
+          requests: state.requests.map(r => 
+            r.requestId === id ? { ...r, ...response.data } : r
+          ),
+          selectedRequest: state.selectedRequest?.requestId === id 
+            ? { ...state.selectedRequest, ...response.data } 
+            : state.selectedRequest,
+          loading: false
+        }));
+        return true;
+      } else {
+        set({ 
+          loading: false, 
+          error: response.detail?.msg || "Không thể cập nhật yêu cầu học sinh" 
+        });
+        return false;
+      }
+    } catch (error: any) {
+      set({ 
+        loading: false, 
+        error: error.message || "Không thể cập nhật yêu cầu học sinh" 
+      });
+      return false;
+    }
+  },
+  closeStudentRequest: async (id:string) => {
+    set({ loading: true, error: null });
+    try {
+      const statusResponse = await StatusApi.getStatusStudentRequest(1, 20) ;
+      const statusList = Array.isArray(statusResponse.data) ? (statusResponse.data as Status[]) : [];
+      const closedStatus: Status | undefined = statusList.find(
+        (status) => status.code.toLowerCase() === "Cancelled"
+      );
+      const response = await studentRequestsApi.updateStudentRequest(id, { status: closedStatus?.statusId });
+      if (response.success) {
+        set(state => ({
+          myRequests: state.myRequests.filter(r => r.requestId !== id),
+          requests: state.requests.filter(r => r.requestId !== id),
+          selectedRequest: state.selectedRequest?.requestId === id ? null : state.selectedRequest,
+          loading: false
+        }));
+        return true;
+      } else {
+        set({ 
+          loading: false, 
+          error: response.detail?.msg || "Không thể đóng yêu cầu học sinh" 
+        });
+        return false;
+      }
+    } catch (error: any) {
+      set({ 
+        loading: false, 
+        error: error.message || "Không thể đóng yêu cầu học sinh" 
+      });
+      return false;
+    }
+  },
+  deleteStudentRequest: async (id) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await studentRequestsApi.deleteStudentRequest(id);
+      if (response.success) {
+        set(state => ({
+          myRequests: state.myRequests.filter(r => r.requestId !== id),
+          requests: state.requests.filter(r => r.requestId !== id),
+          selectedRequest: state.selectedRequest?.requestId === id ? null : state.selectedRequest,
+          loading: false
+        }));
+        return true;
+      } else {
+        set({ 
+          loading: false, 
+          error: response.detail?.msg || "Không thể xóa yêu cầu học sinh" 
+        });
+        return false;
+      }
+    } catch (error: any) {
+      set({ 
+        loading: false, 
+        error: error.message || "Không thể xóa yêu cầu học sinh" 
+      });
+      return false;
+    }
+  },
+  
+  nextPage: async () => {
+    const { pagination } = get();
+    if (pagination.page < pagination.totalPages) {
+      await get().fetchStudentRequests(pagination.page + 1);
+    }
+  },
+  
+  prevPage: async () => {
+    const { pagination } = get();
+    if (pagination.page > 1) {
+      await get().fetchStudentRequests(pagination.page - 1);
+    }
+  },
+  
+  clearError: () => set({ error: null })
+}));

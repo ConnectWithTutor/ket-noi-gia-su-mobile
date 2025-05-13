@@ -12,16 +12,17 @@ import { useAuthStore } from "@/store/auth-store";
 import { triggerHaptic } from "@/utils/haptics";
 import Header from "@/components/ui/Header";
 import StatusBar from "@/components/ui/StatusBar";
-
+import {getCurrentAddress} from "@/hooks/useCurrentAddress";
+import DatePicker from "@/components/ui/DatePickerInput";
 export default function PersonalInfoScreen() {
   const router = useRouter();
   const { user, updateUser, isLoading } = useAuthStore();
-  
   const [formData, setFormData] = useState({
-    name: user?.name || "",
+    fullName: user?.fullName || "",
     email: user?.email || "",
-    phone: user?.phone || "",
-    bio: user?.bio || "",
+    phoneNumber: user?.phoneNumber || "",
+    birthDate: user?.birthDate || "",
+    address: user?.address || "",
   });
 
   const handleChange = (field: string, value: string) => {
@@ -39,7 +40,26 @@ export default function PersonalInfoScreen() {
       Alert.alert("Lỗi", "Không thể cập nhật thông tin. Vui lòng thử lại sau.");
     }
   };
+  const handleGetAddress = async () => {
+    triggerHaptic('medium');
+    try {
+      const address = await getCurrentAddress();
+      console.log(address);
+      if (address) {
+         setFormData((prev) => ({
+      ...prev,
+      address: address,
+    }));
+        Alert.alert("Thành công", "Địa chỉ đã được cập nhật");
 
+      }
+      else {
+        Alert.alert("Lỗi", "Không thể lấy địa chỉ mới. Vui lòng thử lại sau.");
+      }
+    } catch (error) {
+      Alert.alert("Lỗi", "Không thể lấy địa chỉ mới. Vui lòng thử lại sau.");
+    }
+  };
   return (
     <View style={styles.container}>
         <StatusBar backgroundColor={colors.primary} />
@@ -68,10 +88,10 @@ export default function PersonalInfoScreen() {
       >
         <View style={styles.avatarContainer}>
           <View style={styles.avatar}>
-            {user?.avatar ? (
+            {user?.avatarUrl ? (
               <TouchableOpacity style={styles.avatarImage}>
                 <Image 
-                  src={user.avatar} 
+                  src={user.avatarUrl } 
                   alt="User avatar" 
                   style={{ width: '100%', height: '100%', borderRadius: 60 }} 
                 />
@@ -82,7 +102,7 @@ export default function PersonalInfoScreen() {
             ) : (
               <TouchableOpacity style={styles.avatarPlaceholder}>
                 <Text style={styles.avatarPlaceholderText}>
-                  {user?.name?.charAt(0) || "U"}
+                  {user?.fullName?.charAt(0) || "U"}
                 </Text>
                 <View style={styles.cameraButton}>
                   <Camera size={20} color={colors.white} />
@@ -96,8 +116,8 @@ export default function PersonalInfoScreen() {
         <View style={styles.formContainer}>
           <Input
             label="Họ và tên"
-            value={formData.name}
-            onChangeText={(text) => handleChange("name", text)}
+            value={formData.fullName}
+            onChangeText={(text) => handleChange("fullName", text)}
             placeholder="Nhập họ và tên"
             containerStyle={styles.inputContainer}
           />
@@ -113,23 +133,32 @@ export default function PersonalInfoScreen() {
           
           <Input
             label="Số điện thoại"
-            value={formData.phone}
-            onChangeText={(text) => handleChange("phone", text)}
+            value={formData.phoneNumber}
+            onChangeText={(text) => handleChange("phoneNumber", text)}
             placeholder="Nhập số điện thoại"
             keyboardType="phone-pad"
             containerStyle={styles.inputContainer}
           />
-          
+           <DatePicker
+              value={formData.birthDate}
+              onChange={(value) => handleChange('birthDate', value)}
+            />
+
           <Input
-            label="Giới thiệu bản thân"
-            value={formData.bio}
-            onChangeText={(text) => handleChange("bio", text)}
-            placeholder="Nhập giới thiệu bản thân"
-            multiline
-            numberOfLines={4}
+            label="Địa chỉ"
+            value={formData.address}
+            onChangeText={(text) => handleChange("address", text)}
+            placeholder="Nhập địa chỉ"
+            editable={false}
             containerStyle={styles.inputContainer}
+            textAlignVertical="top"
+            
           />
-          
+          <Button
+            title="Lấy địa chỉ mới"
+            onPress={() => handleGetAddress()}
+            style={styles.saveButton}
+          />
           <Button
             title="Lưu thay đổi"
             onPress={handleSubmit}
@@ -218,10 +247,10 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   textArea: {
-    height: 100,
     textAlignVertical: "top",
   },
   saveButton: {
     marginTop: SPACING.md,
-  },
+  }
+  
 });

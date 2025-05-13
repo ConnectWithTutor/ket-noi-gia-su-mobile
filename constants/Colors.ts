@@ -15,6 +15,7 @@ export default  {
   textSecondary: '#757575',
   textLight: '#BDBDBD',
   border: '#E0E0E0',
+  error: '#F44336',
   divider: '#EEEEEE',
   noticeMark: '#EBF5FE',
   placeholder: '#9E9E9E',
