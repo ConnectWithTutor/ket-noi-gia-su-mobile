@@ -1,5 +1,5 @@
 import { api } from "@/services/api";
-import { ApiResponse, PaginatedResponse, Role } from "@/types";
+import {SingleItemResponse, PaginatedResponse, Role } from "@/types";
 
 export const rolesApi = {
   // Get all roles
@@ -9,6 +9,6 @@ export const rolesApi = {
   
   // Get role by ID
   getRoleById: async (id: string) => {
-    return api.get<ApiResponse<Role>>(`/roles/${id}`);
+    return api.get<SingleItemResponse<Role>>(`/roles/${id}`);
   }
 };  

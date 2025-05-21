@@ -44,12 +44,12 @@ export default function PersonalInfoScreen() {
     triggerHaptic('medium');
     try {
       const address = await getCurrentAddress();
-      console.log(address);
       if (address) {
          setFormData((prev) => ({
       ...prev,
       address: address,
-    }));
+      }));
+      
         Alert.alert("Thành công", "Địa chỉ đã được cập nhật");
 
       }

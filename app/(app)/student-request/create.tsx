@@ -27,7 +27,6 @@ import Header from "@/components/ui/Header";
 const STUDY_TYPES = [
   { id: "online", label: "Online" },
   { id: "offline", label: "Offline" },
-  { id: "hybrid", label: "Hybrid" }
 ];
 
 export default function CreateStudentRequestScreen() {
@@ -314,6 +313,7 @@ export default function CreateStudentRequestScreen() {
                 {errors.tuitionFee && <Text style={styles.errorText}>{errors.tuitionFee}</Text>}
               </View>
             </View>
+            {/* Địa chỉ liên hệ (không bắt buộc) */}
             
             <View style={styles.formSection}>
               <Text style={styles.sectionTitle}>Mô tả chi tiết</Text>

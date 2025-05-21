@@ -88,7 +88,31 @@ export const API_ENDPOINTS = {
     deleteTutorApplicationStatus: (status_id: string) => `${API_BASE_URL}/status/tutor-application/delete/${status_id}`,
 
     // Class Status
+    classesStatus: `${API_BASE_URL}/status/class`,
     createClassStatus: `${API_BASE_URL}/status/class/create`,
     updateClassStatus: (status_id: string) => `${API_BASE_URL}/status/class/update/${status_id}`,
     deleteClassStatus: (status_id: string) => `${API_BASE_URL}/status/class/delete/${status_id}`,
+
+    // Class Registration
+    classRegistration: `${API_BASE_URL}/class-registration`,
+    classRegistrationByClass: (class_id: string) => `${API_BASE_URL}/class-registration/get-by-class/${class_id}`,
+    classRegistrationById: (registration_id: string) => `${API_BASE_URL}/class-registration/get-by-id/${registration_id}`,
+    classRegistrationByStudent: (student_id: string) => `${API_BASE_URL}/class-registration/get-by-student/${student_id}`,
+    createClassRegistration: `${API_BASE_URL}/class-registration/create`,
+    deleteClassRegistration: (registration_id: string) => `${API_BASE_URL}/class-registration/delete/${registration_id}`,
+
+    // Schedule
+    schedulesByClass: (class_id: string) => `${API_BASE_URL}/schedules/get-by-class/${class_id}`,
+    schedulesById: (schedule_id: string) => `${API_BASE_URL}/schedules/get-by-id/${schedule_id}`,
+    createSchedule: `${API_BASE_URL}/schedules/create`,
+    createBulkSchedules: `${API_BASE_URL}/schedules/create-bulk-schedules`,
+    updateSchedule: (schedule_id: string) => `${API_BASE_URL}/schedules/update/${schedule_id}`,
+    deleteSchedule: (schedule_id: string) => `${API_BASE_URL}/schedules/delete/${schedule_id}`,
+
+    // Addresses
+    addresses: `${API_BASE_URL}/addresses`,
+    addressById: (user_request_class_id: string) => `${API_BASE_URL}/addresses/get-by-id/${user_request_class_id}`,
+    createAddress: `${API_BASE_URL}/addresses/create`,
+    updateAddress: (address_id: string) => `${API_BASE_URL}/addresses/update/${address_id}`,
+    deleteAddress: (address_id: string) => `${API_BASE_URL}/addresses/delete/${address_id}`,
 }

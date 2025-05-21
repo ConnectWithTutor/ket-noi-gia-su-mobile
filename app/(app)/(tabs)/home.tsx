@@ -1,25 +1,27 @@
 import React, { useEffect } from "react";
 import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
-import { Bell, Search, BookOpen, Users, Calendar, MessageSquare, FileText } from "lucide-react-native";
+import { Bell, Search, BookOpen, Users, Calendar, MessageSquare, FileText, School } from "lucide-react-native";
 
 import colors from "@/constants/Colors";
 import { BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS, SPACING } from "@/constants/Theme";
 import StatusBar from "@/components/ui/StatusBar";
 import { useAuthStore } from "@/store/auth-store";
-import { useScheduleStore } from "@/store/schedule-store";
 import { useStudentRequestStore } from "@/store/post-store";
 import { useTutorStore } from "@/store/tutor-store";
-import { formatTime } from "@/utils/date-utils";
+import { formatDate, formatTime } from "@/utils/date-utils";
 import { triggerHaptic } from "@/utils/haptics";
 import PostCard from "@/components/posts/PostCard";
 import TutorCard from "@/components/tutors/TutorCard";
-import { StudentRequest } from "@/types";
+import { StudentRequest, Tutor, User } from "@/types";
+import { useClassStore } from "@/store/class-store";
+import { useStatusStore } from "@/store/status-store";
 
 export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const { classes, fetchClasses } = useScheduleStore();
+  const { classes, fetchClasses } = useClassStore();
+  const {StatusesClass, fetchStatusesClass} = useStatusStore();
   const {
     recentRequests,
     loading,
@@ -28,14 +30,15 @@ export default function HomeScreen() {
   const { users, fetchTutors } = useTutorStore();
     useEffect(() => {
     fetchClasses();
+    fetchStatusesClass();
     fetchRecentStudentRequests();
     fetchTutors();
   }, []);
   
-  
+  const PendingClass = StatusesClass.find((status) => status.code === "Pending");
   const upcomingClasses = classes
-    .filter(c => c.status === "upcoming")
-    .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
+    .filter(c => c.status === PendingClass?.statusId)
+    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
     .slice(0, 3);
    const handleRequestPress = (request: StudentRequest) => {
 
@@ -65,7 +68,10 @@ export default function HomeScreen() {
     }
   };
   
-  
+  const getTutor = (tutorId: string): User => {
+    const tutor = users.find(user => user.userId === tutorId);
+    return tutor ?? user!;
+  };
   
   const handleTutorPress = (userid: string) => {
     triggerHaptic('light');
@@ -126,9 +132,9 @@ export default function HomeScreen() {
               onPress={() => handleFeaturePress("tutors")}
             >
               <View style={[styles.featureIcon, { backgroundColor: "#FFE0B2" }]}>
-                <Users size={24} color="#FF9800" />
+                <School size={24} color="#FF9800" />
               </View>
-              <Text style={styles.featureText}>Gia sư</Text>
+              <Text style={styles.featureText}>Lớp học</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
@@ -200,24 +206,24 @@ export default function HomeScreen() {
           {upcomingClasses.length > 0 ? (
             upcomingClasses.map((classItem) => (
               <TouchableOpacity 
-                key={classItem.id} 
+                key={classItem.classId} 
                 style={styles.classCard}
                 onPress={() => {}}
               >
                 <View style={styles.classInfo}>
-                  <Text style={styles.classTitle}>{classItem.title}</Text>
+                  <Text style={styles.classTitle}>{classItem.className_vi}</Text>
                   <Text style={styles.classTime}>
-                    {formatTime(classItem.startTime)} - {formatTime(classItem.endTime)}
+                    {formatDate(classItem.startDate)} 
                   </Text>
-                  <Text style={styles.classLocation}>{classItem.location}</Text>
+                  <Text style={styles.classLocation}>{classItem.description}</Text>
                 </View>
                 
                 <View style={styles.tutorInfo}>
                   <Image
-                    source={{ uri: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80" }}
+                    source={{ uri: getTutor(classItem.tutorId).avatarUrl ||  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80" }}
                     style={styles.tutorAvatar}
                   />
-                  <Text style={styles.tutorName}>{classItem.tutorName}</Text>
+                  <Text style={styles.tutorName}>{getTutor(classItem.tutorId).fullName}</Text>
                 </View>
               </TouchableOpacity>
             ))

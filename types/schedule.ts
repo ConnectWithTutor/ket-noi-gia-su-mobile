@@ -1,26 +1,26 @@
-export type ClassStatus = 'upcoming' | 'completed' | 'cancelled';
+export interface Schedule {
+  scheduleId: string;
+  classId: string;
+  zoomUrl?: string;
+  zoomMeetingId?: string;
+  zoomPassword?: string;
+  dayStudying: string; // ISO date string for specific date
+  startTime: string; // ISO time string
+  endTime: string; // ISO time string
+  status: string;
+}
 
-export interface Class {
-  id: string;
-  title: string;
-  description?: string;
-  tutorId: string;
-  tutorName: string;
-  studentId: string;
-  studentName: string;
-  subject: string;
+export interface WeeklySchedule {
+  classId: string;
+  weekdays: number[]; // 0 = Sunday, 1 = Monday, etc.
+  startTime: string; // ISO time string
+  endTime: string; // ISO time string
+}
+
+export interface ScheduleCreateRequest {
+  classId: string;
+  dayStudying: string;
   startTime: string;
   endTime: string;
-  location: string;
-  status: ClassStatus;
-  notes?: string;
 }
 
-export interface CalendarDay {
-  date: number;
-  month: number;
-  year: number;
-  isCurrentMonth: boolean;
-  isToday: boolean;
-  hasEvents: boolean;
-}

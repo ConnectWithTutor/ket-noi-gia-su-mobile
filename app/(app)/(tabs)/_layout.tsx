@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Home, Calendar, MessageSquare, FileText, User, Bell } from 'lucide-react-native';
+import { Home, Calendar, MessageSquare, FileText, User, Bell,School } from 'lucide-react-native';
 import { TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
@@ -55,9 +55,9 @@ export default function TabsLayout() {
           tabBarIcon: ({ color }) => <Home size={24} color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="schedule"
-        options={{
+     <Tabs.Screen
+       name="schedule"
+         options={{
           title: 'Lịch học',
           tabBarIcon: ({ color }) => <Calendar size={24} color={color} />,
         }}
@@ -77,6 +77,13 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="class"
+        options={{
+          title: 'Lớp học',
+          tabBarIcon: ({ color }) => <School size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: 'Cá nhân',
@@ -84,5 +91,6 @@ export default function TabsLayout() {
         }}
       />
     </Tabs>
+    
   );
 }

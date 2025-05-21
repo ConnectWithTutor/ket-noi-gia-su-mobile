@@ -1,17 +1,17 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { Clock, MapPin, User } from 'lucide-react-native';
 import colors from '@/constants/Colors';
 import { BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS, SPACING } from '@/constants/Theme';
-
-export type ClassStatus = 'upcoming' | 'completed' | 'cancelled';
-
+import { useStatusStore } from '@/store/status-store';
+import { Status } from '@/types/status';
+import { useUserProfileStore } from '@/store/profile-store';
 interface ClassCardProps {
   title: string;
   time: string;
   location: string;
   tutor: string;
-  status: ClassStatus;
+  status: Status;
   onPress: () => void;
 }
 
@@ -23,12 +23,20 @@ export default function ClassCard({
   status,
   onPress,
 }: ClassCardProps) {
+  const { user,fetchUserById } = useUserProfileStore();
+  useEffect(() => {
+    const fetchData = async () => {
+      await fetchUserById(tutor);
+    };
+    fetchData();
+  }, []);
+ 
   const getStatusColor = () => {
-    switch (status) {
-      case 'upcoming':
-        return colors.primary;
+    switch (status.code) {
+      case 'Ongoing':
+        return colors.success;
       case 'completed':
-        return colors.secondary;
+        return colors.secondaryLight;
       case 'cancelled':
         return colors.danger;
       default:
@@ -57,7 +65,7 @@ export default function ClassCard({
         
         <View style={styles.infoRow}>
           <User size={16} color={colors.textSecondary} />
-          <Text style={styles.infoText} numberOfLines={1}>{tutor}</Text>
+          <Text style={styles.infoText} numberOfLines={1}>{user?.fullName}</Text>
         </View>
       </View>
     </TouchableOpacity>

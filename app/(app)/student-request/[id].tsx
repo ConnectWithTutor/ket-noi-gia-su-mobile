@@ -19,16 +19,14 @@ import Header from '@/components/ui/Header';
 import { useUserProfileStore } from '@/store/profile-store';
 import { User,Status } from '@/types';
 import Button from '@/components/ui/Button';
-import { useTutorStore } from '@/store/tutor-store';
 import TutorApplication from '@/components/tutors/TutorApplication';
 export default function StudentRequestDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const postId = Array.isArray(id) ? id[0] : id;
   const router = useRouter();
   const { user } = useAuthStore();
-  const { statusesStudentRequest,fetchStatuses } = useStatusStore();
+  const { statusesStudentRequest,fetchStatuses ,StatusesTutorApplication,fetchStatusTutorApplication} = useStatusStore();
   const { createApplication } = useTutorApplicationStore();
-  const { getTutorById } = useTutorStore();
   const { 
     fetchStudentRequestById, 
     loading, 
@@ -49,26 +47,42 @@ const [status, setStatus] = useState<Status| null>(null);
  const { fetchUserById } = useUserProfileStore();
    const [author, setAuthor] = React.useState<User | null>(null);
    const [isLoading, setIsLoading] = useState(false);
-  useEffect(() => {
+  useEffect( () => {
+     const init = async () => {
     if (id) {
       fetchRoles();
       fetchApplicationsByRequest(id);
       fetchStudentRequestById(id);
       fetchStatuses();
-      async () => { await fetchUserById(selectedRequest?.studentId || ''); }
-
-      const currentStatus = statusesStudentRequest.find(status => status.statusId === selectedRequest?.status);
-      setStatus(currentStatus || null);
-      setAuthor(useUserProfileStore.getState().user)
+      fetchStatusTutorApplication();
     }
+    }
+    init();
   }, [id]);
+  useEffect(() => {
+  if (selectedRequest?.studentId) {
+    fetchUserById(selectedRequest.studentId).then(user => setAuthor(useUserProfileStore.getState().user));
+  }
+}, [selectedRequest?.studentId]);
+  useEffect(() => {
+  if (selectedRequest && statusesStudentRequest.length > 0) {
+    const currentStatus = statusesStudentRequest.find(
+      s => s.statusId === selectedRequest.status
+    );
+    setStatus(currentStatus || null);
+  }
+}, [selectedRequest, statusesStudentRequest]);
  const isMyPost = user?.userId === selectedRequest?.studentId;
+   const isApplied =  StatusesTutorApplication.find(s => s.code === 'Accepted');
+ const hasAcceptedApplication = applications?.some(
+  (app) => app.tutorId === user?.userId && app.status === isApplied?.statusId
+);
   useEffect(() => {
     const currentUserRole = roles.find(role => role.roleId === user?.roleId);
     if (isMyPost && currentUserRole?.roleName === 'Student') {
       fetchApplicationsByRequest(id);
     }
-  }, [isMyPost, user]);
+  }, [isMyPost, user, roles, id]);
   const handleApply = () => {
     triggerHaptic('medium');
     Alert.alert(
@@ -129,6 +143,43 @@ const [status, setStatus] = useState<Status| null>(null);
       ]
     );
   };
+  const handleCancelApplication = () => {
+    triggerHaptic('medium');
+    Alert.alert(
+      "Hủy ứng tuyển",
+      "Bạn có chắc muốn hủy ứng tuyển vào bài đăng này?",
+      [
+        {
+          text: "Hủy",
+          style: "cancel"
+        },
+        {
+          text: "Hủy",
+          onPress: async () => {
+            try {
+              if (user) {
+                const applicationData = {
+                  requestId: postId,
+                  tutorId: user?.userId, 
+                };
+                await createApplication(applicationData);
+              } else {
+                console.error("Tutor not found");
+              }
+            }
+            catch (error) {
+              console.error("Error applying for the request:", error);
+            }
+
+            Alert.alert(
+              "Thành công",
+              "Đã hủy ứng tuyển thành công."
+            );
+          }
+        }
+      ]
+    );
+    }
 const handleClosePost = async () => {
     triggerHaptic('medium');
     Alert.alert(
@@ -157,6 +208,10 @@ const handleClosePost = async () => {
       ]
     );
   };
+  const handleCreateClass =( postId:string) => {
+    triggerHaptic('medium');
+    router.push(`/class/create/${postId}` as any);
+  };
  const handleMessage = () => {
     triggerHaptic('light');
     // Find existing conversation or create new one
@@ -175,6 +230,7 @@ const handleClosePost = async () => {
       );
     }
   };
+
   const handleReport = () => {
     triggerHaptic('light');
     Alert.alert(
@@ -330,13 +386,31 @@ const handleClosePost = async () => {
             />
           )}
         {isTutor && hasApplied && (
+        <>
           <View style={styles.alreadyAppliedContainer}>
             <Text style={styles.alreadyAppliedText}>
               Bạn đã ứng tuyển vào yêu cầu này
             </Text>
           </View>
-        )}
-</View>
+
+          <Button
+            title="Huỷ ứng tuyển"
+            onPress={handleCancelApplication}
+            fullWidth
+            style={styles.applyButton}
+          />
+
+          {hasAcceptedApplication && (
+            <Button
+              title="Tạo lớp học"
+              onPress={() => handleCreateClass(postId)} // Hàm xử lý tạo lớp học bạn định nghĩa ở chỗ khác
+              fullWidth
+              style={styles.applyButton} // Bạn nên định nghĩa thêm style này
+            />
+          )}
+        </>
+      )}
+      </View>
 
         {isOwner && applications && applications.length > 0 && (
           <View style={styles.applicationsContainer}>
@@ -369,17 +443,6 @@ const handleClosePost = async () => {
           </View>
           )}
         <View style={styles.actionsContainer}>
-          {!isMyPost && status?.code === 'Pending' && (
-            <Button
-              title="Ứng tuyển"
-              onPress={handleApply}
-              fullWidth
-              style={styles.applyButton}
-            />
-          )}
-          
-          
-          
           <View style={styles.secondaryActions}>
             {!isMyPost && (
               <TouchableOpacity 
@@ -414,7 +477,6 @@ const handleClosePost = async () => {
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   alreadyAppliedContainer: {
     backgroundColor: "#e0f7fa",

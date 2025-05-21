@@ -13,6 +13,7 @@ export interface SingleItemResponse<T> {
   detail?: ErrorResponse;
   pagination: paginatedData;
   data: T;
+  id: string;
 }
 export interface ErrorResponse {
     loc: (string | number)[];

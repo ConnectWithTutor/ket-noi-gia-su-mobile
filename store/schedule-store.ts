@@ -1,83 +1,74 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Class, ClassStatus } from '@/types/schedule';
+import { Class } from '@/types/class';
+import { Status } from '@/types/status';
+import { Schedule, ScheduleCreateRequest, WeeklySchedule } from '@/types/schedule';
+import { classApi } from '@/api/class';
+import { scheduleApi } from '@/api/schedule';
 
 interface ScheduleState {
   classes: Class[];
+  schedules: Schedule[];
   isLoading: boolean;
   error: string | null;
 }
 
 interface ScheduleStore extends ScheduleState {
-  fetchClasses: () => Promise<void>;
-  addClass: (classData: Omit<Class, 'id'>) => Promise<void>;
-  updateClass: (id: string, classData: Partial<Class>) => Promise<void>;
-  cancelClass: (id: string) => Promise<void>;
-  getClassesByDate: (date: Date) => Class[];
+
+  // getClassesByDate: (date: Date) => Class[];
+  
+  // New methods for schedules
+  getSchedulesByClass: (classId?: string) => Promise<void>;
+  // createSchedule: (scheduleData: ScheduleCreateRequest) => Promise<string | null>;
+  createWeeklySchedules: (scheduleData: WeeklySchedule) => Promise<boolean>;
+  // updateSchedule: (id: string, scheduleData: Partial<Schedule>) => Promise<boolean>;
+  // cancelSchedule: (id: string) => Promise<boolean>;
+  getSchedulesByDate: (date: Date) => Schedule[];
 }
 
 export const useScheduleStore = create<ScheduleStore>()(
   persist(
     (set, get) => ({
       classes: [],
+      schedules: [],
       isLoading: false,
       error: null,
+      // getClassesByDate: (date) => {
+      //   const { schedules } = get();
+      //   return schedules.filter((c) => {
+      //     const classDate = new Date(c.startTime);
+      //     return (
+      //       classDate.getDate() === date.getDate() &&
+      //       classDate.getMonth() === date.getMonth() &&
+      //       classDate.getFullYear() === date.getFullYear()
+      //     );
+      //   });
+      // },
 
-      fetchClasses: async () => {
+      // New methods for schedules
+      getSchedulesByClass: async (classId) => {
         set({ isLoading: true, error: null });
         try {
           // Simulate API call
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          
-          // Mock classes data
+          if (!classId) {
+            set({ schedules: [], isLoading: false });
+            return;
+          }
+          const response = await scheduleApi.getSchedulesByClass(classId);
+          // Mock schedules data
           const today = new Date();
-          const tomorrow = new Date(today);
-          tomorrow.setDate(tomorrow.getDate() + 1);
+          const nextWeek = new Date(today);
+          nextWeek.setDate(nextWeek.getDate() + 7);
+          // Filter by classId if provided
+          if (response.data) {
+           const schedule = response.data;
+            const filteredSchedules = classId 
+            ? schedule.filter(s => s.classId === classId)
+            : schedule;
+          set({ schedules: filteredSchedules, isLoading: false });
+          }
           
-          const mockClasses: Class[] = [
-            {
-              id: '1',
-              title: 'Tiếng Anh - Lớp Ngoại Ngữ',
-              tutorId: '2',
-              tutorName: 'Nguyễn Văn A',
-              studentId: '1',
-              studentName: 'Bạch Minh Tuyên',
-              subject: 'Tiếng Anh',
-              startTime: new Date(today.setHours(9, 0, 0)).toISOString(),
-              endTime: new Date(today.setHours(10, 30, 0)).toISOString(),
-              location: 'Phòng 101',
-              status: 'upcoming',
-            },
-            {
-              id: '2',
-              title: 'Đại Số - Lớp Toán',
-              tutorId: '3',
-              tutorName: 'Lê Thị B',
-              studentId: '1',
-              studentName: 'Bạch Minh Tuyên',
-              subject: 'Toán',
-              startTime: new Date(tomorrow.setHours(13, 0, 0)).toISOString(),
-              endTime: new Date(tomorrow.setHours(15, 0, 0)).toISOString(),
-              location: 'Phòng 202',
-              status: 'upcoming',
-            },
-            {
-              id: '3',
-              title: 'Vật Lý - Cơ Học',
-              tutorId: '4',
-              tutorName: 'Trần Văn C',
-              studentId: '1',
-              studentName: 'Bạch Minh Tuyên',
-              subject: 'Vật Lý',
-              startTime: new Date(today.setHours(15, 30, 0)).toISOString(),
-              endTime: new Date(today.setHours(17, 0, 0)).toISOString(),
-              location: 'Phòng 303',
-              status: 'upcoming',
-            },
-          ];
-          
-          set({ classes: mockClasses, isLoading: false });
         } catch (error) {
           set({ 
             error: "Không thể tải lịch học. Vui lòng thử lại sau.", 
@@ -86,79 +77,109 @@ export const useScheduleStore = create<ScheduleStore>()(
         }
       },
 
-      addClass: async (classData) => {
+      // createSchedule: async (scheduleData) => {
+      //   set({ isLoading: true, error: null });
+      //   try {
+      //     // Simulate API call
+      //     await new Promise((resolve) => setTimeout(resolve, 1000));
+          
+      //     const newSchedule: Schedule = {
+      //       id: Date.now().toString(),
+      //       ...scheduleData,
+      //       status: 'active',
+      //     };
+          
+      //     set((state) => ({
+      //       schedules: [...state.schedules, newSchedule],
+      //       isLoading: false,
+      //     }));
+          
+      //     return newSchedule.id;
+      //   } catch (error) {
+      //     set({ 
+      //       error: "Không thể tạo lịch học. Vui lòng thử lại sau.", 
+      //       isLoading: false 
+      //     });
+      //     return null;
+      //   }
+      // },
+
+      createWeeklySchedules: async (scheduleData:WeeklySchedule ) => {
         set({ isLoading: true, error: null });
         try {
           // Simulate API call
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          
-          const newClass: Class = {
-            id: Date.now().toString(),
-            ...classData,
-          };
-          
+           const response = await scheduleApi.createBulkSchedules(scheduleData);      
+          if (response.detail) {
+            set({ 
+              error: response.detail.msg ||"Không thể tạo lịch học hàng tuần. Vui lòng thử lại sau.", 
+              isLoading: false 
+            });
+            return false;
+          }
           set((state) => ({
-            classes: [...state.classes, newClass],
             isLoading: false,
           }));
+          return true;
         } catch (error) {
           set({ 
-            error: "Không thể thêm lớp học. Vui lòng thử lại sau.", 
+            error: "Không thể tạo lịch học hàng tuần. Vui lòng thử lại sau.", 
             isLoading: false 
           });
+          return false;
         }
       },
 
-      updateClass: async (id, classData) => {
-        set({ isLoading: true, error: null });
-        try {
-          // Simulate API call
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+      // updateSchedule: async (id, scheduleData) => {
+      //   set({ isLoading: true, error: null });
+      //   try {
+      //     // Simulate API call
+      //     await new Promise((resolve) => setTimeout(resolve, 1000));
           
-          set((state) => ({
-            classes: state.classes.map((c) => 
-              c.id === id ? { ...c, ...classData } : c
-            ),
-            isLoading: false,
-          }));
-        } catch (error) {
-          set({ 
-            error: "Không thể cập nhật lớp học. Vui lòng thử lại sau.", 
-            isLoading: false 
-          });
-        }
-      },
-
-      cancelClass: async (id) => {
-        set({ isLoading: true, error: null });
-        try {
-          // Simulate API call
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+      //     set((state) => ({
+      //       schedules: state.schedules.map((s) => 
+      //         s.id === id ? { ...s, ...scheduleData } : s
+      //       ),
+      //       isLoading: false,
+      //     }));
           
-          set((state) => ({
-            classes: state.classes.map((c) => 
-              c.id === id ? { ...c, status: 'cancelled' as ClassStatus } : c
-            ),
-            isLoading: false,
-          }));
-        } catch (error) {
-          set({ 
-            error: "Không thể hủy lớp học. Vui lòng thử lại sau.", 
-            isLoading: false 
-          });
-        }
-      },
+      //     return true;
+      //   } catch (error) {
+      //     set({ 
+      //       error: "Không thể cập nhật lịch học. Vui lòng thử lại sau.", 
+      //       isLoading: false 
+      //     });
+      //     return false;
+      //   }
+      // },
 
-      getClassesByDate: (date) => {
-        const { classes } = get();
-        return classes.filter((c) => {
-          const classDate = new Date(c.startTime);
-          return (
-            classDate.getDate() === date.getDate() &&
-            classDate.getMonth() === date.getMonth() &&
-            classDate.getFullYear() === date.getFullYear()
-          );
-        });
+      // cancelSchedule: async (id) => {
+      //   set({ isLoading: true, error: null });
+      //   try {
+      //     // Simulate API call
+      //     await new Promise((resolve) => setTimeout(resolve, 1000));
+          
+      //     set((state) => ({
+      //       schedules: state.schedules.map((s) => 
+      //         s.id === id ? { ...s, status: 'cancelled' } : s
+      //       ),
+      //       isLoading: false,
+      //     }));
+          
+      //     return true;
+      //   } catch (error) {
+      //     set({ 
+      //       error: "Không thể hủy lịch học. Vui lòng thử lại sau.", 
+      //       isLoading: false 
+      //     });
+      //     return false;
+      //   }
+      // },
+
+     
+      getSchedulesByDate: (date) => {
+        const { schedules } = get();
+        const dateString = date.toISOString().split('T')[0];
+        return schedules.filter(s => s.dayStudying === dateString);
       },
     }),
     {

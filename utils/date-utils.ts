@@ -26,7 +26,6 @@ export const formatDateTime = (dateString: string | Date): string => {
   });
 };
 
-// Renamed from formatRelativeTime to getRelativeTime to match usage in components
 export const getRelativeTime = (dateString: string | Date): string => {
   const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
   const now = new Date();
@@ -57,7 +56,6 @@ export const getRelativeTime = (dateString: string | Date): string => {
 // Keeping the original function name as an alias for backward compatibility
 export const formatRelativeTime = getRelativeTime;
 
-// Updated to support abbreviated names
 export const getDayName = (date: Date, abbreviated: boolean = false): string => {
   const fullDays = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
   const shortDays = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
@@ -85,4 +83,23 @@ export const getDaysInMonth = (year: number, month: number): number => {
 
 export const getFirstDayOfMonth = (year: number, month: number): number => {
   return new Date(year, month, 1).getDay();
+};
+
+export const formatTimeRange = (startTime: string | Date, endTime: string | Date): string => {
+  return `${formatTime(startTime)} - ${formatTime(endTime)}`;
+};
+
+export const getWeekdayName = (weekday: number, abbreviated: boolean = false): string => {
+  return getDayName(new Date(2023, 0, 1 + weekday), abbreviated);
+};
+
+export const parseTimeString = (timeString: string): Date => {
+  const [hours, minutes] = timeString.split(':').map(Number);
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+  return date;
+};
+
+export const formatTimeString = (date: Date): string => {
+  return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
 };

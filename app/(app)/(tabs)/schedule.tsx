@@ -13,17 +13,43 @@ import { useScheduleStore } from "@/store/schedule-store";
 import { formatDate, getDayName, getMonthName } from "@/utils/date-utils";
 import { router } from "expo-router";
 import { triggerHaptic } from "@/utils/haptics";
+import { useClassStore } from "@/store/class-store";
+import { useStatusStore } from "@/store/status-store";
+import { Status } from "@/types";
 
 export default function ScheduleScreen() {
-  const { classes, fetchClasses, isLoading } = useScheduleStore();
+  const { schedules, getSchedulesByClass, isLoading: isScheduleLoading } = useScheduleStore();
+  const { classes, fetchClasses, isLoading } = useClassStore();
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [weekDates, setWeekDates] = useState<Date[]>([]);
-  
+   const { fetchStatusesClass,StatusesClass } = useStatusStore();
   useEffect(() => {
-    fetchClasses();
-    generateWeekDates(selectedDate);
-  }, []);
+  const fetchData = async () => {
+    await fetchClasses();
+    await fetchStatusesClass();
+
+    const allSchedules = [];
+
+    const classList = useClassStore.getState().classes;
+
+    for (const classItem of classList) {
+      await getSchedulesByClass(classItem.classId);
+      
+      const classSchedules = useScheduleStore.getState().schedules.map(sch => ({
+        ...sch,
+        classInfo: classItem, // Gắn thông tin lớp vào lịch học
+      }));
+
+      allSchedules.push(...classSchedules);
+    }
+
+    useScheduleStore.setState({ schedules: allSchedules });
+  };
+
+  fetchData();
+  generateWeekDates(selectedDate);
+}, []);
   
   const generateWeekDates = (date: Date) => {
     const currentDay = date.getDay();
@@ -39,7 +65,14 @@ export default function ScheduleScreen() {
     
     setWeekDates(weekDays);
   };
-  
+  const getStatus = (_statusID: string): Status => {
+    const statusItem = StatusesClass.find(item => item.statusId === _statusID);
+    if (!statusItem) {
+      return StatusesClass[0];
+    }
+    return statusItem;
+  }
+    
   const handlePrevWeek = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const newDate = new Date(selectedDate);
@@ -65,19 +98,23 @@ export default function ScheduleScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setViewMode(viewMode === "list" ? "calendar" : "list");
   };
+  const mergedSchedules = schedules.map(sch => ({
+  ...sch,
+  classInfo: classes.find(cls => cls.classId === sch.classId) || null,
+}));
+const filteredClasses = mergedSchedules.filter(sch => {
+  const schDate = new Date(sch.dayStudying);
+  return (
+    schDate.getDate() === selectedDate.getDate() &&
+    schDate.getMonth() === selectedDate.getMonth() &&
+    schDate.getFullYear() === selectedDate.getFullYear()
+  );
+});
   
-  const filteredClasses = classes.filter(classItem => {
-    const classDate = new Date(classItem.startTime);
-    return (
-      classDate.getDate() === selectedDate.getDate() &&
-      classDate.getMonth() === selectedDate.getMonth() &&
-      classDate.getFullYear() === selectedDate.getFullYear()
-    );
-  });
   
   const hasEvents = (date: Date) => {
     return classes.some(classItem => {
-      const classDate = new Date(classItem.startTime);
+      const classDate = new Date(classItem.startDate);
       return (
         classDate.getDate() === date.getDate() &&
         classDate.getMonth() === date.getMonth() &&
@@ -181,14 +218,15 @@ export default function ScheduleScreen() {
           ) : filteredClasses.length > 0 ? (
             filteredClasses.map((classItem) => (
               <ClassCard
-                key={classItem.id}
-                title={classItem.title}
-                time={`${new Date(classItem.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(classItem.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
-                location={classItem.location}
-                tutor={classItem.tutorName}
-                status={classItem.status}
-                onPress={() => {}}
-              />
+                key={classItem.classId}
+                title={classItem.classInfo?.className_vi || "Lớp học"}
+                time={classItem.startTime && classItem.endTime
+                  ? `${classItem.startTime.slice(0, 5)} - ${classItem.endTime.slice(0, 5) }`
+                  : "Chưa xác định"}
+                location={"Hà Nội"}
+                tutor={classItem.classInfo?.tutorId || "Giáo viên"}
+                status={getStatus(classItem.status)}
+                onPress={() => { } } />
             ))
           ) : (
             <View style={styles.emptyContainer}>

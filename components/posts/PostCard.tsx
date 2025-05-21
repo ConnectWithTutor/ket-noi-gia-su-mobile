@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Image } from 'react-native';
-import { MapPin, Users, Clock, DollarSign, Import } from 'lucide-react-native';
+import { MapPin, Users, Clock, DollarSign } from 'lucide-react-native';
 
 import colors from '@/constants/Colors';
 import { BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS, SPACING } from '@/constants/Theme';
@@ -11,42 +11,44 @@ import { useUserProfileStore } from '@/store/profile-store';
 import PostStatus from './PostStatus';
 import { useSubjectStore } from '@/store/subjectStore';
 import { Subject } from '@/types';
+
 interface PostCardProps {
   post: StudentRequest;
   onPress: () => void;
 }
 
-export default function PostCard({ post, onPress }: PostCardProps) {
-   const { fetchUserById } = useUserProfileStore();
-   const [author, setAuthor] = React.useState<User | null>(null);
-   const { fetchSubjects, getSubjectById, subjects, loading}= useSubjectStore();
-   const [subject, setSubject] = React.useState<Subject | null>(null);
-   useEffect(() => {
-      fetchSubjects();
-      const fetchAuthor = async () => {
-      await fetchUserById(post.studentId) ;
-       setAuthor(useUserProfileStore.getState().user);
-     };
-     fetchAuthor();
-     
-   }, []);
- useEffect(() => {
- 
-  if (!loading && subjects.length > 0) {
-    const subject = getSubjectById(post.subjectId);
-    if (subject) {
-      setSubject(subject);
-    } else {
-      console.error(`Subject with ID ${post.subjectId} not found`);
+function PostCardComponent({ post, onPress }: PostCardProps) {
+  const { fetchUserById } = useUserProfileStore();
+  const [author, setAuthor] = useState<User | null>(null);
+  const { fetchSubjects, getSubjectById, subjects, loading } = useSubjectStore();
+  const [subject, setSubject] = useState<Subject | null>(null);
+
+  useEffect(() => {
+    fetchSubjects();
+  }, [fetchSubjects]);
+
+  useEffect(() => {
+    async function fetchAuthor() {
+      await fetchUserById(post.studentId);
+      setAuthor(useUserProfileStore.getState().user);
     }
-  }
-}, []);
+    fetchAuthor();
+  }, [fetchUserById, post.studentId]);
+
+  useEffect(() => {
+    if (!loading && subjects.length > 0) {
+      const sub = getSubjectById(post.subjectId);
+      if (sub) setSubject(sub);
+      else console.error(`Subject with ID ${post.subjectId} not found`);
+    }
+  }, [loading, subjects, getSubjectById, post.subjectId]);
+
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.8}>
       <View style={styles.header}>
         <View style={styles.userInfo}>
           <Image 
-            source={{ uri: author?.avatarUrl  || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80' }} 
+            source={{ uri: author?.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80' }} 
             style={styles.avatar} 
           />
           <View>
@@ -86,11 +88,18 @@ export default function PostCard({ post, onPress }: PostCardProps) {
         <View style={styles.subjectBadge}>
           <Text style={styles.subjectText}>{subject?.subjectName_vi}</Text>
         </View>
-        
       </View>
     </TouchableOpacity>
   );
 }
+
+// Memo hóa component, so sánh props đơn giản
+export default React.memo(PostCardComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.post.requestId === nextProps.post.requestId &&
+    prevProps.onPress === nextProps.onPress
+  );
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -124,15 +133,6 @@ const styles = StyleSheet.create({
   postTime: {
     fontSize: FONT_SIZE.xs,
     color: colors.textSecondary,
-  },
-  statusBadge: {
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.xs / 2,
-    borderRadius: BORDER_RADIUS.sm,
-  },
-  statusText: {
-    fontSize: FONT_SIZE.xs,
-    fontWeight: '600',
   },
   title: {
     fontSize: FONT_SIZE.lg,
@@ -176,9 +176,5 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.xs,
     fontWeight: '600',
     color: colors.white,
-  },
-  applicantsText: {
-    fontSize: FONT_SIZE.xs,
-    color: colors.textSecondary,
   },
 });
