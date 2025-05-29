@@ -6,7 +6,7 @@ interface UserProfileState {
     user: User | null;
     loading: boolean;
     error: string | null;
-    fetchUserById: (id: string) => Promise<void>;
+    fetchUserById: (id: string) =>Promise< User | null>;
     updateUser: (id: string, data: UserUpdateRequest) => Promise<boolean>;
     clearError: () => void;
 }
@@ -21,13 +21,15 @@ export const useUserProfileStore = create<UserProfileState>((set) => ({
         try {
             const response = await usersApi.getUsersById(id);
             if (response) {
-                set({ user: response, loading: false });
+                set({ loading: false });
+                return response;
                 
             } else {
                 set({
                     loading: false,
                     error:  "Không thể lấy thông tin người dùng",
                 });
+                return null;
 
             }
         } catch (error: any) {
@@ -35,6 +37,7 @@ export const useUserProfileStore = create<UserProfileState>((set) => ({
                 loading: false,
                 error: error.message || "Không thể lấy thông tin người dùng",
             });
+            return null;
         }
     },
 
@@ -42,6 +45,7 @@ export const useUserProfileStore = create<UserProfileState>((set) => ({
         set({ loading: true, error: null });
         try {
             const response = await usersApi.updateProfile(id, data);
+
             if (response.data) {
                 set({ user: response.data, loading: false });
                 return true;

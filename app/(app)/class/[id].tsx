@@ -14,12 +14,14 @@ import Button from '@/components/ui/Button';
 import { useScheduleStore } from '@/store/schedule-store';
 import { useClassRegistrationStore } from '@/store/classRegistration-store';
 import { useSubjectStore } from '@/store/subjectStore';
+import { Subject } from '@/types';
 export default function ClassDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const classId = Array.isArray(id) ? id[0] : id;
   const router = useRouter();
 const { fetchRegistrationsByClass,registrations } = useClassRegistrationStore();
-const {  getSubjectById} = useSubjectStore();
+const {  getSubjectById } = useSubjectStore();
+const [subject, setSubject] = useState<Subject>({} as Subject);
   const { user } = useAuthStore();
   const { 
     selectedClass, 
@@ -36,7 +38,8 @@ const {  getSubjectById} = useSubjectStore();
     if (classId) {
       fetchClassById(classId);
       getSchedulesByClass(classId);
-    fetchRegistrationsByClass(classId);
+      fetchRegistrationsByClass(classId);
+     
     }
   }, [classId]);
   useEffect(() => {
@@ -77,7 +80,8 @@ const {  getSubjectById} = useSubjectStore();
   };
   const handleAddSchedule = () => {
     triggerHaptic('light');
-    // router.push(`/class/schedule/create?classId=${classId}`);
+    console.log('classId', classId);
+    router.push(`/class/schedule/create/${classId}`);
   };
 
   const handleAddStudent = () => {
@@ -218,7 +222,7 @@ const upcomingSchedules = schedules
           <View style={styles.infoRow}>
             <DollarSign size={18} color={Colors.textSecondary} />
             <Text style={styles.infoLabel}>Học phí:</Text>
-            <Text style={styles.infoValue}>{selectedClass.tuitionFee.toLocaleString('vi-VN')}đ</Text>
+            <Text style={styles.infoValue}>{selectedClass.tuitionFee.toLocaleString()}đ</Text>
           </View>
         </View>
 
@@ -293,7 +297,6 @@ const upcomingSchedules = schedules
             <TouchableOpacity
               style={[styles.addButton, { marginLeft: SPACING.md }]}
               onPress={() => {
-                // TODO: Implement navigation to student list screen
                 Alert.alert('Danh sách học viên', 'Tính năng xem danh sách học viên sẽ được cập nhật trong phiên bản tiếp theo.');
               }}
             >

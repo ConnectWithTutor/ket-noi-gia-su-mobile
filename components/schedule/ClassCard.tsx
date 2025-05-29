@@ -1,46 +1,61 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, View, Text, TouchableOpacity,Linking } from 'react-native';
 import { Clock, MapPin, User } from 'lucide-react-native';
 import colors from '@/constants/Colors';
 import { BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS, SPACING } from '@/constants/Theme';
-import { useStatusStore } from '@/store/status-store';
 import { Status } from '@/types/status';
 import { useUserProfileStore } from '@/store/profile-store';
+import { Role } from '@/types';
+import { useZoomStore } from '@/store/zoom-store';
 interface ClassCardProps {
+  scheduleId: string;
   title: string;
   time: string;
   location: string;
   tutor: string;
   status: Status;
+  zoomLink?: string;
+  role?: Role;
+  studyType: 'Online' | 'Offline';  
   onPress: () => void;
 }
 
 export default function ClassCard({
+  scheduleId,
   title,
   time,
   location,
   tutor,
   status,
   onPress,
+  zoomLink,
+  studyType,
+  role
 }: ClassCardProps) {
-  const { user,fetchUserById } = useUserProfileStore();
+  const { fetchUserById } = useUserProfileStore();
+  const { createZoomMeeting } = useZoomStore();
+   const [zoomCreated, setZoomCreated] = useState(false);
   useEffect(() => {
     const fetchData = async () => {
       await fetchUserById(tutor);
     };
     fetchData();
-  }, []);
- 
+  }, [zoomCreated]);
+
   const getStatusColor = () => {
-    switch (status.code) {
-      case 'Ongoing':
-        return colors.success;
-      case 'completed':
-        return colors.secondaryLight;
-      case 'cancelled':
-        return colors.danger;
-      default:
-        return colors.primary;
+    if (studyType === 'Offline')
+      return colors.success;
+    else
+      return colors.primary;
+  };
+
+  const handleCreateZoom = async () => {
+    try {
+      await createZoomMeeting(scheduleId);
+      alert('Tạo Zoom thành công!');
+      setZoomCreated(prev => !prev);
+    } catch (error) {
+      alert('Lỗi khi tạo Zoom. Vui lòng thử lại sau.');
     }
   };
 
@@ -52,21 +67,55 @@ export default function ClassCard({
     >
       <View style={styles.content}>
         <Text style={styles.title} numberOfLines={1}>{title}</Text>
-        
+
         <View style={styles.infoRow}>
           <Clock size={16} color={colors.textSecondary} />
           <Text style={styles.infoText}>{time}</Text>
         </View>
-        
+
         <View style={styles.infoRow}>
           <MapPin size={16} color={colors.textSecondary} />
           <Text style={styles.infoText} numberOfLines={1}>{location}</Text>
         </View>
-        
+
         <View style={styles.infoRow}>
           <User size={16} color={colors.textSecondary} />
-          <Text style={styles.infoText} numberOfLines={1}>{user?.fullName}</Text>
+          <Text style={styles.infoText} numberOfLines={1}>{tutor}</Text>
         </View>
+
+        {studyType === 'Online' && zoomLink ? (
+          <TouchableOpacity
+            style={{
+              marginTop: SPACING.sm,
+              backgroundColor: colors.primary,
+              borderRadius: BORDER_RADIUS.sm,
+              paddingVertical: 8,
+              alignItems: 'center',
+            }}
+            onPress={() => {
+              if (zoomLink) {
+                Linking.openURL(zoomLink);
+              }
+            }}
+          >
+            <Text style={{ color: colors.white, fontWeight: 'bold' }}>Tham gia lớp học</Text>
+          </TouchableOpacity>
+        ) : null}
+
+        {role?.roleName === 'Tutor' && studyType === 'Online' ? (
+          <TouchableOpacity
+            style={{
+              marginTop: SPACING.sm,
+              backgroundColor: colors.success,
+              borderRadius: BORDER_RADIUS.sm,
+              paddingVertical: 8,
+              alignItems: 'center',
+            }}
+            onPress={handleCreateZoom}
+          >
+          <Text style={{ color: colors.white, fontWeight: 'bold' }}>Tạo Zoom</Text>
+          </TouchableOpacity>
+        ) : null}
       </View>
     </TouchableOpacity>
   );

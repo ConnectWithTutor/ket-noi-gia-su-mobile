@@ -2,7 +2,7 @@ import { api } from "@/services/api";
 import { API_ENDPOINTS } from "@/constants/apiEndpoints";
 import { 
   PaginatedResponse, 
-  
+  SingleItemResponse,
     Tutor,
     TutorProfile,
 } from "@/types";

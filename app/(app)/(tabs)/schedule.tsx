@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { StyleSheet, View, Text, TouchableOpacity, ScrollView, RefreshControl } from "react-native";
 import { ChevronLeft, ChevronRight } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 
@@ -15,42 +15,71 @@ import { router } from "expo-router";
 import { triggerHaptic } from "@/utils/haptics";
 import { useClassStore } from "@/store/class-store";
 import { useStatusStore } from "@/store/status-store";
-import { Status } from "@/types";
-
+import { Role, Status } from "@/types";
+import { useAuthStore} from "@/store/auth-store"
+import { useRoleStore } from "@/store/roleStore";
+import { useUserProfileStore } from "@/store/profile-store";
 export default function ScheduleScreen() {
   const { schedules, getSchedulesByClass, isLoading: isScheduleLoading } = useScheduleStore();
   const { classes, fetchClasses, isLoading } = useClassStore();
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [weekDates, setWeekDates] = useState<Date[]>([]);
+  const { user } = useAuthStore();
+  const {  getRoleById } = useRoleStore();
+  const {fetchUserById} = useUserProfileStore();
+   const [refreshing, setRefreshing] = useState(false);
+  const [role, setRole] = useState<Role>();
    const { fetchStatusesClass,StatusesClass } = useStatusStore();
   useEffect(() => {
   const fetchData = async () => {
     await fetchClasses();
     await fetchStatusesClass();
-
+    const userRole = await getRoleById(user?.roleId || "");
+    if (userRole) {
+       setRole(userRole || null);
+    }
+    
     const allSchedules = [];
 
     const classList = useClassStore.getState().classes;
-
     for (const classItem of classList) {
       await getSchedulesByClass(classItem.classId);
-      
+       const tutor = await fetchUserById(classItem.tutorId);
       const classSchedules = useScheduleStore.getState().schedules.map(sch => ({
         ...sch,
-        classInfo: classItem, // Gắn thông tin lớp vào lịch học
+        classInfo: {classItem, tutor}
       }));
 
       allSchedules.push(...classSchedules);
     }
-
     useScheduleStore.setState({ schedules: allSchedules });
   };
 
   fetchData();
   generateWeekDates(selectedDate);
 }, []);
-  
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchClasses();
+    await fetchStatusesClass();
+    const classList = useClassStore.getState().classes;
+    const allSchedules = [];
+    for (const classItem of classList) {
+      await getSchedulesByClass(classItem.classId);
+      const classSchedules = await Promise.all(
+        useScheduleStore.getState().schedules.map(async sch => ({
+          ...sch,
+          classInfo: classItem,
+          tutor: await fetchUserById(classItem.tutorId) || null,
+        }))
+      );
+      allSchedules.push(...classSchedules);
+    }
+    useScheduleStore.setState({ schedules: allSchedules });
+    setRefreshing(false);
+  };
+
   const generateWeekDates = (date: Date) => {
     const currentDay = date.getDay();
     const sunday = new Date(date);
@@ -166,6 +195,9 @@ const filteredClasses = mergedSchedules.filter(sch => {
           horizontal 
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.daysContainer}
+          refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
         >
           {weekDates.map((date, index) => (
             <CalendarDay
@@ -202,7 +234,7 @@ const filteredClasses = mergedSchedules.filter(sch => {
               </View>
               <View style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: colors.secondary }]} />
-                <Text style={styles.legendText}>Lịch học truyền</Text>
+                <Text style={styles.legendText}>Lịch học trực tuyến</Text>
               </View>
               <View style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: colors.danger }]} />
@@ -210,7 +242,6 @@ const filteredClasses = mergedSchedules.filter(sch => {
               </View>
             </View>
           </View>
-          
           {isLoading ? (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>Đang tải...</Text>
@@ -219,12 +250,20 @@ const filteredClasses = mergedSchedules.filter(sch => {
             filteredClasses.map((classItem) => (
               <ClassCard
                 key={classItem.classId}
+                scheduleId={classItem.scheduleId}
                 title={classItem.classInfo?.className_vi || "Lớp học"}
                 time={classItem.startTime && classItem.endTime
                   ? `${classItem.startTime.slice(0, 5)} - ${classItem.endTime.slice(0, 5) }`
                   : "Chưa xác định"}
+                zoomLink={classItem.zoomUrl}
+                studyType={
+                  classItem.classInfo?.studyType === "Online"
+                    ? "Online"
+                    : "Offline"
+                } 
                 location={"Hà Nội"}
-                tutor={classItem.classInfo?.tutorId || "Giáo viên"}
+                role={role}
+                tutor={classItem.classInfo?.tutorId || ""}
                 status={getStatus(classItem.status)}
                 onPress={() => { } } />
             ))

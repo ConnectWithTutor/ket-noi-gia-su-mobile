@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from "axios";
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { API_BASE_URL,PREFIX } from "@/constants/config";
+import { SOCKET_URL,PREFIX } from "@/constants/config";
 
 class ApiError extends Error {
   status: number;
@@ -15,7 +15,7 @@ class ApiError extends Error {
 
 // Create axios instance
 const axiosInstance: AxiosInstance = axios.create({
-  baseURL: API_BASE_URL + PREFIX,
+  baseURL: SOCKET_URL + PREFIX,
   headers: {
     "Content-Type": "application/json",
     "Accept": "application/json"
@@ -70,7 +70,7 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-export const api = {
+export const apiChat = {
   async request<T>(endpoint: string, options: AxiosRequestConfig = {}): Promise<T> {
     try {
       const response = await axiosInstance({

@@ -48,7 +48,7 @@ export const tutorApplicationsApi = {
   
   // Update a tutor application
   updateTutorApplication: async (id: string, data: TutorApplicationCreateRequest) => {
-    return api.patch<SingleItemResponse<TutorApplication>>(
+    return api.put<SingleItemResponse<TutorApplication>>(
       API_ENDPOINTS.updateTutorApplication(id), 
       data
     );

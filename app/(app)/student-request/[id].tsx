@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert ,Image } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert ,Image, FlatList } from 'react-native';
 import colors from "@/constants/Colors";
 import { BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS, SPACING } from "@/constants/Theme";
 import { useLocalSearchParams, useRouter, Link } from 'expo-router';
@@ -11,7 +11,6 @@ import { formatDate } from '@/utils/date-utils';
 import {  MapPin, Users, Clock, DollarSign, Flag, MessageSquare, Share2, Send } from 'lucide-react-native';
 import { useRoleStore } from '@/store/roleStore';
 import { useStatusStore } from '@/store/status-store';
-import PostStatus from '@/components/posts/PostStatus';
 import { triggerHaptic } from '@/utils/haptics';
 import { useChatStore } from '@/store/chat-store';
 import StatusBar from '@/components/ui/StatusBar';
@@ -26,7 +25,6 @@ export default function StudentRequestDetails() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { statusesStudentRequest,fetchStatuses ,StatusesTutorApplication,fetchStatusTutorApplication} = useStatusStore();
-  const { createApplication } = useTutorApplicationStore();
   const { 
     fetchStudentRequestById, 
     loading, 
@@ -36,7 +34,9 @@ export default function StudentRequestDetails() {
     
   } = useStudentRequestStore();
   const { 
+    createApplication,
     fetchApplicationsByRequest, 
+    updateApplication,
     applications, 
     isLoading: isLoadingApplications 
   } = useTutorApplicationStore();
@@ -47,23 +47,60 @@ const [status, setStatus] = useState<Status| null>(null);
  const { fetchUserById } = useUserProfileStore();
    const [author, setAuthor] = React.useState<User | null>(null);
    const [isLoading, setIsLoading] = useState(false);
-  useEffect( () => {
-     const init = async () => {
-    if (id) {
-      fetchRoles();
-      fetchApplicationsByRequest(id);
-      fetchStudentRequestById(id);
-      fetchStatuses();
-      fetchStatusTutorApplication();
-    }
-    }
-    init();
-  }, [id]);
   useEffect(() => {
-  if (selectedRequest?.studentId) {
-    fetchUserById(selectedRequest.studentId).then(user => setAuthor(useUserProfileStore.getState().user));
-  }
+  const init = async () => {
+    if (id) {
+      await Promise.all([
+        fetchRoles(),
+        fetchApplicationsByRequest(id),
+        fetchStudentRequestById(id),
+        fetchStatuses(),
+        fetchStatusTutorApplication()
+      ]);
+    }
+  };
+  init();
+}, [id]);
+
+  const statusPending = useMemo(
+    () => StatusesTutorApplication.find(s => s.code === 'Pending'),
+    [StatusesTutorApplication]
+  );
+  const statusAccepted = useMemo(
+    () => StatusesTutorApplication.find(s => s.code === 'Accepted'),
+    [StatusesTutorApplication]
+  );
+  const statusRejected = useMemo(
+    () => StatusesTutorApplication.find(s => s.code === 'Rejected'),
+    [StatusesTutorApplication]
+  );
+  const statusWithdrawn = useMemo(
+    () => StatusesTutorApplication.find(s => s.code === 'Withdrawn'),
+    [StatusesTutorApplication]
+  );
+  const statusCancelled = useMemo(
+    () => StatusesTutorApplication.find(s => s.code === 'Cancelled'),
+    [StatusesTutorApplication]
+  );
+  const statusCompleted = useMemo(
+    () => StatusesTutorApplication.find(s => s.code === 'Completed'),
+    [StatusesTutorApplication]
+  );
+ 
+  // Lấy thông tin người dùng từ của yêu cầu hiện tại
+useEffect(() => {
+  const fetchAuthor = async () => {
+    if (selectedRequest?.studentId) {
+      const user = await fetchUserById(selectedRequest.studentId);
+      if (user) {
+        setAuthor(user);
+      }
+    }
+  };
+  fetchAuthor();
 }, [selectedRequest?.studentId]);
+
+  // lấy status hiện tại của yêu cầu
   useEffect(() => {
   if (selectedRequest && statusesStudentRequest.length > 0) {
     const currentStatus = statusesStudentRequest.find(
@@ -72,11 +109,22 @@ const [status, setStatus] = useState<Status| null>(null);
     setStatus(currentStatus || null);
   }
 }, [selectedRequest, statusesStudentRequest]);
- const isMyPost = user?.userId === selectedRequest?.studentId;
-   const isApplied =  StatusesTutorApplication.find(s => s.code === 'Accepted');
- const hasAcceptedApplication = applications?.some(
-  (app) => app.tutorId === user?.userId && app.status === isApplied?.statusId
-);
+
+const isMyPost = user?.userId === selectedRequest?.studentId;
+const tutorRole = roles.find(role => role.roleName.toLowerCase() === 'tutor');
+const isTutor = user?.roleId === tutorRole?.roleId;
+
+// Lấy application của gia sư hiện tại (nếu không phải người đăng tin)
+const myApplication = !isMyPost
+  ? applications?.find(app => app.tutorId === user?.userId)
+  : null;
+const TutorApplicationStatus = useMemo(() => {
+  return myApplication
+    ? StatusesTutorApplication.find(s => s.statusId === myApplication.status)
+    : null;
+}, [myApplication, StatusesTutorApplication]);
+const hasApplied = applications?.some(app => app.tutorId === user?.userId) ?? false;
+
   useEffect(() => {
     const currentUserRole = roles.find(role => role.roleId === user?.roleId);
     if (isMyPost && currentUserRole?.roleName === 'Student') {
@@ -115,6 +163,7 @@ const [status, setStatus] = useState<Status| null>(null);
               "Thành công",
               "Đã gửi đơn ứng tuyển thành công. Người đăng sẽ liên hệ với bạn sớm."
             );
+            await fetchApplicationsByRequest(postId);
           }
         }
       ]
@@ -157,12 +206,15 @@ const [status, setStatus] = useState<Status| null>(null);
           text: "Hủy",
           onPress: async () => {
             try {
-              if (user) {
+              const myApp = applications.find(app => app.tutorId === user?.userId);
+              const applicationId = myApp?.applicationId;
+              if (user && applicationId) {
                 const applicationData = {
                   requestId: postId,
-                  tutorId: user?.userId, 
+                  tutorId: user?.userId,
+                  status: statusWithdrawn?.statusId || '',
                 };
-                await createApplication(applicationData);
+                await updateApplication(applicationId,applicationData);
               } else {
                 console.error("Tutor not found");
               }
@@ -274,15 +326,17 @@ const handleClosePost = async () => {
     triggerHaptic('light');
     router.push(`/tutor/${userId}`);
   };
-  if (loading) {
+const displayedApplications = useMemo(() => {
+    return showApplications ? applications : applications.slice(0, 3);
+  }, [applications, showApplications]);
+if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-        <Text style={styles.loadingText}>Đang tải....</Text>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Đang tải...</Text>
       </View>
     );
   }
-
   if (error) {
     return (
       <View style={styles.errorContainer}>
@@ -296,190 +350,225 @@ const handleClosePost = async () => {
       </View>
     );
   }
-
-  const isOwner = user?.userId === selectedRequest?.studentId;
-  const tutorRole = roles.find(role => role.roleName.toLowerCase() === 'tutor');
-  const isTutor = user?.roleId === tutorRole?.roleId;
-  const hasApplied = applications?.some(app => app.tutorId === user?.userId);
+ 
 
   return (
-     <View style={styles.container}>
+      <View style={styles.container}>
       <StatusBar backgroundColor={colors.primary} />
       <Header title="Chi tiết bài đăng" showBack />
-    
-      
-    <ScrollView  style={styles.content} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
-        <View style={styles.userInfo}>
-            <TouchableOpacity >
-              <Image 
-                source={{ uri: author?.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80' }} 
-                style={styles.avatar} 
-              />
-            </TouchableOpacity>
-            <View>
-              <TouchableOpacity >
-                <Text style={styles.userName}>{author?.fullName}</Text>
-              </TouchableOpacity>
-              <Text style={styles.postDate}>{selectedRequest?.createdAt ? formatDate(selectedRequest.createdAt) : 'N/A'}</Text>
 
-            </View>
-        </View>
-
-        <PostStatus statusId={selectedRequest?.status || ''} />
-        </View> 
-        <Text style={styles.title}>{selectedRequest?.title}</Text>    
-        <View style={styles.infoCard}>
-          <View style={styles.infoRow}>
-            <View style={styles.infoItem}>
-              <MapPin size={18} color={colors.textSecondary} />
-              <Text style={styles.infoLabel}>Địa điểm:</Text>
-              <Text style={styles.infoValue}>{selectedRequest?.location}</Text>
-            </View>
-          </View>
-          
-          <View style={styles.infoRow}>
-            <View style={styles.infoItem}>
-              <Users size={18} color={colors.textSecondary} />
-              <Text style={styles.infoLabel}>Số học sinh:</Text>
-              <Text style={styles.infoValue}>{selectedRequest?.studentCount}</Text>
-            </View>
-          </View>
-          
-          <View style={styles.infoRow}>
-            <View style={styles.infoItem}>
-              <Clock size={18} color={colors.textSecondary} />
-              <Text style={styles.infoLabel}>Lịch học:</Text>
-              <Text style={styles.infoValue}>{selectedRequest?.preferredSchedule}</Text>
-            </View>
-          </View>
-          
-          <View style={styles.infoRow}>
-            <View style={styles.infoItem}>
-              <DollarSign size={18} color={colors.textSecondary} />
-              <Text style={styles.infoLabel}>Học phí:</Text>
-              <Text style={styles.infoValue}>{selectedRequest?.tuitionFee}đ/giờ</Text>
-            </View>
-          </View>
-        </View>
-       <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Mô tả</Text>
-          <Text style={styles.description}>{selectedRequest?.description}</Text>
-        </View>
-       <View style={styles.actionsContainer}>
-        {isTutor && !isMyPost && status?.code === 'Pending' && !hasApplied && (
-          <Button
-              title="Ứng tuyển"
-              onPress={handleApply}
-              fullWidth
-              style={styles.applyButton}
-            />
-        )}
-         {isMyPost && status?.code === 'Pending' && (
-            <Button
-              title="Đóng bài đăng"
-              onPress={handleClosePost}
-              variant="outline"
-              loading={isLoading}
-              fullWidth
-              style={styles.closeButton}
-            />
-          )}
-        {isTutor && hasApplied && (
-        <>
-          <View style={styles.alreadyAppliedContainer}>
-            <Text style={styles.alreadyAppliedText}>
-              Bạn đã ứng tuyển vào yêu cầu này
-            </Text>
-          </View>
-
-          <Button
-            title="Huỷ ứng tuyển"
-            onPress={handleCancelApplication}
-            fullWidth
-            style={styles.applyButton}
+      <FlatList
+        data={showApplications ? displayedApplications : []}
+        keyExtractor={(item) => item.applicationId}
+        renderItem={({ item }) => (
+          <TutorApplication
+            key={item.applicationId}
+            requestId={postId}
+            StatusAccepted={statusAccepted?.statusId || ''}
+            StatusRejected={statusRejected?.statusId || ''}
+             item={item}
+             statusStudentRequest={statusesStudentRequest}
+            onPress={() => handleViewProfile(item.tutorId)}
           />
-
-          {hasAcceptedApplication && (
-            <Button
-              title="Tạo lớp học"
-              onPress={() => handleCreateClass(postId)} // Hàm xử lý tạo lớp học bạn định nghĩa ở chỗ khác
-              fullWidth
-              style={styles.applyButton} // Bạn nên định nghĩa thêm style này
-            />
-          )}
-        </>
-      )}
-      </View>
-
-        {isOwner && applications && applications.length > 0 && (
-          <View style={styles.applicationsContainer}>
-            <TouchableOpacity 
-              style={styles.toggleButton}
-              onPress={() => setShowApplications(!showApplications)}
-            >
-              <Text style={styles.toggleButtonText}>
-                {showApplications ? 'Ẩn danh sách ứng tuyển' : `Hiện thị danh sách ứng tuyển (${applications.length})`}
-              </Text>
-            </TouchableOpacity>
-            
-            {showApplications && (
-              <View style={styles.applicationsList}>
-                {isLoadingApplications ? (
-                  <ActivityIndicator size="small" color={Colors.primary} />
-                ) : (
-                  applications.map((application) => (
-                    <TutorApplication
-                      key={application.applicationId}
-                      userId={application.tutorId}
-                      status={ application.status}
-                      date={application.applicationDate}
-                      onPress={() => handleViewProfile(application.tutorId)}
-                      />
-                  ))
-                )}
+        )}
+        ListHeaderComponent={
+          <>
+            {/* --- Info Section --- */}
+            <View style={styles.header}>
+              <View style={styles.userInfo}>
+                <TouchableOpacity>
+                  <Image
+                    source={
+                      author?.avatarUrl
+                        ? { uri: author.avatarUrl }
+                        : require('@/assets/images/user_default.jpg')
+                    }
+                    style={styles.avatar}
+                  />
+                </TouchableOpacity>
+                <View>
+                  <TouchableOpacity>
+                    <Text style={styles.userName}>{author?.fullName}</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.postDate}>
+                    {selectedRequest?.createdAt ? formatDate(selectedRequest.createdAt) : 'N/A'}
+                  </Text>
+                </View>
               </View>
-            )}
-          </View>
-          )}
-        <View style={styles.actionsContainer}>
-          <View style={styles.secondaryActions}>
-            {!isMyPost && (
-              <TouchableOpacity 
-                style={styles.actionButton} 
-                onPress={handleMessage}
-              >
-                <MessageSquare size={20} color={colors.primary} />
-                <Text style={styles.actionText}>Nhắn tin</Text>
+            </View>
+
+            <Text style={styles.title}>{selectedRequest?.title}</Text>
+
+            {/* --- Info Card --- */}
+            <View style={styles.infoCard}>
+              {/* Địa điểm */}
+              <View style={styles.infoRow}>
+                <View style={styles.infoItem}>
+                  <MapPin size={18} color={colors.textSecondary} />
+                  <Text style={styles.infoLabel}>Địa điểm:</Text>
+                  <Text style={styles.infoValue}>{selectedRequest?.location}</Text>
+                </View>
+              </View>
+
+              {/* Số học sinh */}
+              <View style={styles.infoRow}>
+                <View style={styles.infoItem}>
+                  <Users size={18} color={colors.textSecondary} />
+                  <Text style={styles.infoLabel}>Số học sinh:</Text>
+                  <Text style={styles.infoValue}>{selectedRequest?.studentCount}</Text>
+                </View>
+              </View>
+
+              {/* Lịch học */}
+              <View style={styles.infoRow}>
+                <View style={styles.infoItem}>
+                  <Clock size={18} color={colors.textSecondary} />
+                  <Text style={styles.infoLabel}>Lịch học:</Text>
+                  <Text style={styles.infoValue}>{selectedRequest?.preferredSchedule}</Text>
+                </View>
+              </View>
+
+              {/* Học phí */}
+              <View style={styles.infoRow}>
+                <View style={styles.infoItem}>
+                  <DollarSign size={18} color={colors.textSecondary} />
+                  <Text style={styles.infoLabel}>Học phí:</Text>
+                  <Text style={styles.infoValue}>{selectedRequest?.tuitionFee}đ/giờ</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* --- Mô tả --- */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Mô tả</Text>
+              <Text style={styles.description}>{selectedRequest?.description}</Text>
+            </View>
+
+            {/* --- Hành động --- */}
+            <View style={styles.actionsContainer}>
+              {!isMyPost && ((isTutor && status?.code === 'Pending') || hasApplied) && (
+                <>
+                  {!hasApplied ? (
+                    <Button title="Ứng tuyển" onPress={handleApply} fullWidth style={styles.applyButton} />
+                  ) : (
+                    <>
+                      {TutorApplicationStatus?.code === 'Pending' && (
+                        <>
+                          <View style={styles.alreadyAppliedContainer}>
+                            <Text style={styles.alreadyAppliedText}>
+                              Bạn đã ứng tuyển vào yêu cầu này (chờ xét duyệt)
+                            </Text>
+                          </View>
+                          <Button
+                            title="Huỷ ứng tuyển"
+                            onPress={handleCancelApplication}
+                            fullWidth
+                            style={styles.applyButton}
+                          />
+                        </>
+                      )}
+                      {TutorApplicationStatus?.code === 'Accepted' && (
+                        <>
+                          <View style={styles.alreadyAppliedContainer}>
+                            <Text style={styles.alreadyAppliedText}>Bạn đã được chấp nhận vào yêu cầu này</Text>
+                          </View>
+                          <Button
+                            title="Tạo lớp học"
+                            onPress={() => handleCreateClass(postId)}
+                            fullWidth
+                            style={styles.applyButton}
+                          />
+                        </>
+                      )}
+                      {TutorApplicationStatus?.code === 'Rejected' && (
+                        <View style={styles.normalAplliedContainer}>
+                          <Text style={styles.rejectedText}>Hồ sơ của bạn đã bị từ chối</Text>
+                        </View>
+                      )}
+                      {TutorApplicationStatus?.code === 'Withdrawn' && (
+                        <View style={styles.normalAplliedContainer}>
+                          <Text style={styles.rejectedText}>Bạn đã rút đơn ứng tuyển</Text>
+                        </View>
+                      )}
+                      {TutorApplicationStatus?.code === 'Cancelled' && (
+                        <Text style={styles.rejectedText}>Ứng tuyển đã bị huỷ do hệ thống hoặc học viên</Text>
+                      )}
+                      {myApplication?.status === 'Completed' && (
+                        <Text style={styles.rejectedText}>Yêu cầu đã hoàn tất</Text>
+                      )}
+                    </>
+                  )}
+                </>
+              )}
+              {isMyPost && (
+                <Button
+                  title="Đóng bài đăng"
+                  onPress={handleClosePost}
+                  variant="outline"
+                  loading={isLoading}
+                  fullWidth
+                  style={styles.closeButton}
+                />
+              )}
+            </View>
+
+            {/* --- Toggle danh sách --- */}
+            {isMyPost && applications.length > 0 && (
+              <TouchableOpacity style={styles.toggleButton} onPress={() => setShowApplications(!showApplications)}>
+                <Text style={styles.toggleButtonText}>
+                  {showApplications
+                    ? 'Ẩn danh sách ứng tuyển'
+                    : `Hiện thị danh sách ứng tuyển (${applications.length})`}
+                </Text>
               </TouchableOpacity>
             )}
-            
-            <TouchableOpacity 
-              style={styles.actionButton} 
-              onPress={handleShare}
-            >
-              <Share2 size={20} color={colors.primary} />
-              <Text style={styles.actionText}>Chia sẻ</Text>
-            </TouchableOpacity>
-            
-            {!isMyPost && (
-              <TouchableOpacity 
-                style={styles.actionButton} 
-                onPress={handleReport}
-              >
-                <Flag size={20} color={colors.danger} />
-                <Text style={[styles.actionText, { color: colors.danger }]}>Báo cáo</Text>
+          </>
+        }
+        ListEmptyComponent={
+          showApplications
+            ? <Text style={{ paddingHorizontal: 16 }}>Không có ứng viên nào.</Text>
+            : null
+        }
+        ListFooterComponent={
+          <View style={styles.actionsContainer}>
+            <View style={styles.secondaryActions}>
+              {!isMyPost && (
+                <TouchableOpacity style={styles.actionButton} onPress={handleMessage}>
+                  <MessageSquare size={20} color={colors.primary} />
+                  <Text style={styles.actionText}>Nhắn tin</Text>
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
+                <Share2 size={20} color={colors.primary} />
+                <Text style={styles.actionText}>Chia sẻ</Text>
               </TouchableOpacity>
-            )}
+
+              {!isMyPost && (
+                <TouchableOpacity style={styles.actionButton} onPress={handleReport}>
+                  <Flag size={20} color={colors.danger} />
+                  <Text style={[styles.actionText, { color: colors.danger }]}>Báo cáo</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
-        </View>
-    </ScrollView>
+        }
+        contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+      />
     </View>
   );
 }
 const styles = StyleSheet.create({
   alreadyAppliedContainer: {
     backgroundColor: "#e0f7fa",
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.md,
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+  normalAplliedContainer: {
+    backgroundColor: colors.card,
     padding: SPACING.md,
     borderRadius: BORDER_RADIUS.md,
     alignItems: 'center',
@@ -709,6 +798,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: SPACING.sm,
   },
+  rejectedText: {
+  color: '#D32F2F',
+  fontSize: 14,
+  fontWeight: '500',
+  marginTop: 8,
+  textAlign: 'center',
+},
   actionText: {
     fontSize: FONT_SIZE.sm,
     color: colors.primary,

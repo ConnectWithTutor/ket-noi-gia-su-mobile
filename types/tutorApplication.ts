@@ -12,7 +12,7 @@ export interface TutorApplication {
 export interface TutorApplicationCreateRequest {
   tutorId: string;
   requestId: string;
-  applicationDate: string;
+  applicationDate?: string;
   status: string;
 }
 

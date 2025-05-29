@@ -144,6 +144,7 @@ export const useAuthStore = create<AuthState>()(
           }
           
           const response = await authApi.getCurrentUser();
+
           if ( response) {
             set({
               user: response,

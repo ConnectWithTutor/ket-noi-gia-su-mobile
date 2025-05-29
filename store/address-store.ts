@@ -10,7 +10,7 @@ interface AddressState {
 interface AddressStoreState extends AddressState {
     fetchAddressById: (id: string) => Promise<Address | null>;
     createAddress: (data: AddressCreateRequest) => Promise<boolean>;
-    // updateAddress: (id: string, data: Partial<Address>) => Promise<boolean>;
+    updateAddress: (id: string, data: Partial<AddressCreateRequest>) => Promise<boolean>;
     // deleteAddress: (id: string) => Promise<boolean>;
     // setSelectedAddress: (address: Address | null) => void;
     clearError: () => void;
@@ -62,43 +62,38 @@ export const useAddressStore = create<AddressStoreState>()(
                     return false;
                 }
             },
+            updateAddress: async (id: string, data: Partial<AddressCreateRequest>) => {
+                set({ isLoading: true, error: null });
+                try {
+                    const res = await addressApi.updateAddress(id, data);
+                    const updated = (res as SingleItemResponse<Address>).data;
+                    if (updated) {
+                        set((state) => ({
+                            Address: updated,
+                            isLoading: false,
+                        }));
+                        return true;
+                    }
+                    set({
+                        error: "Không thể cập nhật địa chỉ. Vui lòng thử lại sau.",
+                        isLoading: false,
+                    });
+                    return false;
+                } catch (e: any) {
+                    set({
+                        error: e.message || "Không thể cập nhật địa chỉ. Vui lòng thử lại sau.",
+                        isLoading: false,
+                    });
+                    return false;
+                }
+            },
             clearError: () => set({ error: null }),
 }));
 
 
             
 
-        //     updateAddress: async (id: string, data: Partial<Address>) => {
-        //         set({ isLoading: true, error: null });
-        //         try {
-        //             const res = await addressApi.updateAddress(id, data);
-        //             const updated = (res as SingleItemResponse<Address>).data;
-        //             if (updated) {
-        //                 set((state) => ({
-        //                     addresses: state.addresses.map((a) =>
-        //                         a.id === id ? updated : a
-        //                     ),
-        //                     selectedAddress:
-        //                         state.selectedAddress?.id === id
-        //                             ? updated
-        //                             : state.selectedAddress,
-        //                     isLoading: false,
-        //                 }));
-        //                 return true;
-        //             }
-        //             set({
-        //                 error: "Không thể cập nhật địa chỉ. Vui lòng thử lại sau.",
-        //                 isLoading: false,
-        //             });
-        //             return false;
-        //         } catch (e: any) {
-        //             set({
-        //                 error: e.message || "Không thể cập nhật địa chỉ. Vui lòng thử lại sau.",
-        //                 isLoading: false,
-        //             });
-        //             return false;
-        //         }
-        //     },
+            
 
         //     deleteAddress: async (id: string) => {
         //         set({ isLoading: true, error: null });

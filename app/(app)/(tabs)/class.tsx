@@ -39,6 +39,14 @@ export default function ClassesScreen() {
     router.push(`/class/${classId}` as any);
   };
 
+  // Phân loại lớp học
+  const myClasses = classes.filter(
+    (item) => item.tutorId === user?.userId 
+  );
+  const otherClasses = classes.filter(
+    (item) => item.tutorId !== user?.userId 
+  );
+
   const renderClassItem = ({ item }: { item: Class }) => (
     <TouchableOpacity 
       style={styles.classCard} 
@@ -53,10 +61,9 @@ export default function ClassesScreen() {
                           item.status === 'cancelled' ? Colors.danger : 
                           Colors.warning
         }]}>
-          
         </View>
       </View>
-
+      {/* ...giữ nguyên các dòng khác */}
       <View style={styles.infoRow}>
         <View style={styles.infoItem}>
           <BookOpen size={16} color={Colors.textSecondary} />
@@ -71,7 +78,6 @@ export default function ClassesScreen() {
           <Text style={styles.infoText}>{item.maxStudents} học viên</Text>
         </View>
       </View>
-
       <View style={styles.infoRow}>
         <View style={styles.infoItem}>
           <Clock size={16} color={Colors.textSecondary} />
@@ -82,17 +88,16 @@ export default function ClassesScreen() {
           <Text style={styles.infoText}>{item.studyType}</Text>
         </View>
       </View>
-
       <View style={styles.footer}>
-        <Text style={styles.price}>{item.tuitionFee.toLocaleString('vi-VN')}đ</Text>
+        <Text style={styles.price}>{item.tuitionFee.toLocaleString()}đ</Text>
         <Text style={styles.date}>Bắt đầu: {formatDate(item.startDate)}</Text>
       </View>
     </TouchableOpacity>
   );
 
-  const renderEmptyComponent = () => (
+  const renderEmptyComponent = (text: string) => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>Bạn chưa có lớp học nào</Text>
+      <Text style={styles.emptyText}>{text}</Text>
       <TouchableOpacity 
         style={styles.createButton}
         onPress={() => router.push('/student-request/create')}
@@ -106,7 +111,7 @@ export default function ClassesScreen() {
     return (
       <View style={styles.container}>
         <StatusBar backgroundColor={Colors.primary} />
-        <Header title="Lớp học của tôi" />
+        <Header title="Lớp học" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
           <Text style={styles.loadingText}>Đang tải lớp học...</Text>
@@ -119,7 +124,7 @@ export default function ClassesScreen() {
     return (
       <View style={styles.container}>
         <StatusBar backgroundColor={Colors.primary} />
-        <Header title="Lớp học của tôi" />
+        <Header title="Lớp học" />
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={loadClasses}>
@@ -133,10 +138,9 @@ export default function ClassesScreen() {
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor={Colors.primary} />
-      <Header title="Lớp học của tôi" />
-      
+      <Header title="Lớp học" />
       <FlatList
-        data={classes}
+        data={myClasses}
         renderItem={renderClassItem}
         keyExtractor={(item) => item.classId}
         contentContainerStyle={styles.listContent}
@@ -149,7 +153,21 @@ export default function ClassesScreen() {
             tintColor={Colors.primary}
           />
         }
-        ListEmptyComponent={renderEmptyComponent}
+        ListHeaderComponent={
+          <Text style={{...styles.className, marginBottom: 8}}>Lớp học của tôi</Text>
+        }
+        ListEmptyComponent={renderEmptyComponent('Bạn chưa có lớp học nào')}
+      />
+      <FlatList
+        data={otherClasses}
+        renderItem={renderClassItem}
+        keyExtractor={(item) => item.classId}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <Text style={{...styles.className, marginBottom: 8}}>Các lớp học khác</Text>
+        }
+        ListEmptyComponent={renderEmptyComponent('Không có lớp học khác')}
       />
     </View>
   );

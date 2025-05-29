@@ -24,7 +24,9 @@ export const classApi = {
     getClassById: async (class_id: string) => {
         return api.get<SingleItemResponse<Class>>(API_ENDPOINTS.classesById(class_id));
     },
-
+    findBestClasses: async (data?: { keyword?: string; userId?: string; limit?: number }) => {
+        return api.post<PaginatedResponse<Class>>(API_ENDPOINTS.findBestClasses, data);
+    },
     createClass: async (data: ClassCreateRequest) => {
         return api.post<SingleItemResponse<Class>>(API_ENDPOINTS.createClasses, data);
     },

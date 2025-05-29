@@ -3,7 +3,13 @@ import * as Location from 'expo-location';
 /**
  * Lấy địa chỉ hiện tại của thiết bị (chuỗi string)
  */
-export const getCurrentAddress = async (): Promise<string> => {
+export interface CurrentAddressResult {
+  fullAddress: string;
+  latitude: number;
+  longitude: number;
+}
+
+export const getCurrentAddress = async (): Promise<CurrentAddressResult> => {
   try {
     // Yêu cầu quyền truy cập vị trí
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -20,7 +26,12 @@ export const getCurrentAddress = async (): Promise<string> => {
 
     if (reverseGeocode.length > 0) {
       const place = reverseGeocode[0];
-      return `${place.name ?? ''}, ${place.street ?? ''}, ${place.city ?? ''}, ${place.region ?? ''}, ${place.country ?? ''}`;
+      const fullAddress = `${place.name ?? ''}, ${place.street ?? ''}, ${place.city ?? ''}, ${place.region ?? ''}, ${place.country ?? ''}`;
+      return {
+        fullAddress,
+        latitude,
+        longitude,
+      };
     } else {
       throw new Error('Không tìm thấy địa chỉ từ tọa độ');
     }

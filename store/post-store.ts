@@ -54,18 +54,40 @@ export const useStudentRequestStore = create<StudentRequestState>((set, get) => 
     try {
       const response = await studentRequestsApi.getStudentRequests(page, limit);
       if (response.data) {
-
         const paginatedData = response as PaginatedResponse<StudentRequest>;
-        set({ 
-          requests: paginatedData.data || [],
-          pagination: {
-            page: paginatedData.pagination.currentPage,
-            limit: limit,
-            total: paginatedData.pagination.totalItems,
-            totalPages: paginatedData.pagination.totalPages
-          },
-          loading: false
+        const newRequests = paginatedData.data || [];
+        
+        set(state => {
+          // Lọc ra các item mới hoặc có status thay đổi
+          const updatedRequests = state.requests.map(existingItem => {
+        const found = newRequests.find(newItem => newItem.requestId === existingItem.requestId);
+        if (found) {
+          // Nếu status thay đổi thì cập nhật
+          if (found.status !== existingItem.status) {
+            return { ...existingItem, ...found };
+          }
+          return existingItem;
+        }
+        return existingItem;
+          });
+
+          // Thêm các item mới chưa có trong state.requests
+          const filteredNewRequests = newRequests.filter(newItem =>
+        !state.requests.some(existingItem => existingItem.requestId === newItem.requestId)
+          );
+
+          return {
+        requests: [...updatedRequests, ...filteredNewRequests],
+        pagination: {
+          page: paginatedData.pagination.currentPage,
+          limit: limit,
+          total: paginatedData.pagination.totalItems,
+          totalPages: paginatedData.pagination.totalPages
+        },
+        loading: false
+          };
         });
+
       } else {
         set({ 
           loading: false, 

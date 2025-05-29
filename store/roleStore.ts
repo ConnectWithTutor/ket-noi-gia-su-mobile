@@ -13,7 +13,7 @@ interface RoleState {
   };
   
   fetchRoles: (page?: number) => Promise<void>;
-  getRoleById: (id: string) => Role | undefined;
+  getRoleById: (id: string) => Promise<Role | undefined>;
   clearError: () => void;
 }
 
@@ -53,8 +53,15 @@ export const useRoleStore = create<RoleState>(
     }
   },
   
-  getRoleById: (id) => {
-    return get().roles.find(role => role.roleId === id);
+  getRoleById: async (id) => {
+    try {
+      if (!id) return undefined;
+      const response = await rolesApi.getRoleById(id);
+      return response;
+    } catch (error) {
+      set({ error: "Failed to fetch role by ID" });
+      return undefined;
+    }
   },
   
   clearError: () => set({ error: null })

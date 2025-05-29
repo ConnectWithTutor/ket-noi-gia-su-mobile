@@ -9,6 +9,6 @@ export const rolesApi = {
   
   // Get role by ID
   getRoleById: async (id: string) => {
-    return api.get<SingleItemResponse<Role>>(`/roles/${id}`);
+    return api.get<Role>(`/roles/${id}`);
   }
 };  

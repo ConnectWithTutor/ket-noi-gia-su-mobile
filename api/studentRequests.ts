@@ -40,7 +40,7 @@ export const studentRequestsApi = {
   
   // Update a student request
   updateStudentRequest: async (id: string, data: StudentRequestUpdateRequest) => {
-    return api.patch<PaginatedResponse<StudentRequest>>(API_ENDPOINTS.updateStudentRequest(id), data);
+    return api.put<PaginatedResponse<StudentRequest>>(API_ENDPOINTS.updateStudentRequest(id), data);
   },
   
   // Delete a student request

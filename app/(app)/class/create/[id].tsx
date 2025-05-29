@@ -34,12 +34,11 @@ export default function CreateClassScreen() {
   const { user } = useAuthStore();
   const { fetchStudentRequestById, selectedRequest } = useStudentRequestStore();
   const {createClass, isLoading: isCreatingClass ,selectedClass} = useClassStore();
-  const { fetchStatusesClass, StatusesClass } = useStatusStore();
+  const { fetchStatusesClass, StatusesClass,statusesStudentRequest } = useStatusStore();
   const { createWeeklySchedules, isLoading: isCreatingSchedule } = useScheduleStore();
-  
+   const { updateStudentRequest } = useStudentRequestStore();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
   // Class form state
   const [className_vi, setClassName_vi] = useState('');
   const [className_en, setClassName_en] = useState('');
@@ -244,6 +243,10 @@ export default function CreateClassScreen() {
           studentId:selectedRequest?.studentId || '',
           registrationDate: new Date().toISOString(),
           });
+          const Status = statusesStudentRequest?.find((st) => st.code.toLowerCase() === "completed");
+                await updateStudentRequest(requestId, {
+                  status: Status?.statusId || '',
+                });
         const schedulesCreated = await createWeeklySchedules(scheduleData);
         if (schedulesCreated) {
           Alert.alert(

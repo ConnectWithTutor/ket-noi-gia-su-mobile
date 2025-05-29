@@ -57,6 +57,8 @@ export const useTutorStore = create<TutorStore>()(
 
       getTutorById: async (id) => {
         try {
+          console.log("respon", id);
+
           const respon = await tutorApi.tutorProfileById(id);
             if (respon) {
             return respon;

@@ -40,13 +40,16 @@ export default function TutorProfileScreen() {
   const { conversations, setActiveConversation } = useChatStore();
   
   const [tutor, setTutor] = useState<TutorProfile | undefined>();
-  const { user, fetchUserById } = useUserProfileStore();
+  const [user, setUser] = useState<any>(null);
+  const { fetchUserById } = useUserProfileStore();
 
   useEffect(() => {
     const fetchTutorData = async () => {
       try {
         const tutorData = await getTutorById(userId);
-        if (tutorData) {
+        const user = await fetchUserById(userId);
+        if (tutorData && user) {
+          setUser(user);
           setTutor(tutorData);
         } else {
           Alert.alert("Thông báo", "Không tìm thấy gia sư.");
@@ -58,7 +61,6 @@ export default function TutorProfileScreen() {
     };
 
     fetchTutorData();
-    fetchUserById(userId);
   }, [userId]);
   
   if (!tutor) {

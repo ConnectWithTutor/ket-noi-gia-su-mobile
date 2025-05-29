@@ -14,3 +14,4 @@ export * from './status';
 export * from './subject';
 export * from './address';
 export * from './tutorApplication';
+export * from './zoom';

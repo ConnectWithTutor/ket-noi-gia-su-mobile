@@ -8,47 +8,24 @@ import { StudentRequest } from '@/types/student-request';
 import { User } from '@/types/user';
 import { getRelativeTime } from '@/utils/date-utils';
 import { useUserProfileStore } from '@/store/profile-store';
-import PostStatus from './PostStatus';
-import { useSubjectStore } from '@/store/subjectStore';
-import { Subject } from '@/types';
+import { Status, Subject } from '@/types';
 
 interface PostCardProps {
   post: StudentRequest;
   onPress: () => void;
+  status: Status;
+  author: User;
+  subject?: Subject;
 }
 
-function PostCardComponent({ post, onPress }: PostCardProps) {
-  const { fetchUserById } = useUserProfileStore();
-  const [author, setAuthor] = useState<User | null>(null);
-  const { fetchSubjects, getSubjectById, subjects, loading } = useSubjectStore();
-  const [subject, setSubject] = useState<Subject | null>(null);
-
-  useEffect(() => {
-    fetchSubjects();
-  }, [fetchSubjects]);
-
-  useEffect(() => {
-    async function fetchAuthor() {
-      await fetchUserById(post.studentId);
-      setAuthor(useUserProfileStore.getState().user);
-    }
-    fetchAuthor();
-  }, [fetchUserById, post.studentId]);
-
-  useEffect(() => {
-    if (!loading && subjects.length > 0) {
-      const sub = getSubjectById(post.subjectId);
-      if (sub) setSubject(sub);
-      else console.error(`Subject with ID ${post.subjectId} not found`);
-    }
-  }, [loading, subjects, getSubjectById, post.subjectId]);
+function PostCardComponent({ post, onPress,status,author, subject }: PostCardProps) {
 
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.8}>
       <View style={styles.header}>
         <View style={styles.userInfo}>
           <Image 
-            source={{ uri: author?.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80' }} 
+            source={{ uri: author?.avatarUrl || '' }} 
             style={styles.avatar} 
           />
           <View>
@@ -56,7 +33,39 @@ function PostCardComponent({ post, onPress }: PostCardProps) {
             <Text style={styles.postTime}>{getRelativeTime(post.createdAt)}</Text>
           </View>
         </View>
-        <PostStatus statusId={post.status} />
+        <View
+          style={[
+            styles.statusBadge,
+            {
+              backgroundColor:
+          status.code?.toLowerCase() === 'inprogress'
+            ? colors.primary + 20
+            : status.code?.toLowerCase() === 'completed'
+            ? colors.success + 20
+            : status.code?.toLowerCase() === 'cancelled'
+            ? colors.danger + 20
+            : colors.warning + 20,
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.statusText,
+              {
+          color:
+            status.code?.toLowerCase() === 'inprogress'
+              ? colors.primary
+              : status.code?.toLowerCase() === 'completed'
+              ? colors.success
+              : status.code?.toLowerCase() === 'cancelled'
+              ? colors.danger
+              : colors.warning,
+              },
+            ]}
+          >
+            {status.name || 'Không rõ'}
+          </Text>
+        </View>
       </View>
       
       <Text style={styles.title}>{post.title}</Text>
@@ -70,7 +79,7 @@ function PostCardComponent({ post, onPress }: PostCardProps) {
         
         <View style={styles.infoItem}>
           <Users size={16} color={colors.textSecondary} />
-          <Text style={styles.infoText}>2 học sinh</Text>
+          <Text style={styles.infoText}>{post.studentCount}</Text>
         </View>
         
         <View style={styles.infoItem}>
@@ -176,5 +185,14 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.xs,
     fontWeight: '600',
     color: colors.white,
+  },
+    statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  statusText: {
+   fontSize: FONT_SIZE.xs,
+    fontWeight: '600',
   },
 });

@@ -5,6 +5,7 @@ import {
   Subject,
   SubjectCreateRequest,
   SubjectUpdateRequest,
+  SingleItemResponse
 } from "@/types";
 
 export const subjectsApi = {
@@ -15,7 +16,7 @@ export const subjectsApi = {
   
   // Get subject by ID
   getSubjectById: async (id: string) => {
-    return api.get<PaginatedResponse<Subject>>(`${API_ENDPOINTS.subjects}/${id}`);
+    return api.get<SingleItemResponse<Subject>>(`${API_ENDPOINTS.subjects}/${id}`);
   },
   
   // Create subject (admin only)

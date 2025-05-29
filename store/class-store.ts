@@ -4,17 +4,23 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Class, ClassCreateRequest } from '@/types/class';
 import { ClassRegistrationCreateRequest } from '@/types/class-registration';
 import { classApi } from '@/api/class';
+import { useAuthStore } from './auth-store';
 
 interface ClassState {
   classes: Class[];
   selectedClass: Class | null;
   isLoading: boolean;
   error: string | null;
+  message: string | null;
 }
 
 interface ClassStore extends ClassState {
   fetchClasses: () => Promise<void>;
   fetchClassById: (id: string) => Promise<Class | null>;
+  findBestClasses: (params: {
+    keyword: string;
+    limit: number;
+  }) => Promise<void>;
   createClass: (classData: ClassCreateRequest) => Promise<string | null>;
   updateClass: (id: string, classData: Partial<Class>) => Promise<boolean>;
   deleteClass: (id: string) => Promise<boolean>;
@@ -29,6 +35,7 @@ export const useClassStore = create<ClassStore>()(
       selectedClass: null,
       isLoading: false,
       error: null,
+      message: null,
 
      fetchClasses: async () => {
              set({ isLoading: true, error: null });
@@ -69,12 +76,39 @@ export const useClassStore = create<ClassStore>()(
           return null;
         }
       },
-
+      findBestClasses: async ({
+        keyword,
+        limit,
+      }: {
+        keyword: string;
+        limit: number;
+      }) => {
+        set({ isLoading: true, error: null });
+        try {
+            const userId = useAuthStore.getState().user?.userId;
+            const response = await classApi.findBestClasses({ keyword, userId, limit });
+          if (response.results) {
+            set({ classes: response.results, isLoading: false , message:null });
+          } else {
+            set({
+              message: response.message || "Không tìm thấy lớp học phù hợp.",
+              classes: [],
+              error: "Không tìm thấy lớp học phù hợp.",
+              isLoading: false,
+            });
+          }
+        } catch (error) {
+          set({
+            error: "Không thể tìm kiếm lớp học. Vui lòng thử lại sau.",
+            isLoading: false,
+          });
+        }
+      },
       createClass: async (classData: ClassCreateRequest) => {
         set({ isLoading: true, error: null });
         try {
           const response = await classApi.createClass(classData);
-          if (response) {
+          if (response.id) {
             // Lấy thông tin lớp học mới tạo từ API và cập nhật selectedClass
             await get().fetchClassById(response.id);
            set({

@@ -14,9 +14,13 @@ import Header from "@/components/ui/Header";
 import StatusBar from "@/components/ui/StatusBar";
 import {getCurrentAddress} from "@/hooks/useCurrentAddress";
 import DatePicker from "@/components/ui/DatePickerInput";
+import { useAddressStore } from "@/store/address-store";
 export default function PersonalInfoScreen() {
   const router = useRouter();
   const { user, updateUser, isLoading } = useAuthStore();
+  const { createAddress,updateAddress,fetchAddressById } = useAddressStore();
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     fullName: user?.fullName || "",
     email: user?.email || "",
@@ -33,8 +37,41 @@ export default function PersonalInfoScreen() {
     triggerHaptic('medium');
     
     try {
-      await updateUser(formData);
-      Alert.alert("Thành công", "Thông tin cá nhân đã được cập nhật");
+      if(latitude && longitude)
+      {
+        await updateUser(formData);
+        if (user?.userId) {
+          const addressUser = await fetchAddressById(user.userId);
+            if (addressUser && Array.isArray(addressUser) && addressUser.length > 0) {
+            await updateAddress(
+              user.userId,
+              {
+                ...addressUser,
+                fullAddress: formData.address,
+                latitude: latitude,
+                longitude: longitude,
+              }
+            );
+          } else {
+            await createAddress({
+              userId: user.userId,
+              fullAddress: formData.address,
+              latitude: latitude,
+              longitude: longitude,
+            });
+          }
+        Alert.alert("Thành công", "Thông tin cá nhân đã được cập nhật");
+        }
+      
+        else {
+          Alert.alert("Lỗi", "Không tìm thấy người dùng. Vui lòng đăng nhập lại.");
+          return;
+        }
+      }
+      else {
+        Alert.alert("Lỗi", "Vui lòng lấy địa chỉ trước khi lưu thay đổi.");
+        return;
+      }
       router.back();
     } catch (error) {
       Alert.alert("Lỗi", "Không thể cập nhật thông tin. Vui lòng thử lại sau.");
@@ -47,9 +84,10 @@ export default function PersonalInfoScreen() {
       if (address) {
          setFormData((prev) => ({
       ...prev,
-      address: address,
+      address: address.fullAddress,
       }));
-      
+        setLatitude(address.latitude);
+        setLongitude(address.longitude);
         Alert.alert("Thành công", "Địa chỉ đã được cập nhật");
 
       }

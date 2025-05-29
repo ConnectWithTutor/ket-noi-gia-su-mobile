@@ -8,12 +8,13 @@ export interface PaginatedResponse<T> {
   detail?: ErrorResponse;
   pagination: paginatedData;
   data: T[];
+  results?: T[];
 }
 export interface SingleItemResponse<T> {
+  id?: string;
   detail?: ErrorResponse;
   pagination: paginatedData;
-  data: T;
-  id: string;
+  data?: T;
 }
 export interface ErrorResponse {
     loc: (string | number)[];

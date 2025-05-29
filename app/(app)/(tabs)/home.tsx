@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { Bell, Search, BookOpen, Users, Calendar, MessageSquare, FileText, School } from "lucide-react-native";
@@ -16,12 +16,17 @@ import TutorCard from "@/components/tutors/TutorCard";
 import { StudentRequest, Tutor, User } from "@/types";
 import { useClassStore } from "@/store/class-store";
 import { useStatusStore } from "@/store/status-store";
+import { useUserProfileStore } from "@/store/profile-store";
 
 export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
+ 
+      const { fetchUserById } = useUserProfileStore();
   const { classes, fetchClasses } = useClassStore();
   const {StatusesClass, fetchStatusesClass} = useStatusStore();
+    const [authorsMap, setAuthorsMap] = useState<Map<string, any>>(new Map());
+    const { statusesStudentRequest, fetchStatuses } = useStatusStore();
   const {
     recentRequests,
     loading,
@@ -32,21 +37,63 @@ export default function HomeScreen() {
     fetchClasses();
     fetchStatusesClass();
     fetchRecentStudentRequests();
+    fetchStatuses
     fetchTutors();
   }, []);
-  
+
   const PendingClass = StatusesClass.find((status) => status.code === "Pending");
   const upcomingClasses = classes
     .filter(c => c.status === PendingClass?.statusId)
     .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
     .slice(0, 3);
    const handleRequestPress = (request: StudentRequest) => {
-
     router.push(`/student-request/${request.requestId}` as any);
   };
 
-  
+   const getStatusById = useCallback(
+    (statusId: string) => statusesStudentRequest.find(s => s.statusId === statusId) || null,
+    [statusesStudentRequest]
+  );
   const recommendedTutors = users.slice(0, 4);
+   const handlePostPress = useCallback(
+      (requestId: string) => {
+        triggerHaptic("light");
+        router.push(`/student-request/${requestId}`);
+      },
+      [router]
+    );
+
+  useEffect(() => {
+    async function fetchAuthors() {
+      const userIds = [...new Set(recentRequests.map(item => item.studentId))];
+      const users = await Promise.all(userIds.map(id => 
+        fetchUserById(id)
+
+    ));
+
+      const map = new Map();
+      users.forEach(user => {
+        if (user) map.set(user.userId, user);
+      });
+      // So sánh map mới với authorsMap cũ
+      let isSame = true;
+      if (map.size !== authorsMap.size) isSame = false;
+      else {
+        for (let [key, value] of map) {
+          if (authorsMap.get(key) !== value) {
+            isSame = false;
+            break;
+          }
+        }
+      }
+      if (!isSame) setAuthorsMap(map);
+    }
+  
+    if (recentRequests.length > 0) {
+      fetchAuthors();
+    }
+  }, [recentRequests, fetchUserById]);
+   
   const handleFeaturePress = (feature: string) => {
     triggerHaptic('light');
     
@@ -67,7 +114,10 @@ export default function HomeScreen() {
         break;
     }
   };
-  
+  const handleFindClass = () => {
+    triggerHaptic('light');
+    router.push("/(app)/class/find-class" as any);
+  };
   const getTutor = (tutorId: string): User => {
     const tutor = users.find(user => user.userId === tutorId);
     return tutor ?? user!;
@@ -106,9 +156,9 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
         
-        <TouchableOpacity style={styles.searchBar} onPress={() => {}}>
+        <TouchableOpacity style={styles.searchBar} onPress={() => {handleFindClass()}}>
           <Search size={20} color={colors.textSecondary} />
-          <Text style={styles.searchText}>Tìm kiếm gia sư, môn học...</Text>
+          <Text style={styles.searchText}>Tìm kiếm môn học</Text>
         </TouchableOpacity>
       </View>
       
@@ -173,13 +223,23 @@ export default function HomeScreen() {
               <Text style={styles.loadingText}>Đang tải bài đăng...</Text>
             </View>
           ) : recentRequests.length > 0 ? (
-            recentRequests.map(request => (
-              <PostCard 
-                key={request.requestId} 
-                post={request} 
-                onPress={() => handleRequestPress(request)} 
-              />
-            ))
+            recentRequests.map((item) =>
+              {
+              const author = authorsMap.get(item.studentId);
+              const status = getStatusById(item.status);
+              if (!author || !status) return null;
+            
+              return (
+                <PostCard
+                  key={item.requestId}
+                  post={item}
+                  author={author}
+                  status={status}
+                  onPress={() => handlePostPress(item.requestId)}
+                />
+              );
+              }
+            )
           ) : (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>Không có bài đăng mới</Text>
@@ -198,7 +258,7 @@ export default function HomeScreen() {
         <View style={styles.upcomingClassesContainer}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Lớp học sắp tới</Text>
-            <TouchableOpacity onPress={() => router.push("/(app)/(tabs)/schedule")}>
+            <TouchableOpacity onPress={() => router.push("/(app)/(tabs)/class")}>
               <Text style={styles.seeAllText}>Xem tất cả</Text>
             </TouchableOpacity>
           </View>
@@ -213,7 +273,7 @@ export default function HomeScreen() {
                 <View style={styles.classInfo}>
                   <Text style={styles.classTitle}>{classItem.className_vi}</Text>
                   <Text style={styles.classTime}>
-                    {formatDate(classItem.startDate)} 
+                    {(classItem.startDate)} 
                   </Text>
                   <Text style={styles.classLocation}>{classItem.description}</Text>
                 </View>

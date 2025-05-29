@@ -79,7 +79,7 @@ export const useTutorApplicationStore = create<TutorApplicationState>((set, get)
     set({ isLoading: true, error: null });
     try {
       const response = await tutorApplicationsApi.getTutorApplicationsByUser(userId, page, limit);
-      if (response.success && response.data) {
+      if ( response.data) {
         set({
           applications: response.data,
           totalApplications: response.pagination.totalItems,
@@ -165,8 +165,8 @@ export const useTutorApplicationStore = create<TutorApplicationState>((set, get)
         applicationDate: new Date().toISOString(),
         status: pendingStatus?.statusId || ""
       };
-
       const response = await tutorApplicationsApi.createTutorApplication(dataI);
+      
       if (response) {
         set({
           isLoading: false

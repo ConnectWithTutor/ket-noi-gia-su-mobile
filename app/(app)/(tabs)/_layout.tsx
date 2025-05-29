@@ -23,73 +23,74 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textSecondary,
-        tabBarStyle: {
-          borderTopColor: colors.border,
-          backgroundColor: colors.white,
-        },
-        headerStyle: {
-          backgroundColor: colors.white,
-        },
-        headerShown: false ,
-        headerTitleStyle: {
-          color: colors.text,
-          fontWeight: '600',
-        },
-        headerRight: () => (
-          <TouchableOpacity 
-            onPress={handleNotificationPress}
-            style={{ marginRight: 16, position: 'relative' }}
-          >
-            <Bell size={24} color={colors.text} />
-            <NotificationBadge count={unreadCount} size="small" />
-          </TouchableOpacity>
-        ),
+      tabBarActiveTintColor: colors.primary,
+      tabBarInactiveTintColor: colors.textSecondary,
+      tabBarStyle: {
+        borderTopColor: colors.border,
+        backgroundColor: colors.white,
+      },
+      headerStyle: {
+        backgroundColor: colors.white,
+      },
+      headerShown: false ,
+      headerTitleStyle: {
+        color: colors.text,
+        fontWeight: '600',
+      },
+      headerRight: () => (
+        <TouchableOpacity 
+        onPress={handleNotificationPress}
+        style={{ marginRight: 16, position: 'relative' }}
+        >
+        <Bell size={24} color={colors.text} />
+        <NotificationBadge count={unreadCount} size="small" />
+        </TouchableOpacity>
+      ),
       }}
     >
       <Tabs.Screen
-        name="home"
-        options={{
-          title: 'Trang chủ',
-          tabBarIcon: ({ color }) => <Home size={24} color={color} />,
-        }}
+      name="home"
+      options={{
+        title: 'Trang chủ',
+        tabBarIcon: ({ color }) => <Home size={24} color={color} />,
+      }}
       />
      <Tabs.Screen
        name="schedule"
-         options={{
-          title: 'Lịch học',
-          tabBarIcon: ({ color }) => <Calendar size={24} color={color} />,
-        }}
+       options={{
+        title: 'Lịch học',
+        tabBarIcon: ({ color }) => <Calendar size={24} color={color} />,
+      }}
       />
       <Tabs.Screen
-        name="posts"
-        options={{
-          title: 'Bài viết',
-          tabBarIcon: ({ color }) => <FileText size={24} color={color} />,
-        }}
+      name="posts"
+      options={{
+        title: 'Bài viết',
+        tabBarIcon: ({ color }) => <FileText size={24} color={color} />,
+      }}
       />
       <Tabs.Screen
-        name="chat"
-        options={{
-          title: 'Tin nhắn',
-          tabBarIcon: ({ color }) => <MessageSquare size={24} color={color} />,
-        }}
+      name="chat"
+      options={{
+        title: 'Tin nhắn',
+        tabBarIcon: ({ color }) => <MessageSquare size={24} color={color} />,
+      }}
       />
       <Tabs.Screen
-        name="class"
-        options={{
-          title: 'Lớp học',
-          tabBarIcon: ({ color }) => <School size={24} color={color} />,
-        }}
+      name="class"
+      options={{
+        title: 'Lớp học',
+        tabBarIcon: ({ color }) => <School size={24} color={color} />,
+      }}
       />
       <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Cá nhân',
-          tabBarIcon: ({ color }) => <User size={24} color={color} />,
-        }}
+      name="profile"
+      options={{
+        title: 'Cá nhân',
+        tabBarIcon: ({ color }) => <User size={24} color={color} />,
+      }}
       />
+     
     </Tabs>
     
   );
