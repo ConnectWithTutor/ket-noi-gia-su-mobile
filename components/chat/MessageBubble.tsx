@@ -23,11 +23,15 @@ export default function MessageBubble({
       styles.container,
       isMe ? styles.myMessageContainer : styles.otherMessageContainer,
     ]}>
-      {!isMe && showAvatar && (
-        <Image
-          source={{ uri: avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80' }}
-          style={styles.avatar}
-        />
+      {!isMe && (
+        showAvatar ? (
+          <Image
+            source={{ uri: avatar || require('@/assets/images/user_default.jpg') }}
+            style={styles.avatar}
+          />
+        ) : (
+          <View style={styles.avatarPlaceholder} />
+        )
       )}
       
       <View style={[
@@ -69,6 +73,11 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     marginRight: SPACING.xs,
   },
+  avatarPlaceholder: {
+  width: 30,
+  height: 30,
+  marginRight: SPACING.xs,
+},
   bubble: {
     padding: SPACING.sm,
     borderRadius: BORDER_RADIUS.md,

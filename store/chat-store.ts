@@ -1,249 +1,300 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Conversation, Message } from '@/types/chat';
+import { apiChat } from '@/services/apiChat';
+import {webSocketService } from '@/services/websocket';
+import { Message, User, Conversation, MessageCreateRequest } from '@/types';
 
 interface ChatState {
+  currentUser: User | null;
   conversations: Conversation[];
+  participants: User[];
+  currentConversation: Conversation | null;
   messages: Record<string, Message[]>;
-  activeConversationId: string | null;
   isLoading: boolean;
   error: string | null;
-}
-
-interface ChatStore extends ChatState {
-  fetchConversations: () => Promise<void>;
+  
+  setCurrentUser: (user: User) => void;
+  fetchConversations: (userId: string) => Promise<void>;
   fetchMessages: (conversationId: string) => Promise<void>;
-  sendMessage: (conversationId: string, content: string) => Promise<void>;
-  setActiveConversation: (conversationId: string) => void;
-  markConversationAsRead: (conversationId: string) => Promise<void>;
+  fetchParticipants: (conversationId: string) => Promise<User[]>;
+  sendMessage: (conversationId: string, content: string, messageType?: string) => Promise<void>;
+  setCurrentConversation: (conversation: Conversation | null) => void;
+  createConversation: (userId: string, otherUserId: string) => Promise<Conversation>;
+  SearchConversation: (user1Id: string, user2Id: string) => Promise<Conversation | null>;
+  addParticipant: (conversationId: string, userId: string) => Promise<void>;
+  addMessageToConversation: (message: Message) => void;
+  connectWebSocket: (userId: string) => Promise<void>;
+  disconnectWebSocket: () => void;
 }
 
-export const useChatStore = create<ChatStore>()(
+export const useChatStore = create<ChatState>()(
   persist(
     (set, get) => ({
+       currentUser: null,
       conversations: [],
+      participants: [],
+      currentConversation: null,
       messages: {},
-      activeConversationId: null,
       isLoading: false,
       error: null,
 
-      fetchConversations: async () => {
+      setCurrentConversation: (conversation) => {
+        set({ currentConversation: conversation });
+        
+        // If setting a new conversation, unsubscribe from the previous one
+        const prevConversation = get().currentConversation;
+        if (prevConversation && prevConversation.conversationId !== conversation?.conversationId) {
+          webSocketService.unsubscribeFromConversation(prevConversation.conversationId);
+        }
+        
+        // Subscribe to the new conversation
+        if (conversation) {
+          webSocketService.subscribeToConversation(conversation.conversationId);
+        }
+      },
+      setCurrentUser: (user) => set({ currentUser: user }),
+      fetchConversations: async (userId) => {
         set({ isLoading: true, error: null });
         try {
-          // Simulate API call
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          
-          // Mock conversations data
-          const mockConversations: Conversation[] = [
-            {
-              id: '1',
-              participants: ['1', '2'],
-              lastMessage: {
-                id: '101',
-                senderId: '2',
-                receiverId: '1',
-                content: 'Xin chào, bạn có thể giúp tôi về bài tập không?',
-                timestamp: new Date().toISOString(),
-                read: false,
-              },
-              unreadCount: 1,
-            },
-            {
-              id: '2',
-              participants: ['1', '3'],
-              lastMessage: {
-                id: '201',
-                senderId: '1',
-                receiverId: '3',
-                content: 'Cảm ơn thầy về buổi học hôm nay!',
-                timestamp: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-                read: true,
-              },
-              unreadCount: 0,
-            },
-            {
-              id: '3',
-              participants: ['1', '4'],
-              lastMessage: {
-                id: '301',
-                senderId: '4',
-                receiverId: '1',
-                content: 'Ngày mai chúng ta sẽ học chương 5 nhé.',
-                timestamp: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-                read: true,
-              },
-              unreadCount: 0,
-            },
-          ];
-          
-          set({ conversations: mockConversations, isLoading: false });
+          const conversations = await apiChat.conversations.getAll(userId);
+          set({ conversations, isLoading: false });
         } catch (error) {
+          console.error('Lỗi khi lấy danh sách cuộc trò chuyện:', error);
           set({ 
-            error: "Không thể tải cuộc trò chuyện. Vui lòng thử lại sau.", 
+            error: error instanceof Error ? error.message : 'Không thể lấy danh sách cuộc trò chuyện', 
             isLoading: false 
           });
+          throw error;
         }
       },
 
       fetchMessages: async (conversationId) => {
         set({ isLoading: true, error: null });
         try {
-          // Simulate API call
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          
-          // Mock messages data
-          const now = Date.now();
-          const mockMessages: Message[] = [
-            {
-              id: '1',
-              senderId: '2',
-              receiverId: '1',
-              content: 'Xin chào, bạn có thể giúp tôi về bài tập không?',
-              timestamp: new Date(now - 3600000).toISOString(), // 1 hour ago
-              read: true,
-            },
-            {
-              id: '2',
-              senderId: '1',
-              receiverId: '2',
-              content: 'Chào bạn, tôi có thể giúp gì cho bạn?',
-              timestamp: new Date(now - 3540000).toISOString(), // 59 minutes ago
-              read: true,
-            },
-            {
-              id: '3',
-              senderId: '2',
-              receiverId: '1',
-              content: 'Tôi đang gặp khó khăn với bài tập về Phương trình bậc hai.',
-              timestamp: new Date(now - 3480000).toISOString(), // 58 minutes ago
-              read: true,
-            },
-            {
-              id: '4',
-              senderId: '1',
-              receiverId: '2',
-              content: 'Không vấn đề gì. Bạn có thể gửi bài tập cho tôi xem không?',
-              timestamp: new Date(now - 3420000).toISOString(), // 57 minutes ago
-              read: true,
-            },
-            {
-              id: '5',
-              senderId: '2',
-              receiverId: '1',
-              content: 'Phòng tôi có thể học trực tiếp không? Tôi sẽ mang theo sách.',
-              timestamp: new Date(now - 3360000).toISOString(), // 56 minutes ago
-              read: true,
-            },
-            {
-              id: '6',
-              senderId: '1',
-              receiverId: '2',
-              content: 'Được chứ. Chúng ta có thể gặp nhau vào ngày mai lúc 3 giờ chiều tại thư viện.',
-              timestamp: new Date(now - 3300000).toISOString(), // 55 minutes ago
-              read: true,
-            },
-            {
-              id: '7',
-              senderId: '2',
-              receiverId: '1',
-              content: 'Tuyệt vời! Cảm ơn bạn rất nhiều.',
-              timestamp: new Date(now - 3240000).toISOString(), // 54 minutes ago
-              read: true,
-            },
-            {
-              id: '8',
-              senderId: '1',
-              receiverId: '2',
-              content: 'Không có gì. Hẹn gặp bạn ngày mai.',
-              timestamp: new Date(now - 3180000).toISOString(), // 53 minutes ago
-              read: true,
-            },
-          ];
-          
-          set((state) => ({
+          const messages = await apiChat.messages.getByConversation(conversationId);
+          set(state => ({
             messages: {
               ...state.messages,
-              [conversationId]: mockMessages,
+              [conversationId]: messages
             },
-            isLoading: false,
+            isLoading: false
           }));
+          
+          webSocketService.subscribeToConversation(conversationId);
         } catch (error) {
+          console.error('Lỗi khi lấy tin nhắn:', error);
           set({ 
-            error: "Không thể tải tin nhắn. Vui lòng thử lại sau.", 
+            error: error instanceof Error ? error.message : 'Không thể lấy tin nhắn', 
             isLoading: false 
           });
+          throw error;
         }
       },
-
-      sendMessage: async (conversationId, content) => {
+      fetchParticipants: async (conversationId) => {
         set({ isLoading: true, error: null });
         try {
-          // Simulate API call
-          await new Promise((resolve) => setTimeout(resolve, 500));
-          
-          const newMessage: Message = {
-            id: Date.now().toString(),
-            senderId: '1', // Current user ID
-            receiverId: get().conversations.find(c => c.id === conversationId)?.participants.find(p => p !== '1') || '',
-            content,
-            timestamp: new Date().toISOString(),
-            read: true,
-          };
-          
-          set((state) => {
-            // Update messages
-            const conversationMessages = state.messages[conversationId] || [];
-            const updatedMessages = {
-              ...state.messages,
-              [conversationId]: [...conversationMessages, newMessage],
-            };
-            
-            // Update conversation last message
-            const updatedConversations = state.conversations.map(conv => 
-              conv.id === conversationId
-                ? { ...conv, lastMessage: newMessage, unreadCount: 0 }
-                : conv
-            );
-            
-            return {
-              messages: updatedMessages,
-              conversations: updatedConversations,
-              isLoading: false,
-            };
-          });
+          const participants = await apiChat.conversations.getParticipants(conversationId);
+          set({ isLoading: false });
+          return participants;
         } catch (error) {
+          console.error('Lỗi khi lấy thành viên:', error);
           set({ 
-            error: "Không thể gửi tin nhắn. Vui lòng thử lại sau.", 
+            error: error instanceof Error ? error.message : 'Không thể lấy thành viên', 
             isLoading: false 
           });
+          throw error;
         }
       },
+      sendMessage: async (conversationId, content, messageType = 'text') => {
+        const { currentUser } = get();
+        if (!currentUser) {
+          const error = 'Người dùng chưa đăng nhập';
+          set({ error });
+          throw new Error(error);
+        }
 
-      setActiveConversation: (conversationId) => {
-        set({ activeConversationId: conversationId });
-      },
-
-      markConversationAsRead: async (conversationId) => {
         try {
-          // Simulate API call
-          await new Promise((resolve) => setTimeout(resolve, 300));
+          // Generate a temporary ID for optimistic updates
+           const tempId = `temp-${Date.now()}`;
+          const tempMessage: Message = {
+            messageId: tempId,
+            conversationId,
+            senderId: currentUser.userId,
+            content,
+            messageType: messageType as 'text' | 'image' | 'file',
+            sentAt: new Date().toISOString(),
+            isEdited: false,
+            isDeleted: false,
+
+          };
           
-          set((state) => ({
-            conversations: state.conversations.map(conv => 
-              conv.id === conversationId
-                ? { ...conv, unreadCount: 0 }
-                : conv
-            ),
-          }));
+          // Optimistically add message to the local state
+
+          // Send via WebSocket for real-time delivery
+          webSocketService.sendMessage(conversationId, content, messageType);
+          
+        
+          get().addMessageToConversation(tempMessage);
+          
+          set(state => {
+              const conversationMessages = state.messages[conversationId] || [];
+              return {
+                messages: {
+                  ...state.messages,
+                  [conversationId]: [...conversationMessages, tempMessage]  // Append
+                }
+              };
+            });
+          
         } catch (error) {
-          console.error("Error marking conversation as read:", error);
+          console.error('Lỗi khi gửi tin nhắn:', error);
+          set({ 
+            error: error instanceof Error ? error.message : 'Không thể gửi tin nhắn'
+          });
+          throw error;
         }
       },
+
+      createConversation: async (userId, otherUserId) => {
+        set({ isLoading: true, error: null });
+        try {
+          if( userId === otherUserId) {
+            const error = 'Không thể tạo cuộc trò chuyện với chính mình';
+            set({ error, isLoading: false });
+            throw new Error(error);
+          }
+          const newConversation = await apiChat.conversations.create(userId, 'private');
+          
+          // Add the other user to the conversation
+          await apiChat.conversations.addParticipant(newConversation.conversationId, otherUserId);
+          
+          const participants = await apiChat.conversations.getParticipants(newConversation.conversationId);
+          
+          const conversationWithParticipants = {
+            ...newConversation,
+            participants: participants,
+          };
+          
+          // Update the conversations list
+          set(state => ({
+            conversations: [...state.conversations, conversationWithParticipants],
+            isLoading: false
+          }));
+          
+          return conversationWithParticipants;
+        } catch (error) {
+          console.error('Lỗi khi tạo cuộc trò chuyện:', error);
+          set({ 
+            error: error instanceof Error ? error.message : 'Không thể tạo cuộc trò chuyện', 
+            isLoading: false 
+          });
+          throw error;
+        }
+      },
+      SearchConversation: async (user1Id, user2Id) => {
+        set({ isLoading: true, error: null });
+        try {
+          const conversation = await apiChat.conversations.search(user1Id, user2Id);
+          set({ isLoading: false });
+          return conversation || null;
+        } catch (error) {
+          console.error('Lỗi khi tìm kiếm cuộc trò chuyện:', error);
+          set({ 
+            error: error instanceof Error ? error.message : 'Không thể tìm kiếm cuộc trò chuyện', 
+            isLoading: false 
+          });
+          throw error;
+        }
+      },
+      addParticipant: async (conversationId, userId) => {
+        set({ isLoading: true, error: null });
+        try {
+          const updatedConversation = await apiChat.conversations.addParticipant(conversationId, userId);
+          
+          set(state => ({
+            conversations: state.conversations.map(conv =>
+              conv.conversationId === conversationId ? updatedConversation : conv
+            ),
+            isLoading: false
+          }));
+          
+        } catch (error) {
+          console.error('Lỗi khi thêm thành viên:', error);
+          set({ 
+            error: error instanceof Error ? error.message : 'Không thể thêm thành viên', 
+            isLoading: false 
+          });
+          throw error;
+        }
+      },
+
+      addMessageToConversation: (message) => {
+        const { conversations, messages } = get();
+        const conversationId = message.conversationId;
+        set(state => {
+          const conversationMessages = state.messages[conversationId] || [];
+          if ((message.senderId !== state.currentUser?.userId) && !conversationMessages.some(m => m.messageId === message.messageId)) {
+            return {
+              messages: {
+                ...state.messages,
+                [conversationId]: [
+                  ...conversationMessages,
+                  message
+                ]
+              }
+            };
+          }
+          return state;
+        });
+        const updatedConversations = conversations.map(conv => {
+          if (conv.conversationId === conversationId) {
+            return {
+              ...conv,
+              lastMessage: message,
+              updatedAt: message.sentAt|| new Date().toISOString()
+            };
+          }
+          return conv;
+        });
+        
+        // Sort conversations by most recent message
+        updatedConversations.sort((a, b) => {
+          const aTime = a.lastMessage?.sentAt || a.updatedAt;
+          const bTime = b.lastMessage?.sentAt || b.updatedAt;
+          return new Date(bTime ?? '').getTime() - new Date(aTime ?? '').getTime();
+        });
+        
+        set({ conversations: updatedConversations });
+      },
+
+      connectWebSocket: async (userId) => {
+        try {
+          await webSocketService.connect(userId);
+          webSocketService.addMessageHandler('global', (message) => {
+            get().addMessageToConversation(message);
+          });
+          
+          return;
+        } catch (error) {
+          console.error('Lỗi khi kết nối WebSocket:', error);
+          set({ 
+            error: error instanceof Error ? error.message : 'Không thể kết nối WebSocket'
+          });
+          throw error;
+        }
+      },
+
+      disconnectWebSocket: () => {
+        webSocketService.disconnect();
+      }
     }),
     {
       name: 'chat-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        currentUser: state.currentUser,
+      }),
     }
   )
 );

@@ -16,4 +16,7 @@ export const StatusApi = {
     getStatusClass: async (page = 1, limit = 20) => {
         return api.get<PaginatedResponse<Status>>(`${API_ENDPOINTS.classesStatus}?page=${page}&limit=${limit}`);
     },
+    getStatusPayment: async (page = 1, limit = 20) => {
+        return api.get<PaginatedResponse<Status>>(`${API_ENDPOINTS.paymentStatus}?page=${page}&limit=${limit}`);
+    }
 };  

@@ -122,10 +122,3 @@ export const api = {
     return this.request<T>(endpoint, { ...config, method: "DELETE" });
   },
 };
-
-// Web compatibility for network errors
-if (Platform.OS === "web") {
-  window.addEventListener("offline", () => {
-    console.warn("Network connection lost");
-  });
-}

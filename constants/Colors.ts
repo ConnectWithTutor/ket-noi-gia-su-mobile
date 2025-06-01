@@ -21,6 +21,7 @@ export default  {
   placeholder: '#9E9E9E',
   disabled: '#BDBDBD',
   white: '#FFFFFF',
+  gray: '#9E9E9E',
   transparent: 'transparent',
   overlay: 'rgba(0, 0, 0, 0.5)',
 };

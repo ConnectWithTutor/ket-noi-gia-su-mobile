@@ -7,7 +7,7 @@ export interface Address {
     district: string;
     ward?: string;
     street?: string;
-    fullAddres?: string;
+    fullAddres: string;
     latitude: number;
     longitude: number;
 }
@@ -20,6 +20,6 @@ export interface AddressCreateRequest {
     ward?: string;
     street?: string;
     fullAddress: string;
-    latitude: number;
-    longitude: number;
+    latitude?: number;
+    longitude?: number;
 }

@@ -88,7 +88,7 @@ const CreateScheduleScreen = () => {
 
                         <Text style={styles.label}>Ngày học</Text>
                         <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.input}>
-                                <Text>{date}</Text>
+                                <Text>{date.toLocaleDateString()}</Text>
                         </TouchableOpacity>
                         {showDatePicker && (
                                 <DateTimePicker

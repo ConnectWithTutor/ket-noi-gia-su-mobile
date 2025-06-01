@@ -19,6 +19,7 @@ import { useUserProfileStore } from '@/store/profile-store';
 import { User,Status } from '@/types';
 import Button from '@/components/ui/Button';
 import TutorApplication from '@/components/tutors/TutorApplication';
+import { useChat } from '@/hooks/useChat';
 export default function StudentRequestDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const postId = Array.isArray(id) ? id[0] : id;
@@ -42,7 +43,7 @@ export default function StudentRequestDetails() {
   } = useTutorApplicationStore();
   const { fetchRoles,roles } = useRoleStore();
   const [showApplications, setShowApplications] = useState(false);
-const { conversations, setActiveConversation } = useChatStore();
+  const {startChat} = useChat(user!);
 const [status, setStatus] = useState<Status| null>(null);
  const { fetchUserById } = useUserProfileStore();
    const [author, setAuthor] = React.useState<User | null>(null);
@@ -264,23 +265,18 @@ const handleClosePost = async () => {
     triggerHaptic('medium');
     router.push(`/class/create/${postId}` as any);
   };
- const handleMessage = () => {
+ const handleMessage = async () => {
     triggerHaptic('light');
     // Find existing conversation or create new one
-    const existingConversation = conversations.find(conv => 
-      conv.participants.includes(user?.userId || '') && 
-      conv.participants.includes(selectedRequest?.studentId || '')
-    );
-    
-    if (existingConversation) {
-      setActiveConversation(existingConversation.id);
-      router.push(`/conversation/${existingConversation.id}`);
-    } else {
-      Alert.alert(
-        "Thông báo",
-        "Tính năng nhắn tin sẽ được cập nhật trong phiên bản tiếp theo."
-      );
-    }
+     const existingConversation = await startChat(selectedRequest?.studentId || '');
+        if (existingConversation) {
+          router.push(`/conversation/${existingConversation.conversationId}`);
+        } else {
+          Alert.alert(
+            "Thông báo",
+            "Không thể tạo cuộc trò chuyện mới. Vui lòng thử lại."
+          );
+        }
   };
 
   const handleReport = () => {
@@ -461,7 +457,7 @@ if (loading) {
                           </View>
                           <Button
                             title="Huỷ ứng tuyển"
-                            onPress={handleCancelApplication}
+                            onPress={handleDelete}
                             fullWidth
                             style={styles.applyButton}
                           />

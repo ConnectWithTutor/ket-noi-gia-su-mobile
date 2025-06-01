@@ -27,6 +27,7 @@ export default function ClassesScreen() {
       await fetchClasses();
     }
   };
+  
 
   const onRefresh = async () => {
     setRefreshing(true);

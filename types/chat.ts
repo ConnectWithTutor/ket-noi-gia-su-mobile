@@ -7,9 +7,3 @@ export interface Message {
     read: boolean;
   }
   
-  export interface Conversation {
-    id: string;
-    participants: string[];
-    lastMessage: Message;
-    unreadCount: number;
-  }

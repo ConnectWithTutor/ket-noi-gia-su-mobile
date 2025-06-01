@@ -130,6 +130,7 @@ export default function ScheduleScreen() {
   const mergedSchedules = schedules.map(sch => ({
   ...sch,
   classInfo: classes.find(cls => cls.classId === sch.classId) || null,
+  
 }));
 const filteredClasses = mergedSchedules.filter(sch => {
   const schDate = new Date(sch.dayStudying);

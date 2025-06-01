@@ -20,10 +20,12 @@ import ProfileItem from "@/components/profile/ProfileItem";
 import { useAuthStore } from "@/store/auth-store";
 import { triggerHaptic } from "@/utils/haptics";
 import { useRoleStore } from "@/store/roleStore";
+import { useChatStore } from "@/store/chat-store";
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
   const { roles,fetchRoles } = useRoleStore();
+  const { disconnectWebSocket } = useChatStore();
   useEffect(() => {
     const fetchUserRole = async () => {
       await fetchRoles();
@@ -32,25 +34,26 @@ export default function ProfileScreen() {
   }, []);
   const role =roles.find((role) => role.roleId === user?.roleId);
   const handleLogout = () => {
-    
+    disconnectWebSocket();
     triggerHaptic('medium');
     logout();
     router.replace("/");
   };
   
-  const handleChangePassword = () => {
+  const handlepush = (path: string) => {
     triggerHaptic('light');
-    router.push("/change-password");
+    router.push(path as any);
+  };
+  const handleChangePassword = () => {
+    handlepush("/change-password");
   };
 
   const handlePersonalInfo = () => {
-    triggerHaptic('light');
-    router.push("/personal-info");
+    handlepush("/personal-info");
   };
 
   const handleNotifications = () => {
-    triggerHaptic('light');
-    router.push("/notifications");
+    handlepush("/notifications");
   };
 
   return (
@@ -120,11 +123,32 @@ export default function ProfileScreen() {
             </View>
           </View>
         )}
+
+        {role?.roleName === "Student" && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Học viên</Text>
+            
+            <View style={styles.sectionContent}>
+              <ProfileItem
+                icon={<BookOpen size={20} color={colors.primary} />}
+                title="Danh sách hoá đơn"
+                subtitle="Xem các hoá đơn của bạn"
+                onPress={() => router.push("/(app)/invoice/invoices")}
+              />
+            </View>
+          </View>
+        )}
         
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Hỗ trợ</Text>
           
           <View style={styles.sectionContent}>
+            <ProfileItem
+              icon={<HelpCircle size={20} color={colors.primary} />}
+              title="Khiếu nại"
+              subtitle="Bạn gặp vấn đề gì?"
+              onPress={() => {handlepush("/(app)/complaint/complaints")}}
+            />
             <ProfileItem
               icon={<HelpCircle size={20} color={colors.primary} />}
               title="Trợ giúp"

@@ -134,20 +134,7 @@ const TutorApplicationComponent = ({  requestId, StatusAccepted,StatusRejected ,
 }
 if (isLoading) {
   return (
-    // <SkeletonPlaceholder
-    //   backgroundColor="#E1E9EE"
-    //   highlightColor="#F2F8FC"
-    //   // @ts-ignore: Expo cần ignore type này
-    //   LinearGradientComponent={LinearGradient}
-    // >
-    //   <SkeletonPlaceholder.Item flexDirection="row" alignItems="center" padding={16}>
-    //     <SkeletonPlaceholder.Item width={50} height={50} borderRadius={25} />
-    //     <SkeletonPlaceholder.Item marginLeft={12}>
-    //       <SkeletonPlaceholder.Item width={120} height={20} borderRadius={4} />
-    //       <SkeletonPlaceholder.Item marginTop={6} width={80} height={20} borderRadius={4} />
-    //     </SkeletonPlaceholder.Item>
-    //   </SkeletonPlaceholder.Item>
-    // </SkeletonPlaceholder>
+   
      <View style={styles.applicationItem}>
       <View style={[styles.skeletonText, { width: '60%' }]} />
       <View style={[styles.skeletonText, { width: '40%', marginTop: 8 }]} />

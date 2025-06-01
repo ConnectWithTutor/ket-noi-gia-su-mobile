@@ -1,131 +1,140 @@
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from "axios";
-import { Platform } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { SOCKET_URL,PREFIX } from "@/constants/config";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { PREFIX,SOCKET_URL } from '@/constants/config';
+import { Conversation, Message, User } from '@/types/';
 
-class ApiError extends Error {
-  status: number;
-  
-  constructor(message: string, status: number) {
-    super(message);
-    this.name = "ApiError";
-    this.status = status;
-  }
-}
+const API_URL = 'http://' + SOCKET_URL + PREFIX;
 
-// Create axios instance
-const axiosInstance: AxiosInstance = axios.create({
-  baseURL: SOCKET_URL + PREFIX,
-  headers: {
-    "Content-Type": "application/json",
-    "Accept": "application/json"
-  },
-  withCredentials: true,
-});
-
-// Helper to get auth token from storage
-export const getAuthToken = async (): Promise<string | null> => {
+export const getToken = async (): Promise<string | null> => {
   try {
-    return await AsyncStorage.getItem("auth_token");
+    const token = await AsyncStorage.getItem("auth_token");
+    return token;
   } catch (error) {
-    console.error("Failed to get auth token", error);
+    console.error('Failed to get auth token', error);
     return null;
   }
 };
 
-axiosInstance.interceptors.request.use(
-  async (config) => {
-    // Only add token if not already provided in the request config
-    if (!config.headers.Authorization) {
-      const token = await getAuthToken();
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  (error: AxiosError) => {
-    if (error.response) {
-      
-      const status = error.response.status;
-      console.error("API Error:", error.response.data);
-      const data = error.response.data as any;
-      const message = data?.message || data?.error || "An error occurred";
-      
-      return Promise.reject(new ApiError(message, status));
-    } else if (error.request) {
-      // The request was made but no response was received
-      return Promise.reject(new ApiError("No response from server", 0));
-    } else {
-      // Something happened in setting up the request that triggered an Error
-      return Promise.reject(new ApiError(error.message || "Request failed", 0));
-    }
-  }
-);
-
-export const apiChat = {
-  async request<T>(endpoint: string, options: AxiosRequestConfig = {}): Promise<T> {
-    try {
-      const response = await axiosInstance({
-        url: endpoint,
-        ...options
-      });
-      
-      return response.data as T;
-    } catch (error) {
-      if (error instanceof ApiError) {
-        throw error;
-      }
-      
-      if (axios.isAxiosError(error)) {
-        const status = error.response?.status || 0;
-        const message = 
-          error.response?.data?.message || 
-          error.response?.data?.error || 
-          error.message || 
-          "Network error";
-        
-        throw new ApiError(message, status);
-      }
-      
-      throw new ApiError(
-        (error as Error).message || "Unknown error",
-        0
-      );
-    }
-  },
-  
-  get<T>(endpoint: string, config: AxiosRequestConfig = {}) {
-    return this.request<T>(endpoint, { ...config, method: "GET" });
-  },
-  
-  post<T>(endpoint: string, data: any, config: AxiosRequestConfig = {}) {
-    return this.request<T>(endpoint, { ...config, method: "POST", data });
-  },
-  
-  put<T>(endpoint: string, data: any, config: AxiosRequestConfig = {}) {
-    return this.request<T>(endpoint, { ...config, method: "PUT", data });
-  },
-  
-  patch<T>(endpoint: string, data: any, config: AxiosRequestConfig = {}) {
-    return this.request<T>(endpoint, { ...config, method: "PATCH", data });
-  },
-  
-  delete<T>(endpoint: string, config: AxiosRequestConfig = {}) {
-    return this.request<T>(endpoint, { ...config, method: "DELETE" });
-  },
+const getHeaders = async () => {
+  const token = await getToken();
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+  };
 };
 
-// Web compatibility for network errors
-if (Platform.OS === "web") {
-  window.addEventListener("offline", () => {
-    console.warn("Network connection lost");
-  });
-}
+const handleResponse = async (response: Response) => {
+  const contentType = response.headers.get('content-type');
+  const isJson = contentType && contentType.includes('application/json');
+
+  let data: any = null;
+  let rawText: string | null = null;
+
+  if (isJson) {
+    try {
+      data = await response.json();
+    } catch (err) {
+      console.warn('Invalid JSON response');
+    }
+  } else {
+    rawText = await response.text(); // chỉ đọc nếu không phải JSON
+  }
+
+  if (!response.ok) {
+    throw {
+      message: data?.message || rawText || 'An error occurred',
+      status: response.status,
+      body: data || rawText
+    };
+  }
+
+  return data;
+};
+
+export const apiChat = {
+  conversations: {
+    getAll: async (userId: string): Promise<Conversation[]> => {
+      const headers = await getHeaders();
+      const response = await fetch(`${API_URL}/conversations/find-chat-room-at-least-one-content/${userId}`, {
+        headers
+      });
+      return handleResponse(response);
+    },
+    
+    create: async (creatorUserId: string, type: 'private' | 'group' = 'private'): Promise<Conversation> => {
+      const headers = await getHeaders();
+      const response = await fetch(`${API_URL}/conversations/create`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ creatorUserId, type })
+      });
+      
+      return handleResponse(response);
+    },
+    
+    search: async (user1Id: string, user2Id: string): Promise<Conversation | null> => {
+      const headers = await getHeaders();
+      const response = await fetch(`${API_URL}/conversations/search?user1Id=${user1Id}&user2Id=${user2Id}`, {
+        headers
+      });
+      if (response.status === 204) {
+          return null;
+      }
+      return handleResponse(response);
+    },
+     
+    addParticipant: async (conversationId: string, userId: string): Promise<Conversation> => {
+      const headers = await getHeaders();
+      const response = await fetch(`${API_URL}/conversations/add-participant?conversationId=${conversationId}&userId=${userId}`, {
+        method: 'POST',
+        headers
+      });
+      
+      return handleResponse(response);
+    },
+    
+    removeParticipant: async (conversationId: string, userId: string): Promise<Conversation> => {
+      const headers = await getHeaders();
+      const response = await fetch(`${API_URL}/conversations/remove-participant?conversationId=${conversationId}&userId=${userId}`, {
+        method: 'POST',
+        headers
+      });
+      
+      return handleResponse(response);
+    },
+
+    getParticipants: async (conversationId: string): Promise<User[]> => {
+      const headers = await getHeaders();
+      const response = await fetch(`${API_URL}/conversations/participants/${conversationId}`, {
+        headers
+      });
+        
+      return handleResponse(response);
+    }
+  },
+  
+  messages: {
+    send: async (conversationId: string, senderId: string, content: string, messageType: string = 'text'): Promise<Message> => {
+      const headers = await getHeaders();
+      const response = await fetch(`${API_URL}/message/send-message`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ 
+          conversationId, 
+          senderId, 
+          content, 
+          messageType 
+        }),
+      });
+      return handleResponse(response);
+    },
+    
+    getByConversation: async (conversationId: string): Promise<Message[]> => {
+      const headers = await getHeaders();
+      const response = await fetch(`${API_URL}/message/messages/${conversationId}`, {
+        headers
+      });
+      
+      return handleResponse(response);
+    },
+  },
+};

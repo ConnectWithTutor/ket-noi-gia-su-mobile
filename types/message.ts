@@ -1,27 +1,22 @@
-import { SearchParams } from './common';
-
 export interface Message {
-  id: string;
+  messageId: string;
+  conversationId: string;
   senderId: string;
-  receiverId: string;
   content: string;
-  isRead: boolean;
-  createdAt: string;
+  messageType: 'text' | 'image' | 'file';
+  sentAt: string;
+  isEdited: boolean;
+  isDeleted: boolean;
 }
 
 export interface MessageCreateRequest {
-  receiverId: string;
+  conversationId: string;
+  senderId: string;
+  messageType: 'text' | 'image' | 'file';
   content: string;
 }
 
-export interface ConversationPreview {
-  userId: string;
-  name: string;
-  lastMessage: string;
-  unreadCount: number;
-  updatedAt: string;
-}
-
-export interface MessageSearchParams extends SearchParams {
-  userId: string;
+export interface WebSocketMessage {
+  type: 'message' | 'typing' | 'read' | 'participant_added' | 'participant_removed';
+  payload: any;
 }

@@ -121,19 +121,25 @@ export const API_ENDPOINTS = {
     updateAddress: (address_id: string) => `${API_BASE}/addresses/update/${address_id}`,
     deleteAddress: (address_id: string) => `${API_BASE}/addresses/delete/${address_id}`,
 
+    //Payment
+    payments: `${API_BASE}/payments`,
+    paymentsByUser: (user_id: string) => `${API_BASE}/payments/get-by-user/${user_id}`,
+    paymentById: (payment_registration_id: string) => `${API_BASE}/payments/get-by-id/${payment_registration_id}`,
+    vnpayReturn: `${API_BASE}/payments/vnpay_return`,
+    paymentOrder: `${API_BASE}/payments/pay-order`,
+    paymentMethods: `${API_BASE}/payment-methods/`,
+    paymentMethodById: (method_id: string) => `${API_BASE}/payment-methods/get-by-id/${method_id}`,
 
-    // Chat
-    conversations: `${API_SOCKET}/chat/conversations`,
-    conversationById: (conversationId: string) => `${API_SOCKET}/conversations/${conversationId}`,
-    createConversation: `${API_SOCKET}/conversations/create`,
-    addParticipant: (conversationId: string,UserID:String) => `${API_SOCKET}/conversations/add-participant?conversationId=${conversationId}&userId=${UserID}`,
-    removeParticipant: (conversationId:string, userId:string) =>
-  `${API_SOCKET}/conversations/remove-participant?conversationId=${conversationId}&userId=${userId}`,
+    //Complaint
+    complaints: `${API_BASE}/complaint`,
+    complaintsByStatus: (status_name: string) => `${API_BASE}/complaint/get-by-status/${status_name}`,
+    complaintById: (complaint_id: string) => `${API_BASE}/complaint/get-by-id/${complaint_id}`,
+    createComplaint: `${API_BASE}/complaint/create`,
+    updateComplaint: (complaint_id: string) => `${API_BASE}/complaint/update/${complaint_id}`,
+    deleteComplaint: (complaint_id: string) => `${API_BASE}/complaint/delete/${complaint_id}`,
 
-    searchPrivateConversation: (user1Id: string, user2Id: string) =>
-        `${API_SOCKET}/chat/search-private-conversation?user1Id=${user1Id}&user2Id=${user2Id}`,
-    messages: `${API_BASE}/messages`,
-    findAllMessages: (userId: string) => `${API_BASE}/messages/find-all/${userId}`,
-    sendMessage: () => `${API_SOCKET}/message/send-message}`,
-
+    //Complaint Type
+    complaintTypes: `${API_BASE}/complaint-type/`,
+    complaintTypeById: (type_id: string) => `${API_BASE}/complaint-type/get-by-id/${type_id}`,
+    createComplaintType: `${API_BASE}/complaint-type/create`,
 }

@@ -15,3 +15,8 @@ export * from './subject';
 export * from './address';
 export * from './tutorApplication';
 export * from './zoom';
+export * from './message';
+export * from './conversation';
+export * from './conversation-participant';
+export * from './payment';
+export * from './complaint';

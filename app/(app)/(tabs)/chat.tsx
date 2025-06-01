@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, View, Text, TouchableOpacity, FlatList, Image, TextInput } from "react-native";
+import { StyleSheet, View, Text, TouchableOpacity, FlatList, Image, TextInput, RefreshControl } from "react-native";
 import { Search, Users, BookOpen, Calendar, Grid3X3, ArrowRight } from "lucide-react-native";
-import * as Haptics from "expo-haptics";
-
 import colors from "@/constants/Colors";
 import { BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS, SPACING } from "@/constants/Theme";
 import Header from "@/components/ui/Header";
@@ -10,22 +8,52 @@ import StatusBar from "@/components/ui/StatusBar";
 import { useChatStore } from "@/store/chat-store";
 import { getRelativeTime } from "@/utils/date-utils";
 import { useRouter } from "expo-router";
-import { Conversation } from "@/types/chat";
+import { Conversation } from "@/types/conversation";
 import { triggerHaptic } from "@/utils/haptics";
+import { useAuthStore } from "@/store/auth-store";
+import { useChat } from "@/hooks/useChat";
+import { User } from "@/types";
 
 export default function ChatScreen() {
   const router = useRouter();
-  const { conversations, fetchConversations, isLoading, setActiveConversation } = useChatStore();
+  const { user } = useAuthStore();
+  if (!user) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.emptyText}>Vui lòng đăng nhập để xem cuộc trò chuyện</Text>
+      </View>
+    );
+  }
+    const { 
+    conversations, 
+    isLoading,
+     fetchConversations,
+  } = useChat(user);
+  const { fetchParticipants } = useChatStore();
+  const [conversationUsersMap, setConversationUsersMap] = useState<{ [key: string]: any }>({});
   const [searchQuery, setSearchQuery] = useState("");
+
+  const [refreshing, setRefreshing] = useState(false);
+  const loadConversationUsersOnce = async (conversationId : string) => {
+    if (conversationUsersMap[conversationId]) return;
+    try {
+      const users = await fetchParticipants(conversationId);
+      setConversationUsersMap((prev) => ({ ...prev, [conversationId]: users }));
+    } catch (error) {
+      console.error("Failed to load conversation users", error);
+    }
+  };
   
-  useEffect(() => {
-    fetchConversations();
-  }, []);
   
-  const handleConversationPress = (conversationId: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setActiveConversation(conversationId);
-    router.push(`/conversation/${conversationId}`);
+  const handleRefresh = async () => {
+  if (!user?.userId) return;
+  setRefreshing(true);
+  fetchConversations(user.userId);
+  setRefreshing(false);
+
+};
+const handleSelectConversation = (conversation: Conversation) => {
+    router.push(`/conversation/${conversation.conversationId}`);
   };
   const handleNotificationPress = () => {
       triggerHaptic('light');
@@ -33,7 +61,7 @@ export default function ChatScreen() {
     };
   const filteredConversations = searchQuery
     ? conversations.filter(conv => 
-        conv.lastMessage.content.toLowerCase().includes(searchQuery.toLowerCase())
+        conv.lastMessage?.content.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : conversations;
 
@@ -56,9 +84,6 @@ export default function ChatScreen() {
           </View>
         </View>
         
-        <View style={styles.categoriesContainer}>
-          <ScrollableCategories />
-        </View>
         
         <View style={styles.conversationsContainer}>
           {isLoading ? (
@@ -68,15 +93,22 @@ export default function ChatScreen() {
           ) : filteredConversations.length > 0 ? (
             <FlatList
               data={filteredConversations}
-              keyExtractor={(item) => item.id}
+              keyExtractor={(item) => item.conversationId}
               renderItem={({ item }) => (
                 <ConversationItem
                   conversation={item}
-                  onPress={() => handleConversationPress(item.id)}
+                  users={conversationUsersMap[item.conversationId] || []}
+                  onVisible={() => loadConversationUsersOnce(item.conversationId)}
+                  onPress={() => handleSelectConversation(item)}
                 />
               )}
               showsVerticalScrollIndicator={false}
+              refreshing={refreshing}
+              refreshControl={
+                        <RefreshControl refreshing={isLoading} onRefresh={handleRefresh} colors={[colors.primary]} />
+                      }
             />
+
           ) : (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>
@@ -90,88 +122,51 @@ export default function ChatScreen() {
   );
 }
 
-function ScrollableCategories() {
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  
-  const categories = [
-    { id: "all", icon: <Users size={20} color={colors.primary} />, label: "Tất cả" },
-    { id: "tutors", icon: <Users size={20} color={colors.primary} />, label: "Gia sư" },
-    { id: "students", icon: <Users size={20} color={colors.primary} />, label: "Học viên" },
-    { id: "subjects", icon: <BookOpen size={20} color={colors.primary} />, label: "Môn học" },
-    { id: "schedule", icon: <Calendar size={20} color={colors.primary} />, label: "Lịch học" },
-    { id: "other", icon: <Grid3X3 size={20} color={colors.primary} />, label: "Khác" },
-  ];
-  
-  return (
-    <FlatList
-      data={categories}
-      keyExtractor={(item) => item.id}
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      renderItem={({ item }) => (
-        <TouchableOpacity
-          style={[
-            styles.categoryItem,
-            selectedCategory === item.id && styles.selectedCategoryItem,
-          ]}
-          onPress={() => setSelectedCategory(item.id)}
-        >
-          {item.icon}
-          <Text
-            style={[
-              styles.categoryLabel,
-              selectedCategory === item.id && styles.selectedCategoryLabel,
-            ]}
-          >
-            {item.label}
-          </Text>
-        </TouchableOpacity>
-      )}
-      contentContainerStyle={styles.categoriesList}
-    />
-  );
-}
+
 
 interface ConversationItemProps {
   conversation: Conversation;
   onPress: () => void;
+  users: User[];
+  onVisible?: () => void;
 }
 
-function ConversationItem({ conversation, onPress }: ConversationItemProps) {
+function ConversationItem({ conversation, onPress, users, onVisible }: ConversationItemProps) {
+   useEffect(() => {
+    onVisible?.();
+  }, []);
+  const userId = useAuthStore((state) => state.user?.userId);
+  const otherUser = users.find((u) => u.userId !== userId);
+  const displayName = otherUser?.fullName || "Không rõ người dùng";
   return (
     <TouchableOpacity style={styles.conversationItem} onPress={onPress}>
       <View style={styles.avatarContainer}>
         <Image
-          source={{ uri: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80" }}
+          source={
+            otherUser?.avatarUrl
+              ? { uri: otherUser.avatarUrl }
+              : require('@/assets/images/user_default.jpg')
+          }
           style={styles.avatar}
         />
-        {conversation.unreadCount > 0 && (
-          <View style={styles.unreadBadge}>
-            <Text style={styles.unreadCount}>{conversation.unreadCount}</Text>
-          </View>
-        )}
       </View>
-      
       <View style={styles.conversationContent}>
         <View style={styles.conversationHeader}>
           <Text style={styles.conversationName}>
-            {conversation.participants.includes("2") ? "Nguyễn Văn A" : 
-             conversation.participants.includes("3") ? "Lê Thị B" : "Trần Văn C"}
+            {displayName}
           </Text>
           <Text style={styles.conversationTime}>
-            {getRelativeTime(conversation.lastMessage.timestamp)}
+            {getRelativeTime(conversation.lastMessage?.sentAt || conversation.createdAt)}
           </Text>
         </View>
-        
         <View style={styles.messagePreview}>
-          <Text 
+          <Text
             style={[
               styles.messageText,
-              conversation.unreadCount > 0 && styles.unreadMessageText,
             ]}
             numberOfLines={1}
           >
-            {conversation.lastMessage.content}
+              {conversation.lastMessage?.content || "Cuộc trò chuyện mới"}
           </Text>
           <ArrowRight size={16} color={colors.textSecondary} />
         </View>

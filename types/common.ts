@@ -22,6 +22,11 @@ export interface ErrorResponse {
     type: string;
   
 }
+export interface CreateResponse {
+  id: string;
+  message: string;
+  detail?: ErrorResponse;
+}
 
 export interface paginatedData
 {

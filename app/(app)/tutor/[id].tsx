@@ -31,16 +31,18 @@ import { useChatStore } from "@/store/chat-store";
 import { triggerHaptic } from "@/utils/haptics";
 import { useUserProfileStore } from "@/store/profile-store"
 import { TutorProfile } from "@/types";
+import { useAuthStore } from "@/store/auth-store";
+import { useChat } from "@/hooks/useChat";
 
 export default function TutorProfileScreen() {
   const { id } = useLocalSearchParams();
   const userId = id as string;
   const router = useRouter();
   const {  getTutorById } = useTutorStore();
-  const { conversations, setActiveConversation } = useChatStore();
-  
+  const {user} = useAuthStore();
+  const {startChat,isLoading} = useChat(user!);
   const [tutor, setTutor] = useState<TutorProfile | undefined>();
-  const [user, setUser] = useState<any>(null);
+  const [userTutor, setUserTutor] = useState<any>(null);
   const { fetchUserById } = useUserProfileStore();
 
   useEffect(() => {
@@ -49,7 +51,7 @@ export default function TutorProfileScreen() {
         const tutorData = await getTutorById(userId);
         const user = await fetchUserById(userId);
         if (tutorData && user) {
-          setUser(user);
+          setUserTutor(user);
           setTutor(tutorData);
         } else {
           Alert.alert("Thông báo", "Không tìm thấy gia sư.");
@@ -67,20 +69,18 @@ export default function TutorProfileScreen() {
     return null;
   }
   
-  const handleMessage = () => {
+  const handleMessage = async () => {
     triggerHaptic('medium');
-    const existingConversation = conversations.find(conv => 
-      conv.participants.includes(user?.userId || '') && 
-      conv.participants.includes(userId)
-    );
-    
+    if (!user?.userId) {
+      Alert.alert("Thông báo", "Bạn cần đăng nhập để sử dụng tính năng nhắn tin.");
+    }
+    const existingConversation = await startChat(userId);
     if (existingConversation) {
-      setActiveConversation(existingConversation.id);
-      router.push(`/conversation/${existingConversation.id}`);
+      router.push(`/conversation/${existingConversation.conversationId}`);
     } else {
       Alert.alert(
         "Thông báo",
-        "Tính năng nhắn tin sẽ được cập nhật trong phiên bản tiếp theo."
+        "Không thể tạo cuộc trò chuyện mới. Vui lòng thử lại."
       );
     }
   };
@@ -101,11 +101,11 @@ export default function TutorProfileScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.profileHeader}>
           <Image 
-            source={{ uri: user?.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80' }} 
+            source={{ uri: userTutor?.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80' }} 
             style={styles.avatar} 
           />
           
-          <Text style={styles.name}>{user?.fullName }</Text>
+          <Text style={styles.name}>{userTutor?.fullName }</Text>
           
           <View style={styles.ratingContainer}>
             <Star size={18} color="#FFB400" fill="#FFB400" />
@@ -122,7 +122,7 @@ export default function TutorProfileScreen() {
             <View style={styles.infoItem}>
               <MapPin size={18} color={colors.textSecondary} />
               <Text style={styles.infoLabel}>Khu vực:</Text>
-              <Text style={styles.infoValue}>{user?.address}</Text>
+              <Text style={styles.infoValue}>{userTutor?.address}</Text>
             </View>
           </View>
           

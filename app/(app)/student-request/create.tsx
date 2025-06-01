@@ -23,6 +23,7 @@ import { StudentRequestCreateRequest } from "@/types";
 import { triggerHaptic } from "@/utils/haptics";
 import AuthGuard from "@/components/AuthGuard";
 import Header from "@/components/ui/Header";
+import { useAddressStore } from "@/store/address-store";
 
 const STUDY_TYPES = [
   { id: "online", label: "Online" },
@@ -34,7 +35,7 @@ export default function CreateStudentRequestScreen() {
   const { createStudentRequest, loading } = useStudentRequestStore();
   const { user } = useAuthStore();
   const { subjects, fetchSubjects } = useSubjectStore();
-  
+    const { createAddress } = useAddressStore();
   const [formData, setFormData] = useState<Partial<StudentRequestCreateRequest>>({
     subjectId: '',
     studyType: 'offline',
@@ -102,6 +103,10 @@ export default function CreateStudentRequestScreen() {
       const success = await createStudentRequest(requestData);
       
       if (success) {
+        await createAddress({
+              userId: user.userId,
+              fullAddress:  formData.location || '',
+            });
         Alert.alert(
           "Thành công",
           "Đăng bài thành công!",
