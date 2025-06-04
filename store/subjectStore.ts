@@ -12,7 +12,7 @@ interface SubjectState {
     totalPages: number;
   };
   fetchSubjects: (page?: number, limit?: number) => Promise<void>;
-  getSubjectById: (id: string) => Promise<Subject | undefined>;
+  getSubjectById: (id: string) => Subject | undefined;
   clearError: () => void;
 }
 
@@ -58,17 +58,9 @@ export const useSubjectStore = create<SubjectState>((set, get) => ({
   },
   
 
-  getSubjectById: async (id:string) => {
-   try {
-    const res = await subjectsApi.getSubjectById(id)
-    if (res.data) {
-    } else {
-      return undefined;
-    }  
-  } catch (error: any) {
-    return undefined;
-  }
+  getSubjectById: (id: string) => {
+    return get().subjects.find(s => s.subjectId === id);
   },
-  
+
   clearError: () => set({ error: null })
 }));

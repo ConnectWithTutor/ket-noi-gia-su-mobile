@@ -6,6 +6,7 @@ import { Status } from '@/types/status';
 import { Schedule, ScheduleCreateRequest, WeeklySchedule } from '@/types/schedule';
 import { classApi } from '@/api/class';
 import { scheduleApi } from '@/api/schedule';
+import { router } from 'expo-router';
 
 interface ScheduleState {
   classes: Class[];
@@ -20,7 +21,7 @@ interface ScheduleStore extends ScheduleState {
   
   // New methods for schedules
   getSchedulesByClass: (classId?: string) => Promise<void>;
-  // createSchedule: (scheduleData: ScheduleCreateRequest) => Promise<string | null>;
+  createSchedule: (scheduleData: ScheduleCreateRequest) => Promise<string | null>;
   createWeeklySchedules: (scheduleData: WeeklySchedule) => Promise<boolean>;
   // updateSchedule: (id: string, scheduleData: Partial<Schedule>) => Promise<boolean>;
   // cancelSchedule: (id: string) => Promise<boolean>;
@@ -77,42 +78,40 @@ export const useScheduleStore = create<ScheduleStore>()(
         }
       },
 
-      // createSchedule: async (scheduleData) => {
-      //   set({ isLoading: true, error: null });
-      //   try {
-      //     // Simulate API call
-      //     await new Promise((resolve) => setTimeout(resolve, 1000));
-          
-      //     const newSchedule: Schedule = {
-      //       id: Date.now().toString(),
-      //       ...scheduleData,
-      //       status: 'active',
-      //     };
-          
-      //     set((state) => ({
-      //       schedules: [...state.schedules, newSchedule],
-      //       isLoading: false,
-      //     }));
-          
-      //     return newSchedule.id;
-      //   } catch (error) {
-      //     set({ 
-      //       error: "Không thể tạo lịch học. Vui lòng thử lại sau.", 
-      //       isLoading: false 
-      //     });
-      //     return null;
-      //   }
-      // },
+      createSchedule: async (scheduleData) => {
+        set({ isLoading: true, error: null });
+        try {
+          // Simulate API call
+          const response = await scheduleApi.createSchedule(scheduleData);
+          if (response.detail) {
+            set({ 
+              error: response.detail.msg || "Không thể tạo lịch học. Vui lòng thử lại sau.", 
+              isLoading: false 
+            });
+            return null;
+          }
+          set(() => ({
+            isLoading: false,
+          }));
+          return response.id || null;
+        } catch (error) {
+          set({ 
+            error: "Không thể tạo lịch học. Vui lòng thử lại sau.", 
+            isLoading: false 
+          });
+          return null;
+        }
+      },
 
       createWeeklySchedules: async (scheduleData:WeeklySchedule ) => {
         set({ isLoading: true, error: null });
         try {
           // Simulate API call
-           const response = await scheduleApi.createBulkSchedules(scheduleData);      
+           const response = await scheduleApi.createBulkSchedules(scheduleData);
           if (response.detail) {
-            set({ 
-              error: response.detail.msg ||"Không thể tạo lịch học hàng tuần. Vui lòng thử lại sau.", 
-              isLoading: false 
+            set({
+              error: response.detail.msg || "Không thể tạo lịch học hàng tuần. Vui lòng thử lại sau.",
+              isLoading: false
             });
             return false;
           }

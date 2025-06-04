@@ -55,10 +55,10 @@ axiosInstance.interceptors.response.use(
     if (error.response) {
       
       const status = error.response.status;
-      console.error("API Error:", error.response.data);
+      console.log("API Error:", error.response.data);
       const data = error.response.data as any;
       const message = data?.message || data?.error || "An error occurred";
-      
+        
       return Promise.reject(new ApiError(message, status));
     } else if (error.request) {
       // The request was made but no response was received

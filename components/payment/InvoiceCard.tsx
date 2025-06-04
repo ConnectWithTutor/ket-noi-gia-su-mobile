@@ -4,6 +4,7 @@ import { PaymentDetails, Status, PaymentMethod } from '@/types';
 import { formatDate } from '@/utils/date-utils';
 import colors from '@/constants/Colors';
 import { BORDER_RADIUS, FONT_SIZE, SHADOWS, SPACING } from '@/constants/Theme';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   invoice: PaymentDetails;
@@ -14,7 +15,7 @@ interface Props {
 
 export default function InvoiceCard({ invoice, status, paymentMethod, onPay }: Props) {
   const { amount, paidAt } = invoice;
-
+  const { t } = useTranslation();
   const formatCurrency = (value: string) => {
     return Number(value).toLocaleString('vi-VN', {
       style: 'currency',
@@ -44,14 +45,14 @@ export default function InvoiceCard({ invoice, status, paymentMethod, onPay }: P
         </Text>
       </View>
       <View style={styles.body}>
-        <Text style={styles.label}>Ngày thanh toán</Text>
+        <Text style={styles.label}>{t('Ngày thanh toán')}</Text>
         <Text style={styles.value}>{formatDate(paidAt)}</Text>
 
-        <Text style={styles.label}>Phương thức</Text>
-        <Text style={styles.value}>{paymentMethod?.description || 'Không rõ'}</Text>
+        <Text style={styles.label}>{t('Phương thức')}</Text>
+        <Text style={styles.value}>{paymentMethod?.description || t('Không rõ')}</Text>
         {status?.code === 'Unpaid' && (
           <TouchableOpacity style={styles.payButton} onPress={onPay}>
-            <Text style={styles.payButtonText}>Thanh toán</Text>
+            <Text style={styles.payButtonText}>{t('Thanh toán')}</Text>
           </TouchableOpacity>
         )}
       </View>

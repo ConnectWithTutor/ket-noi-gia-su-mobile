@@ -28,6 +28,11 @@ export interface CreateResponse {
   detail?: ErrorResponse;
 }
 
+export interface UpdateResponse {
+  data: string;
+  message: string;
+  detail?: ErrorResponse;
+}
 export interface paginatedData
 {
   currentPage: number;

@@ -7,8 +7,8 @@ import { BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS, SPACING } from '@/const
 import { StudentRequest } from '@/types/student-request';
 import { User } from '@/types/user';
 import { getRelativeTime } from '@/utils/date-utils';
-import { useUserProfileStore } from '@/store/profile-store';
 import { Status, Subject } from '@/types';
+import { useTranslation } from 'react-i18next';
 
 interface PostCardProps {
   post: StudentRequest;
@@ -19,7 +19,7 @@ interface PostCardProps {
 }
 
 function PostCardComponent({ post, onPress,status,author, subject }: PostCardProps) {
-
+    const { t } = useTranslation();
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.8}>
       <View style={styles.header}>
@@ -63,7 +63,7 @@ function PostCardComponent({ post, onPress,status,author, subject }: PostCardPro
               },
             ]}
           >
-            {status.name || 'Không rõ'}
+            {status.name || t('Không rõ')}
           </Text>
         </View>
       </View>
@@ -89,7 +89,7 @@ function PostCardComponent({ post, onPress,status,author, subject }: PostCardPro
         
         <View style={styles.infoItem}>
           <DollarSign size={16} color={colors.textSecondary} />
-          <Text style={styles.infoText}>{post.tuitionFee}đ/giờ</Text>
+          <Text style={styles.infoText}>{post.tuitionFee} {t('đ/giờ')}</Text>
         </View>
       </View>
       

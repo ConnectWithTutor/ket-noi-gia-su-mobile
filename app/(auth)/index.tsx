@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView } from "react-native";
 import { Link, useRouter } from "expo-router";
 import { Mail, Lock, User, Facebook } from "lucide-react-native";
-
 import colors from "@/constants/Colors";
 import { FONT_SIZE, FONT_WEIGHT, SPACING } from "@/constants/Theme";
 import Input from "@/components/ui/Input";
@@ -11,28 +10,49 @@ import Checkbox from "@/components/ui/Checkbox";
 import SocialButton from "@/components/auth/SocialButton";
 import { useAuthStore } from "@/store/auth-store";
 import { triggerHaptic } from "@/utils/haptics";
-
+import {validateEmail }  from "@/utils/validateEmail";
+import { useTranslation } from "react-i18next";
 export default function LoginScreen() {
   const router = useRouter();
   const { login, isLoading, error } = useAuthStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-  const [formError, setFormError] = useState("");
+const { t } = useTranslation(); 
+  // Thêm state cho lỗi từng trường
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
   const handleLogin = async () => {
     triggerHaptic('medium');
-    
-    if (!email || !password) {
-      setFormError("Vui lòng nhập đầy đủ");
-      return;
+    setEmailError("");
+    setPasswordError("");
+
+    let hasError = false;
+
+    if (!email) {
+      setEmailError(t("Vui lòng nhập email"));
+      hasError = true;
+    } else if (!validateEmail(email)) {
+      setEmailError(t("Email không hợp lệ"));
+      hasError = true;
     }
-    
+
+    if (!password) {
+      setPasswordError(t("Vui lòng nhập mật khẩu"));
+      hasError = true;
+    } else if (password.length < 6) {
+      setPasswordError(t("Mật khẩu phải có ít nhất 6 ký tự"));
+      hasError = true;
+    }
+
+    if (hasError) return;
+
     try {
-      await login({ email,  password });
+      await login({ email, password });
       router.replace("/(app)/(tabs)/home");
     } catch (error) {
-      console.error("Login error:", error);
+      // Không cần log lỗi ra console cho người dùng cuối
     }
   };
 
@@ -54,78 +74,76 @@ export default function LoginScreen() {
       <View style={styles.container}>
         
         <View style={styles.formContainer}>
-          <Text style={styles.title}>Kết Nối Gia Sư</Text>
+          <Text style={styles.title}>{t("Kết Nối Gia Sư")}</Text>
           <Image
             source={require('@/assets/images/logo.png')}
             style={styles.illustration}
             resizeMode="contain"
           />
           <Input
-            placeholder="Email"
+            placeholder={t("Email")}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
             icon={<Mail size={20} color={colors.textSecondary} />}
-            error={formError && !email ? "Vui lòng nhập email" : ""}
+            error={emailError}
           />
           
           
           <Input
-            placeholder="Mật khẩu"
+            placeholder={t("Mật khẩu")}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
             icon={<Lock size={20} color={colors.textSecondary} />}
-            error={formError && !password ? "Vui lòng nhập mật khẩu" : ""}
+            error={passwordError}
           />
           
           <View style={styles.optionsContainer}>
             <Checkbox
               checked={rememberMe}
               onToggle={() => setRememberMe(!rememberMe)}
-              label="Ghi nhớ đăng nhập"
+              label={t("Ghi nhớ đăng nhập")}
             />
             
             <Link href="/forgot-password" asChild>
               <TouchableOpacity>
-          <Text style={styles.forgotPassword}>Quên mật khẩu?</Text>
+                <Text style={styles.forgotPassword}>{t("Quên mật khẩu?")}</Text>
               </TouchableOpacity>
             </Link>
           </View>
-          
           {error && <Text style={styles.errorText}>{error}</Text>}
-          
           <Button
-            title="Đăng nhập"
+            title={t("Đăng nhập")}
             onPress={handleLogin}
             loading={isLoading}
             fullWidth
           />
           
           <View style={styles.registerContainer}>
-            <Text style={styles.registerText}>Chưa có tài khoản? </Text>
+            <Text style={styles.registerText}>{t("Chưa có tài khoản? ")}</Text>
             <Link href="/register" asChild>
               <TouchableOpacity>
-          <Text style={styles.registerLink}>Tạo tài khoản</Text>
+                <Text style={styles.registerLink}>{t("Tạo tài khoản")}</Text>
               </TouchableOpacity>
             </Link>
           </View>
           
           <View style={styles.divider}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>Hoặc</Text>
+            <Text style={styles.dividerText}>{t("Hoặc")}</Text>
             <View style={styles.dividerLine} />
           </View>
           
           <SocialButton
-            title="Đăng nhập với Google"
+            title={t("Đăng nhập với Google")}
             icon={<Mail size={20} color={colors.danger} />}
             onPress={handleGoogleLogin}
           />
           
           <SocialButton
-            title="Đăng nhập với Facebook"
+            title={t("Đăng nhập với Facebook")}
             icon={<Facebook size={20} color="#1877F2" />}
             onPress={handleFacebookLogin}
           />

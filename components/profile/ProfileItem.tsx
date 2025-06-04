@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
 import colors from '@/constants/Colors';
 import { FONT_SIZE, SPACING } from '@/constants/Theme';
+import { useTranslation } from 'react-i18next';
 
 interface ProfileItemProps {
   icon: React.ReactNode;

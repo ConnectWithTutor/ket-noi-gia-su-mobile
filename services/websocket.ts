@@ -123,7 +123,6 @@ class WebSocketService {
       const message: Message = JSON.parse(stompMessage.body);
       const conversationId = message.conversationId;
       const handlers = this.messageHandlers.get(conversationId) || [];
-      console.log('🔔 Handlers for conversation:', conversationId, handlers,message);
       handlers.forEach(handler => handler(message));
 
       // Also notify global handlers
@@ -185,7 +184,6 @@ class WebSocketService {
       
       // Disconnect the client
       this.client.deactivate();
-      console.log('Disconnected from WebSocket');
     }
     
     this.connectionPromise = null;

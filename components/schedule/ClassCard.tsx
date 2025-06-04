@@ -7,6 +7,7 @@ import { Status } from '@/types/status';
 import { useUserProfileStore } from '@/store/profile-store';
 import { Role } from '@/types';
 import { useZoomStore } from '@/store/zoom-store';
+import { useTranslation } from 'react-i18next';
 interface ClassCardProps {
   scheduleId: string;
   title: string;
@@ -35,6 +36,7 @@ export default function ClassCard({
   const { fetchUserById } = useUserProfileStore();
   const { createZoomMeeting } = useZoomStore();
    const [zoomCreated, setZoomCreated] = useState(false);
+   const { t } = useTranslation();
   useEffect(() => {
     const fetchData = async () => {
       await fetchUserById(tutor);
@@ -52,10 +54,10 @@ export default function ClassCard({
   const handleCreateZoom = async () => {
     try {
       await createZoomMeeting(scheduleId);
-      alert('Tạo Zoom thành công!');
+      alert(t('Tạo Zoom thành công!'));
       setZoomCreated(prev => !prev);
     } catch (error) {
-      alert('Lỗi khi tạo Zoom. Vui lòng thử lại sau.');
+      alert(t('Lỗi khi tạo Zoom. Vui lòng thử lại sau.'));
     }
   };
 

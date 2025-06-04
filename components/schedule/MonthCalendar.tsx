@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import colors from '@/constants/Colors';
 import { FONT_SIZE, FONT_WEIGHT, SPACING } from '@/constants/Theme';
+import { useTranslation } from 'react-i18next';
 
 interface MonthCalendarProps {
   month: string;
@@ -28,7 +29,8 @@ export default function MonthCalendar({
   onNextMonth,
   selectedDate,
 }: MonthCalendarProps) {
-  const weekDays = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+  const { t } = useTranslation();
+  const weekDays = [t('CN'), t('T2'), t('T3'), t('T4'), t('T5'), t('T6'), t('T7')];
 
   return (
     <View style={styles.container}>

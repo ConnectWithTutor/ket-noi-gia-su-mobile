@@ -6,7 +6,8 @@ import {
   ScrollView, 
   Image, 
   TouchableOpacity, 
-  Alert 
+  Alert, 
+  Linking 
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { 
@@ -27,12 +28,12 @@ import StatusBar from "@/components/ui/StatusBar";
 import Header from "@/components/ui/Header";
 import Button from "@/components/ui/Button";
 import { useTutorStore } from "@/store/tutor-store";
-import { useChatStore } from "@/store/chat-store";
 import { triggerHaptic } from "@/utils/haptics";
 import { useUserProfileStore } from "@/store/profile-store"
 import { TutorProfile } from "@/types";
 import { useAuthStore } from "@/store/auth-store";
 import { useChat } from "@/hooks/useChat";
+import { useTranslation } from "react-i18next";
 
 export default function TutorProfileScreen() {
   const { id } = useLocalSearchParams();
@@ -44,7 +45,7 @@ export default function TutorProfileScreen() {
   const [tutor, setTutor] = useState<TutorProfile | undefined>();
   const [userTutor, setUserTutor] = useState<any>(null);
   const { fetchUserById } = useUserProfileStore();
-
+  const { t } = useTranslation();
   useEffect(() => {
     const fetchTutorData = async () => {
       try {
@@ -54,11 +55,11 @@ export default function TutorProfileScreen() {
           setUserTutor(user);
           setTutor(tutorData);
         } else {
-          Alert.alert("Thông báo", "Không tìm thấy gia sư.");
+          Alert.alert(t("Thông báo"), t("Không tìm thấy gia sư."));
         }
       } catch (error) {
         console.error("Error fetching tutor data:", error);
-        Alert.alert("Thông báo", "Đã xảy ra lỗi khi lấy dữ liệu.");
+        Alert.alert(t("Thông báo"), t("Đã xảy ra lỗi khi lấy dữ liệu."));
       }
     };
 
@@ -68,19 +69,18 @@ export default function TutorProfileScreen() {
   if (!tutor) {
     return null;
   }
-  
   const handleMessage = async () => {
     triggerHaptic('medium');
     if (!user?.userId) {
-      Alert.alert("Thông báo", "Bạn cần đăng nhập để sử dụng tính năng nhắn tin.");
+      Alert.alert(t("Thông báo"), t("Bạn cần đăng nhập để sử dụng tính năng nhắn tin."));
     }
     const existingConversation = await startChat(userId);
     if (existingConversation) {
       router.push(`/conversation/${existingConversation.conversationId}`);
     } else {
       Alert.alert(
-        "Thông báo",
-        "Không thể tạo cuộc trò chuyện mới. Vui lòng thử lại."
+        t("Thông báo"),
+        t("Không thể tạo cuộc trò chuyện mới. Vui lòng thử lại.")
       );
     }
   };
@@ -88,16 +88,15 @@ export default function TutorProfileScreen() {
   const handleShare = () => {
     triggerHaptic('light');
     Alert.alert(
-      "Chia sẻ",
-      "Tính năng chia sẻ sẽ được cập nhật trong phiên bản tiếp theo."
+      t("Chia sẻ"),
+      t("Tính năng chia sẻ sẽ được cập nhật trong phiên bản tiếp theo.")
     );
   };
 
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor={colors.primary} />
-      <Header title="Thông tin gia sư" showBack />
-      
+      <Header title={t("Thông tin gia sư")} showBack />
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.profileHeader}>
           <Image 
@@ -121,25 +120,21 @@ export default function TutorProfileScreen() {
           <View style={styles.infoRow}>
             <View style={styles.infoItem}>
               <MapPin size={18} color={colors.textSecondary} />
-              <Text style={styles.infoLabel}>Khu vực:</Text>
+              <Text style={styles.infoLabel}>{t("Khu vực:")}</Text>
               <Text style={styles.infoValue}>{userTutor?.address}</Text>
             </View>
           </View>
-          
-          
-          
-          
         </View>
         
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Giới thiệu</Text>
+          <Text style={styles.sectionTitle}>{t("Giới thiệu")}</Text>
           <Text style={styles.bioText}>{tutor.description}</Text>
         </View>
         
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Award size={20} color={colors.primary} />
-            <Text style={styles.sectionTitle}>Học vấn</Text>
+            <Text style={styles.sectionTitle}>{t("Học vấn")}</Text>
           </View>
           <Text style={styles.educationText}>{tutor.certificate}</Text>
         </View>
@@ -147,27 +142,58 @@ export default function TutorProfileScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Briefcase size={20} color={colors.primary} />
-            <Text style={styles.sectionTitle}>Kinh nghiệm</Text>
+            <Text style={styles.sectionTitle}>{t("Kinh nghiệm")}</Text>
           </View>
            <Text style={styles.bioText}>{tutor.experience}</Text>
         </View>
         
+        {tutor.introVideoUrl ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t("Video giới thiệu")}</Text>
+            {/* Nếu là link YouTube, có thể dùng WebView hoặc chỉ hiển thị link */}
+            <TouchableOpacity
+              onPress={() => {
+                // Mở link video bằng trình duyệt ngoài
+                if (tutor.introVideoUrl) {
+                  Linking.openURL(tutor.introVideoUrl);
+                }
+              }}
+            >
+              <Text style={[styles.bioText, { color: colors.primary, textDecorationLine: 'underline' }]}>
+                {t("Xem video giới thiệu")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+        
         <View style={styles.actionsContainer}>
-          <Button
-            title="Nhắn tin"
-            onPress={handleMessage}
-            icon={<MessageSquare size={20} color={colors.white} />}
-            iconPosition="left"
-            fullWidth
-            style={styles.messageButton}
-          />
-          
+          {user?.userId === userTutor?.userId ? (
+            <Button
+              title={t("Chỉnh sửa thông tin")}
+              onPress={() => router.push(`/profile/profileTutor/edit?id=${userTutor.userId}` as any)}
+              icon={<Award size={20} color={colors.white} />}
+              iconPosition="left"
+              fullWidth
+              style={styles.messageButton}
+            />
+          ) : (
+            <Button
+              title={t("Nhắn tin")}
+              onPress={handleMessage}
+              icon={<MessageSquare size={20} color={colors.white} />}
+              iconPosition="left"
+              fullWidth
+              loading={isLoading}
+              style={styles.messageButton}
+            />
+          )}
+
           <TouchableOpacity 
             style={styles.shareButton} 
             onPress={handleShare}
           >
             <Share2 size={20} color={colors.primary} />
-            <Text style={styles.shareText}>Chia sẻ</Text>
+            <Text style={styles.shareText}>{t("Chia sẻ")}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

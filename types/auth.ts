@@ -20,6 +20,7 @@ export interface RegisterRequest {
 export interface AuthResponse {
     access_token: string;
     token_type: string;
+    detail?: string;
 }
 
 export interface PasswordResetRequest {

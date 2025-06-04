@@ -10,11 +10,12 @@ import { useNotificationStore } from "@/store/notification-store";
 import { triggerHaptic } from "@/utils/haptics";
 import StatusBar from "@/components/ui/StatusBar";
 import Header from "@/components/ui/Header";
+import { useTranslation } from "react-i18next";
 
 export default function NotificationsScreen() {
   const router = useRouter();
   const { preferences, updatePreferences } = useNotificationStore();
-
+ const { t } = useTranslation();
   const handleToggle = (key: string, value: boolean) => {
     triggerHaptic('light');
     updatePreferences({ [key]: value });
@@ -23,11 +24,11 @@ export default function NotificationsScreen() {
   return (
     <View style={styles.container}>
         <StatusBar backgroundColor={colors.primary} />
-        <Header title="Cài đặt thông báo" showBack />
+        <Header title={t("Cài đặt thông báo")} showBack />
               
       <Stack.Screen 
         options={{
-          title: "Thông báo",
+          title: t("Thông báo"),
           headerLeft: () => (
             <TouchableOpacity 
               onPress={() => {
@@ -52,8 +53,8 @@ export default function NotificationsScreen() {
           <View style={styles.card}>
             <View style={styles.settingItem}>
               <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>Thông báo tin nhắn</Text>
-                <Text style={styles.settingDescription}>Nhận thông báo khi có tin nhắn mới</Text>
+                <Text style={styles.settingTitle}>{t("Thông báo tin nhắn")}</Text>
+                <Text style={styles.settingDescription}>{t("Nhận thông báo khi có tin nhắn mới")}</Text>
               </View>
               <Switch
                 value={preferences.messages}
@@ -67,8 +68,8 @@ export default function NotificationsScreen() {
             
             <View style={styles.settingItem}>
               <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>Thông báo lớp học</Text>
-                <Text style={styles.settingDescription}>Nhận thông báo về lịch học và thay đổi</Text>
+                <Text style={styles.settingTitle}>{t("Thông báo lớp học")}</Text>
+                <Text style={styles.settingDescription}>{t("Nhận thông báo về lịch học và thay đổi")}</Text>
               </View>
               <Switch
                 value={preferences.classes}
@@ -82,8 +83,8 @@ export default function NotificationsScreen() {
             
             <View style={styles.settingItem}>
               <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>Thông báo bài viết</Text>
-                <Text style={styles.settingDescription}>Nhận thông báo khi có bài viết mới phù hợp</Text>
+                <Text style={styles.settingTitle}>{t("Thông báo bài viết")}</Text>
+                <Text style={styles.settingDescription}>{t("Nhận thông báo khi có bài viết mới phù hợp")}</Text>
               </View>
               <Switch
                 value={preferences.posts}
@@ -97,8 +98,8 @@ export default function NotificationsScreen() {
             
             <View style={styles.settingItem}>
               <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>Thông báo hệ thống</Text>
-                <Text style={styles.settingDescription}>Nhận thông báo về cập nhật và bảo trì hệ thống</Text>
+                <Text style={styles.settingTitle}>{t("Thông báo hệ thống")}</Text>
+                <Text style={styles.settingDescription}>{t("Nhận thông báo về cập nhật và bảo trì hệ thống")}</Text>
               </View>
               <Switch
                 value={preferences.system}
@@ -111,13 +112,13 @@ export default function NotificationsScreen() {
         </View>
         
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Thông báo đẩy</Text>
-          
+          <Text style={styles.sectionTitle}>{t("Thông báo đẩy")}</Text>
+
           <View style={styles.card}>
             <View style={styles.settingItem}>
               <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>Âm thanh</Text>
-                <Text style={styles.settingDescription}>Phát âm thanh khi có thông báo mới</Text>
+                <Text style={styles.settingTitle}>{t("Âm thanh")}</Text>
+                <Text style={styles.settingDescription}>{t("Phát âm thanh khi có thông báo mới")}</Text>
               </View>
               <Switch
                 value={preferences.sound}
@@ -131,8 +132,8 @@ export default function NotificationsScreen() {
             
             <View style={styles.settingItem}>
               <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>Rung</Text>
-                <Text style={styles.settingDescription}>Rung khi có thông báo mới</Text>
+                <Text style={styles.settingTitle}>{t("Rung")}</Text>
+                <Text style={styles.settingDescription}>{t("Rung khi có thông báo mới")}</Text>
               </View>
               <Switch
                 value={preferences.vibration}

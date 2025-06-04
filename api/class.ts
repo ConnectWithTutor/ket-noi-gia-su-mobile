@@ -20,7 +20,11 @@ export const classApi = {
             `${API_ENDPOINTS.classesByStatus(status_id)}?page=${page}&limit=${limit}`
         );
     },
-
+    getClassByUser: async (user_id: string, page = 1, limit = 30) => {
+        return api.get<PaginatedResponse<Class>>(
+            `${API_ENDPOINTS.classesByUser(user_id)}?page=${page}&limit=${limit}`
+        );
+    },
     getClassById: async (class_id: string) => {
         return api.get<SingleItemResponse<Class>>(API_ENDPOINTS.classesById(class_id));
     },

@@ -34,16 +34,19 @@ export const API_ENDPOINTS = {
 
     // Student Profile
     studentProfileById: (user_id: string) => `${API_BASE}/profiles/students/${user_id}`,
-    updateStudentProfiles: (user_id: string) => `${API_BASE}/profiles/student/update/${user_id}`,
+    updateStudentProfiles: (user_id: string) => `${API_BASE}/profiles/students/update/${user_id}`,
 
     // Subject
     subjects: `${API_BASE}/subjects`,
     subjectById: (subject_id: string) => `${API_BASE}/subjects/get-by-id/${subject_id}`,
     createSubject: `${API_BASE}/subjects/create`,
     updateSubject: (subject_id: string) => `${API_BASE}/subjects/update/${subject_id}`,
-    deleteSubject: (subject_id: string) => `${API_BASE}/subjects/delete/${subject_id}`,  // Class
+    deleteSubject: (subject_id: string) => `${API_BASE}/subjects/delete/${subject_id}`,  
+    
+    // Class
     classes: `${API_BASE}/classes`,
     findBestClasses: `${API_BASE}/classes/find-best-classes`,
+    classesByUser: (user_id: string) => `${API_BASE}/classes/get-by-user/${user_id}`,
     classesByStatus: (status_id: string) => `${API_BASE}/classes/get-by-status/${status_id}`,
     classesById: (class_id: string) => `${API_BASE}/classes/get-by-id/${class_id}`,
     createClasses: `${API_BASE}/classes/create`,

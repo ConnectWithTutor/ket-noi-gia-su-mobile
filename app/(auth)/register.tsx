@@ -13,12 +13,13 @@ import SocialButton from "@/components/auth/SocialButton";
 import { useAuthStore } from "@/store/auth-store";
 import { useRoleStore } from "@/store/roleStore";
 import { triggerHaptic } from "@/utils/haptics";
+import { useTranslation } from "react-i18next";
 
 export default function RegisterScreen() {
   const router = useRouter();
   const { register, isLoading, error, isAuthenticated, clearError } = useAuthStore();
   const { roles, loading: rolesLoading, error: rolesError, fetchRoles } = useRoleStore();
-  
+  const { t } = useTranslation(); 
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -44,10 +45,10 @@ export default function RegisterScreen() {
  
   const validateUsername = () => {
     if (!username) {
-      setUsernameError("Tên đăng nhập là bắt buộc");
+      setUsernameError(t("Tên đăng nhập là bắt buộc"));
       return false;
     } else if (username.length < 3) {
-      setUsernameError("Tên đăng nhập phải có ít nhất 3 ký tự");
+      setUsernameError(t("Tên đăng nhập phải có ít nhất 3 ký tự"));
       return false;
     }
     setUsernameError("");
@@ -56,10 +57,10 @@ export default function RegisterScreen() {
 
   const validateFullName = () => {
     if (!fullName) {
-      setFullNameError("Họ và tên là bắt buộc");
+      setFullNameError(t("Họ và tên là bắt buộc"));
       return false;
     } else if (fullName.length < 2) {
-      setFullNameError("Họ và tên phải có ít nhất 2 ký tự");
+      setFullNameError(t("Họ và tên phải có ít nhất 2 ký tự"));
       return false;
     }
     setFullNameError("");
@@ -69,10 +70,10 @@ export default function RegisterScreen() {
   const validateEmail = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email) {
-      setEmailError("Email là bắt buộc");
+      setEmailError(t("Email là bắt buộc"));
       return false;
     } else if (!emailRegex.test(email)) {
-      setEmailError("Vui lòng nhập email hợp lệ");
+      setEmailError(t("Vui lòng nhập email hợp lệ"));
       return false;
     }
     setEmailError("");
@@ -81,10 +82,10 @@ export default function RegisterScreen() {
 
   const validatePhone = () => {
     if (!phoneNumber) {
-      setPhoneError("Số điện thoại là bắt buộc");
+      setPhoneError(t("Số điện thoại là bắt buộc"));
       return false;
     } else if (phoneNumber.length < 10) {
-      setPhoneError("Vui lòng nhập số điện thoại hợp lệ");
+      setPhoneError(t("Vui lòng nhập số điện thoại hợp lệ"));
       return false;
     }
     setPhoneError("");
@@ -93,10 +94,10 @@ export default function RegisterScreen() {
 
   const validateConfirmPassword = () => {
     if (!confirmPassword) {
-      setConfirmPasswordError("Vui lòng xác nhận mật khẩu");
+      setConfirmPasswordError(t("Vui lòng xác nhận mật khẩu"));
       return false;
     } else if (confirmPassword !== password) {
-      setConfirmPasswordError("Mật khẩu không khớp");
+      setConfirmPasswordError(t("Mật khẩu không khớp"));
       return false;
     }
     setConfirmPasswordError("");
@@ -105,10 +106,10 @@ export default function RegisterScreen() {
 
   const validatePassword = () => {
     if (!password) {
-      setPasswordError("Mật khẩu là bắt buộc");
+      setPasswordError(t("Mật khẩu là bắt buộc"));
       return false;
     } else if (password.length < 6) {
-      setPasswordError("Mật khẩu phải có ít nhất 6 ký tự");
+      setPasswordError(t("Mật khẩu phải có ít nhất 6 ký tự"));
       return false;
     }
     setPasswordError("");
@@ -117,7 +118,7 @@ export default function RegisterScreen() {
 
   const validateRole = () => {
     if (!selectedRoleId) {
-      setRoleError("Vui lòng chọn vai trò");
+      setRoleError(t("Vui lòng chọn vai trò"));
       return false;
     }
     setRoleError("");
@@ -148,7 +149,7 @@ export default function RegisterScreen() {
       });
       router.replace("/(app)/(tabs)/home");
     } catch (error) {
-      console.error("Register error:", error);
+      console.log("Register error:", error);
     }
   };
 
@@ -168,37 +169,37 @@ export default function RegisterScreen() {
       keyboardShouldPersistTaps="handled"
     >
       <View style={styles.container}>
-        <AuthHeader title="Kết Nối Gia Sư" />
-        
+        <AuthHeader title={t("Kết Nối Gia Sư")} />
+
         <View style={styles.formContainer}>
-          <Text style={styles.title}>Đăng ký</Text>
-          
+          <Text style={styles.title}>{t("Đăng ký")}</Text>
+
           <Input
-            placeholder="Tên đăng nhập"
+            placeholder={t("Tên đăng nhập")}
             value={username}
             onChangeText={setUsername}
             icon={<User size={20} color={colors.textSecondary} />}
             error={usernameError}
           />
           <Input
-            placeholder="Họ và tên"
+            placeholder={t("Họ và tên")}
             value={fullName}
             onChangeText={setFullName}
             icon={<User size={20} color={colors.textSecondary} />}
             error={fullNameError}
           />
-          
+
           <Input
-            placeholder="Số điện thoại"
+            placeholder={t("Số điện thoại")}
             value={phoneNumber}
             onChangeText={setPhoneNumber}
             keyboardType="phone-pad"
             icon={<Phone size={20} color={colors.textSecondary} />}
             error={phoneError}
           />
-          
+
           <Input
-            placeholder="Email"
+            placeholder={t("Email")}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -206,18 +207,18 @@ export default function RegisterScreen() {
             icon={<Mail size={20} color={colors.textSecondary} />}
             error={emailError}
           />
-          
+
           <Input
-            placeholder="Mật khẩu"
+            placeholder={t("Mật khẩu")}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
             icon={<Lock size={20} color={colors.textSecondary} />}
             error={passwordError}
           />
-          
+
           <Input
-            placeholder="Xác nhận mật khẩu"
+            placeholder={t("Xác nhận mật khẩu")}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry
@@ -225,7 +226,7 @@ export default function RegisterScreen() {
             error={confirmPasswordError}
           />
           <View style={styles.optionContainer}>
-            <Text style={styles.optionLabel}>Vai trò</Text>
+            <Text style={styles.optionLabel}>{t("Vai trò")}</Text>
             <View style={styles.optionGroup}>
             {roles.map(role => 
               role.roleName === "Admin" ? null : (
@@ -244,35 +245,35 @@ export default function RegisterScreen() {
           {error && <Text style={styles.errorText}>{error}</Text>}
           
           <Button
-            title="Đăng ký"
+            title={t("Đăng ký")}
             onPress={handleRegister}
             loading={isLoading}
             fullWidth
           />
           
           <View style={styles.loginContainer}>
-            <Text style={styles.loginText}>Đã có tài khoản? </Text>
+            <Text style={styles.loginText}>{t("Đã có tài khoản? ")}</Text>
             <Link href="/" asChild>
               <TouchableOpacity>
-                <Text style={styles.loginLink}>Đăng nhập</Text>
+                <Text style={styles.loginLink}>{t("Đăng nhập")}</Text>
               </TouchableOpacity>
             </Link>
           </View>
           
           <View style={styles.divider}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>Hoặc</Text>
+            <Text style={styles.dividerText}>{t("Hoặc")}</Text>
             <View style={styles.dividerLine} />
           </View>
           
           <SocialButton
-            title="Đăng ký với Google"
+            title={t("Đăng ký với Google")}
             icon={<Mail size={20} color={colors.danger} />}
             onPress={handleGoogleRegister}
           />
-          
+
           <SocialButton
-            title="Đăng ký với Facebook"
+            title={t("Đăng ký với Facebook")}
             icon={<Facebook size={20} color="#1877F2" />}
             onPress={handleFacebookRegister}
           />

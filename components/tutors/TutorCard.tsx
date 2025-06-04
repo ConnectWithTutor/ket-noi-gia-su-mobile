@@ -6,6 +6,7 @@ import colors from '@/constants/Colors';
 import { BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS, SPACING } from '@/constants/Theme';
 import { Tutor,TutorProfile,User } from '@/types';
 import { useTutorStore } from '@/store/tutor-store';
+import { useTranslation } from 'react-i18next';
 interface TutorCardProps {
   user: User;
   onPress: () => void;
@@ -13,6 +14,7 @@ interface TutorCardProps {
 
 export default function TutorCard({ user, onPress }: TutorCardProps) {
   const {getTutorById} = useTutorStore();
+   const { t } = useTranslation();
   const [tutor, setTutor] = React.useState<TutorProfile | null>(null);
   useEffect(() => {
     getTutorById(user.userId);
@@ -41,15 +43,13 @@ export default function TutorCard({ user, onPress }: TutorCardProps) {
           <Text style={styles.name}>{user.fullName}</Text>
           <View style={styles.ratingContainer}>
             <Star size={14} color="#FFB400" fill="#FFB400" />
-           
             <Text style={styles.rating}>
-              {tutor.degree} ({tutor.degree} đánh giá)
+              {tutor.degree} ({tutor.degree} {t('đánh giá')})
             </Text>
           </View>
         </View>
       </View>
       
-    
       
       <Text style={styles.bio} numberOfLines={2}>{tutor.experience}</Text>
       

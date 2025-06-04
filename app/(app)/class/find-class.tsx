@@ -16,12 +16,13 @@ import { SPACING, FONT_SIZE, BORDER_RADIUS, SHADOWS } from '@/constants/Theme';
 import { Class } from '@/types';
 import StatusBar from '@/components/ui/StatusBar';
 import Header from '@/components/ui/Header';
+import { useTranslation } from 'react-i18next';
 
 const ClassSearchScreen = () => {
   const router = useRouter();
   const { classes, fetchClasses, findBestClasses ,message,isLoading} = useClassStore();
   const [searchTerm, setSearchTerm] = useState('');
-
+  const { t } = useTranslation();
   useEffect(() => {
     fetchClasses();
   }, []);
@@ -55,11 +56,11 @@ const ClassSearchScreen = () => {
   return (
     <View style={styles.container}>
        <StatusBar backgroundColor={colors.primary} />
-      <Header title="Tạo lớp học mới" showBack />
+      <Header title={t("Tạo lớp học mới")} showBack />
        <View style={styles.content} >
       <TextInput
         style={styles.input}
-        placeholder="Tìm kiếm lớp học..."
+        placeholder={t("Tìm kiếm lớp học...")}
         placeholderTextColor={colors.placeholder}
         value={searchTerm}
         onChangeText={setSearchTerm}

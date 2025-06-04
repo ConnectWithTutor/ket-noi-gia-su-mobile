@@ -21,10 +21,11 @@ import { useSubjectStore } from '@/store/subjectStore';
 import { useUserProfileStore } from '@/store/profile-store';
 import { useStatusStore } from '@/store/status-store';
 import { StudentRequest } from '@/types';
+import { useTranslation } from 'react-i18next';
 export default function RequestsScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
-
+const { t } = useTranslation();
   const {
     requests,
     myRequests,
@@ -115,39 +116,43 @@ export default function RequestsScreen() {
 );
 const listFooter = useMemo(() => {
   if (!showMyRequests && data.length > 0 && pagination.page >= (pagination.totalPages || 1)) {
-    return <Text style={styles.paginationEndText}>Đã tải hết trang</Text>;
+    return <Text style={styles.paginationEndText}>{t('Đã tải hết trang')}</Text>;
   }
   return null;
 }, [showMyRequests, data.length, pagination.page, pagination.totalPages]);
 const renderSeparator = useCallback(() => <View style={styles.separator} />, []);
+  const { subjects } = useSubjectStore();
+
   const renderItem = useCallback(({ item }: { item: StudentRequest }) => {
   const author = authorsMap.get(item.studentId);
   const status = getStatusById(item.status);
-
-  if (!author || !status) return null;
+  // Lấy subject trực tiếp từ mảng subjects
+  const subject = subjects.find(s => s.subjectId === item.subjectId);
+  if (!author || !status || !subject) return null;
 
   return (
     <PostCard
       post={item}
       author={author}
       status={status}
+      subject={subject}
       onPress={() => handlePostPress(item.requestId)}
     />
   );
-}, [authorsMap, handlePostPress, getStatusById]);
+}, [authorsMap, handlePostPress, getStatusById, subjects]);
   const renderEmptyList = useCallback(() => (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyTitle}>
-        {showMyRequests ? "Bạn chưa tạo yêu cầu nào" : "Không tìm thấy yêu cầu nào"}
+        {showMyRequests ? t("Bạn chưa tạo yêu cầu nào") : t("Không tìm thấy yêu cầu nào")}
       </Text>
       <Text style={styles.emptyText}>
         {showMyRequests
-          ? "Tạo một yêu cầu mới để tìm gia sư phù hợp với nhu cầu học tập của bạn"
-          : "Quay lại sau để xem các yêu cầu học tập mới"}
+          ? t("Tạo một yêu cầu mới để tìm gia sư phù hợp với nhu cầu học tập của bạn")
+          : t("Quay lại sau để xem các yêu cầu học tập mới")}
       </Text>
       {showMyRequests && (
         <TouchableOpacity style={styles.createButton} onPress={handleCreateRequest}>
-          <Text style={styles.createButtonText}>Tạo yêu cầu</Text>
+          <Text style={styles.createButtonText}>{t("Tạo yêu cầu")}</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -156,7 +161,7 @@ const renderSeparator = useCallback(() => <View style={styles.separator} />, [])
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor={Colors.primary} />
-      <Header title="Bài đăng" showNotification onNotificationPress={handleNotificationPress} />
+      <Header title={t("Bài đăng")} showNotification onNotificationPress={handleNotificationPress} />
 
       <View style={styles.header}>
         <View style={styles.tabButtons}>
@@ -165,7 +170,7 @@ const renderSeparator = useCallback(() => <View style={styles.separator} />, [])
             onPress={() => setShowMyRequests(false)}
           >
             <Text style={[styles.tabButtonText, !showMyRequests && styles.activeTabButtonText]}>
-              Tất cả yêu cầu
+              {t("Tất cả yêu cầu")}
             </Text>
           </TouchableOpacity>
 
@@ -174,7 +179,7 @@ const renderSeparator = useCallback(() => <View style={styles.separator} />, [])
             onPress={() => setShowMyRequests(true)}
           >
             <Text style={[styles.tabButtonText, showMyRequests && styles.activeTabButtonText]}>
-              Yêu cầu của tôi
+              {t("Yêu cầu của tôi")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -187,13 +192,13 @@ const renderSeparator = useCallback(() => <View style={styles.separator} />, [])
       {loading && data.length === 0 ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Đang tải...</Text>
+          <Text style={styles.loadingText}>{t("Đang tải...")}</Text>
         </View>
       ) : error ? (
         <View style={styles.centered}>
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={onRefresh}>
-            <Text style={styles.retryButtonText}>Thử lại</Text>
+            <Text style={styles.retryButtonText}>{t("Thử lại")}</Text>
           </TouchableOpacity>
         </View>
       ) : (

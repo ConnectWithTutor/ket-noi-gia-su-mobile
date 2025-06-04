@@ -1,10 +1,11 @@
 import { api } from "@/services/api";
 import { API_ENDPOINTS } from "@/constants/apiEndpoints";
 import { 
-  PaginatedResponse, 
-  SingleItemResponse,
+    PaginatedResponse, 
     Tutor,
     TutorProfile,
+    TutorUpdateRequest,
+    UpdateResponse
 } from "@/types";
 
 export const tutorApi = {
@@ -15,8 +16,8 @@ export const tutorApi = {
     tutorProfileById: async (user_id: string) => {
         return api.get<TutorProfile>(`${API_ENDPOINTS.tutorProfileById(user_id)}`);
     },
-    updateTutorProfiles: async (user_id: string, data: Partial<Tutor>) => {
-        return api.put<Tutor>(`${API_ENDPOINTS.updateTutorProfiles(user_id)}`, data);
+    updateTutorProfiles: async (user_id: string, data: Partial<TutorUpdateRequest>) => {
+        return api.put<UpdateResponse>(`${API_ENDPOINTS.updateTutorProfiles(user_id)}`, data);
     },
-  
+
 }

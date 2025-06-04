@@ -18,23 +18,27 @@ import { useStatusStore } from "@/store/status-store";
 import { Role, Status } from "@/types";
 import { useAuthStore} from "@/store/auth-store"
 import { useRoleStore } from "@/store/roleStore";
+import { useAddressStore } from "@/store/address-store";
 import { useUserProfileStore } from "@/store/profile-store";
+import { useTranslation } from "react-i18next";
 export default function ScheduleScreen() {
   const { schedules, getSchedulesByClass, isLoading: isScheduleLoading } = useScheduleStore();
-  const { classes, fetchClasses, isLoading } = useClassStore();
+  const { classes, fetchClassesByUserId, isLoading } = useClassStore();
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [weekDates, setWeekDates] = useState<Date[]>([]);
   const { user } = useAuthStore();
   const {  getRoleById } = useRoleStore();
-  const {fetchUserById} = useUserProfileStore();
+  const {fetchUserById,usersMap} = useUserProfileStore();
+  const { fetchAddressById , addressMap} = useAddressStore();
    const [refreshing, setRefreshing] = useState(false);
+     const { t } = useTranslation();
   const [role, setRole] = useState<Role>();
    const { fetchStatusesClass,StatusesClass } = useStatusStore();
   useEffect(() => {
   const fetchData = async () => {
-    await fetchClasses();
-    await fetchStatusesClass();
+    fetchClassesByUserId(user?.userId || "");
+     fetchStatusesClass();
     const userRole = await getRoleById(user?.roleId || "");
     if (userRole) {
        setRole(userRole || null);
@@ -44,11 +48,12 @@ export default function ScheduleScreen() {
 
     const classList = useClassStore.getState().classes;
     for (const classItem of classList) {
-      await getSchedulesByClass(classItem.classId);
-       const tutor = await fetchUserById(classItem.tutorId);
+      getSchedulesByClass(classItem.classId);
+      fetchUserById(classItem.tutorId);
+      fetchAddressById(classItem.classId);
       const classSchedules = useScheduleStore.getState().schedules.map(sch => ({
         ...sch,
-        classInfo: {classItem, tutor}
+        classInfo: {classItem}
       }));
 
       allSchedules.push(...classSchedules);
@@ -61,7 +66,7 @@ export default function ScheduleScreen() {
 }, []);
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchClasses();
+    await fetchClassesByUserId(user?.userId || "");
     await fetchStatusesClass();
     const classList = useClassStore.getState().classes;
     const allSchedules = [];
@@ -159,8 +164,8 @@ const filteredClasses = mergedSchedules.filter(sch => {
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor={colors.primary} />
-      <Header title="Lịch học" showNotification onNotificationPress={handleNotificationPress}/>
-      
+      <Header title={t("Lịch học")} showNotification onNotificationPress={handleNotificationPress}/>
+
       <View style={styles.content}>
         <View style={styles.calendarHeader}>
           <View style={styles.dateSelector}>
@@ -172,7 +177,7 @@ const filteredClasses = mergedSchedules.filter(sch => {
               onPress={toggleViewMode}
             >
               <Text style={styles.viewModeText}>
-                {viewMode === "list" ? "Lịch" : "Danh sách"}
+                {viewMode === "list" ? t("Lịch") : t("Danh sách")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -183,7 +188,7 @@ const filteredClasses = mergedSchedules.filter(sch => {
             </TouchableOpacity>
             
             <Text style={styles.weekText}>
-              Tuần {Math.ceil(selectedDate.getDate() / 7)}
+              {t('Tuần')} {Math.ceil(selectedDate.getDate() / 7)}
             </Text>
             
             <TouchableOpacity onPress={handleNextWeek}>
@@ -231,46 +236,47 @@ const filteredClasses = mergedSchedules.filter(sch => {
             <View style={styles.legendContainer}>
               <View style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: colors.primary }]} />
-                <Text style={styles.legendText}>Lịch học</Text>
+                <Text style={styles.legendText}>{t("Lịch học")}</Text>
               </View>
               <View style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: colors.secondary }]} />
-                <Text style={styles.legendText}>Lịch học trực tuyến</Text>
+                <Text style={styles.legendText}>{t("Lịch học trực tuyến")}</Text>
               </View>
               <View style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: colors.danger }]} />
-                <Text style={styles.legendText}>Lịch tạm ngưng</Text>
+                <Text style={styles.legendText}>{t("Lịch tạm ngưng")}</Text>
               </View>
             </View>
           </View>
           {isLoading ? (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Đang tải...</Text>
+              <Text style={styles.emptyText}>{t("Đang tải...")}</Text>
             </View>
           ) : filteredClasses.length > 0 ? (
             filteredClasses.map((classItem) => (
+              
               <ClassCard
                 key={classItem.classId}
                 scheduleId={classItem.scheduleId}
-                title={classItem.classInfo?.className_vi || "Lớp học"}
+                title={classItem.classInfo?.className_vi || t("Lớp học")}
                 time={classItem.startTime && classItem.endTime
                   ? `${classItem.startTime.slice(0, 5)} - ${classItem.endTime.slice(0, 5) }`
-                  : "Chưa xác định"}
+                  : t("Chưa xác định")}
                 zoomLink={classItem.zoomUrl}
                 studyType={
                   classItem.classInfo?.studyType === "Online"
                     ? "Online"
                     : "Offline"
                 } 
-                location={"Hà Nội"}
+                location={addressMap[classItem.classId]?.fullAddres || t("Chưa cập nhật")}
                 role={role}
-                tutor={classItem.classInfo?.tutorId || ""}
+                tutor={classItem.classInfo?.tutorId ? usersMap[classItem.classInfo.tutorId]?.fullName || t("Chưa có tên") : t("Chưa có tên")}
                 status={getStatus(classItem.status)}
                 onPress={() => { } } />
             ))
           ) : (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Không có lịch học vào ngày này</Text>
+              <Text style={styles.emptyText}>{t("Không có lịch học vào ngày này")}</Text>
             </View>
           )}
         </ScrollView>

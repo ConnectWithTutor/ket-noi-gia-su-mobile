@@ -7,7 +7,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ErrorBoundary } from "./error-boundary";
 import { useAuthStore } from "@/store/auth-store";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-
+import "@/i18n";
 export const unstable_settings = {
   initialRouteName: "(auth)",
 };

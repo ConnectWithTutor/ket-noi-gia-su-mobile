@@ -11,11 +11,12 @@ import NotificationItem from "@/components/notifications/NotificationItem";
 import { triggerHaptic } from "@/utils/haptics";
 import StatusBar from "@/components/ui/StatusBar";
 import Header from "@/components/ui/Header";
+import { useTranslation } from "react-i18next";
 
 export default function NotificationListScreen() {
   const router = useRouter();
   const { notifications, fetchNotifications, markAllAsRead, isLoading } = useNotificationStore();
-
+  const { t } = useTranslation();
   useEffect(() => {
     fetchNotifications();
   }, []);
@@ -30,7 +31,7 @@ export default function NotificationListScreen() {
       return (
         <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.emptyText}>Đang tải thông báo...</Text>
+          <Text style={styles.emptyText}>{t("Đang tải thông báo...")}</Text>
         </View>
       );
     }
@@ -38,8 +39,8 @@ export default function NotificationListScreen() {
     return (
       <View style={styles.emptyContainer}>
         <Bell size={60} color={colors.textLight} />
-        <Text style={styles.emptyTitle}>Không có thông báo</Text>
-        <Text style={styles.emptyText}>Bạn chưa có thông báo nào</Text>
+        <Text style={styles.emptyTitle}>{t("Không có thông báo")}</Text>
+        <Text style={styles.emptyText}>{t("Bạn chưa có thông báo nào")}</Text>
       </View>
     );
   };
@@ -47,8 +48,8 @@ export default function NotificationListScreen() {
   return (
     <View style={styles.container}>
         <StatusBar backgroundColor={colors.primary} />
-        <Header title="Thông báo" showBack/>
-      
+        <Header title={t("Thông báo")} showBack/>
+
       <FlatList
         data={notifications}
         renderItem={({ item }) => <NotificationItem notification={item} />}

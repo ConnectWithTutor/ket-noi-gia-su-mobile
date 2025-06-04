@@ -15,12 +15,14 @@ import StatusBar from "@/components/ui/StatusBar";
 import {getCurrentAddress} from "@/hooks/useCurrentAddress";
 import DatePicker from "@/components/ui/DatePickerInput";
 import { useAddressStore } from "@/store/address-store";
+import { useTranslation } from "react-i18next";
 export default function PersonalInfoScreen() {
   const router = useRouter();
   const { user, updateUser, isLoading } = useAuthStore();
-  const { createAddress,updateAddress,fetchAddressById } = useAddressStore();
+  const { createAddress,updateAddress,fetchAddressById,isLoading: isLoadingAddress } = useAddressStore();
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [formData, setFormData] = useState({
     fullName: user?.fullName || "",
     email: user?.email || "",
@@ -28,7 +30,7 @@ export default function PersonalInfoScreen() {
     birthDate: user?.birthDate || "",
     address: user?.address || "",
   });
-
+  const { t } = useTranslation();
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -69,12 +71,12 @@ export default function PersonalInfoScreen() {
         }
       }
       else {
-        Alert.alert("Lỗi", "Vui lòng lấy địa chỉ trước khi lưu thay đổi.");
+        Alert.alert(t("Lỗi"), t("Vui lòng lấy địa chỉ trước khi lưu thay đổi."));
         return;
       }
       router.back();
     } catch (error) {
-      Alert.alert("Lỗi", "Không thể cập nhật thông tin. Vui lòng thử lại sau.");
+      Alert.alert(t("Lỗi"), t("Không thể cập nhật thông tin. Vui lòng thử lại sau."));
     }
   };
   const handleGetAddress = async () => {
@@ -88,23 +90,23 @@ export default function PersonalInfoScreen() {
       }));
         setLatitude(address.latitude);
         setLongitude(address.longitude);
-        Alert.alert("Thành công", "Địa chỉ đã được cập nhật");
+        Alert.alert(t("Thành công"), t("Địa chỉ đã được cập nhật"));
 
       }
       else {
-        Alert.alert("Lỗi", "Không thể lấy địa chỉ mới. Vui lòng thử lại sau.");
+        Alert.alert(t("Lỗi"), t("Không thể lấy địa chỉ mới. Vui lòng thử lại sau."));
       }
     } catch (error) {
-      Alert.alert("Lỗi", "Không thể lấy địa chỉ mới. Vui lòng thử lại sau.");
+      Alert.alert(t("Lỗi"), t("Không thể lấy địa chỉ mới. Vui lòng thử lại sau."));
     }
   };
   return (
     <View style={styles.container}>
         <StatusBar backgroundColor={colors.primary} />
-        <Header title="Thông tin cá nhân" showBack />
+        <Header title={t("Thông tin cá nhân")} showBack />
       <Stack.Screen 
         options={{
-          title: "Thông tin cá nhân",
+          title: t("Thông tin cá nhân"),
           headerLeft: () => (
             <TouchableOpacity 
               onPress={() => {
@@ -125,6 +127,9 @@ export default function PersonalInfoScreen() {
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.avatarContainer}>
+
+         
+     
           <View style={styles.avatar}>
             {user?.avatarUrl ? (
               <TouchableOpacity style={styles.avatarImage}>
@@ -148,32 +153,32 @@ export default function PersonalInfoScreen() {
               </TouchableOpacity>
             )}
           </View>
-          <Text style={styles.changePhotoText}>Thay đổi ảnh đại diện</Text>
+          <Text style={styles.changePhotoText}>{t("Thay đổi ảnh đại diện")}</Text>
         </View>
         
         <View style={styles.formContainer}>
           <Input
-            label="Họ và tên"
+            label={t("Họ và tên")}
             value={formData.fullName}
             onChangeText={(text) => handleChange("fullName", text)}
-            placeholder="Nhập họ và tên"
+            placeholder={t("Nhập họ và tên")}
             containerStyle={styles.inputContainer}
           />
           
           <Input
-            label="Email"
+            label={t("Email")}
             value={formData.email}
             onChangeText={(text) => handleChange("email", text)}
-            placeholder="Nhập email"
+            placeholder={t("Nhập email")}
             keyboardType="email-address"
             containerStyle={styles.inputContainer}
           />
           
           <Input
-            label="Số điện thoại"
+            label={t("Số điện thoại")}
             value={formData.phoneNumber}
             onChangeText={(text) => handleChange("phoneNumber", text)}
-            placeholder="Nhập số điện thoại"
+            placeholder={t("Nhập số điện thoại")}
             keyboardType="phone-pad"
             containerStyle={styles.inputContainer}
           />
@@ -182,26 +187,28 @@ export default function PersonalInfoScreen() {
               onChange={(value) => handleChange('birthDate', value)}
             />
 
+
+
           <Input
-            label="Địa chỉ"
+            label={t("Địa chỉ")}
             value={formData.address}
             onChangeText={(text) => handleChange("address", text)}
-            placeholder="Nhập địa chỉ"
+            placeholder={t("Nhập địa chỉ")}
             editable={false}
             containerStyle={styles.inputContainer}
             textAlignVertical="top"
             
           />
           <Button
-            title="Lấy địa chỉ mới"
+            title={t("Lấy địa chỉ mới")}
             onPress={() => handleGetAddress()}
             style={styles.saveButton}
           />
           <Button
-            title="Lưu thay đổi"
+            title={t("Lưu thay đổi")}
             onPress={handleSubmit}
             style={styles.saveButton}
-            loading={isLoading}
+            loading={isLoading || isLoadingAddress}
           />
         </View>
       </ScrollView>
@@ -289,6 +296,6 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     marginTop: SPACING.md,
-  }
-  
+  },
+
 });

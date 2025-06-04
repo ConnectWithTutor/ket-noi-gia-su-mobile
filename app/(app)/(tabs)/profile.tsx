@@ -21,11 +21,13 @@ import { useAuthStore } from "@/store/auth-store";
 import { triggerHaptic } from "@/utils/haptics";
 import { useRoleStore } from "@/store/roleStore";
 import { useChatStore } from "@/store/chat-store";
+import { useTranslation } from "react-i18next";
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
   const { roles,fetchRoles } = useRoleStore();
   const { disconnectWebSocket } = useChatStore();
+  const { t } = useTranslation();
   useEffect(() => {
     const fetchUserRole = async () => {
       await fetchRoles();
@@ -47,7 +49,18 @@ export default function ProfileScreen() {
   const handleChangePassword = () => {
     handlepush("/change-password");
   };
-
+  const handleProfile = () => {
+    if (role?.roleName === "Student") {
+      handlepush(`/profile/profileStudent/${user?.userId}`);
+    } else if (role?.roleName === "Tutor") {
+      handlepush(`/profile/profileTutor/${user?.userId}`);
+    } else {
+      handlepush("/profile");
+    }
+  }
+  const handleSettings = () => {
+    handlepush("/settings/settings");
+  };
   const handlePersonalInfo = () => {
     handlepush("/personal-info");
   };
@@ -69,12 +82,12 @@ export default function ProfileScreen() {
           
           <View style={styles.userInfo}>
             <Text style={styles.userName}>{user?.fullName}</Text>
-            <Text style={styles.userRole}>{role?.roleName === "Tutor" ? "Gia sư" : "Học viên"}</Text>
+            <Text style={styles.userRole}>{role?.roleName === "Tutor" ? t("Gia sư") : t("Học viên")}</Text>
             <TouchableOpacity 
               style={styles.editButton} 
               onPress={handlePersonalInfo}
             >
-              <Text style={styles.editButtonText}>Chỉnh sửa</Text>
+              <Text style={styles.editButtonText}>{t("Chỉnh sửa")}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -82,27 +95,27 @@ export default function ProfileScreen() {
       
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Tài khoản</Text>
-          
+          <Text style={styles.sectionTitle}>{t("Tài khoản")}</Text>
+
           <View style={styles.sectionContent}>
             <ProfileItem
               icon={<User size={20} color={colors.primary} />}
-              title="Thông tin cá nhân"
-              subtitle="Cập nhật thông tin cá nhân của bạn"
-              onPress={handlePersonalInfo}
+              title={t("Thông tin cá nhân")}
+              subtitle={t("Cập nhật thông tin cá nhân của bạn")}
+              onPress={handleProfile}
             />
             
             <ProfileItem
               icon={<Lock size={20} color={colors.primary} />}
-              title="Đổi mật khẩu"
-              subtitle="Cập nhật mật khẩu của bạn"
+              title={t("Đổi mật khẩu")}
+              subtitle={t("Cập nhật mật khẩu của bạn")}
               onPress={handleChangePassword}
             />
             
             <ProfileItem
               icon={<Bell size={20} color={colors.primary} />}
-              title="Thông báo"
-              subtitle="Quản lý thông báo"
+              title={t("Thông báo")}
+              subtitle={t("Quản lý thông báo")}
               onPress={handleNotifications}
             />
           </View>
@@ -110,14 +123,14 @@ export default function ProfileScreen() {
         
         {role?.roleName === "Tutor" && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Gia sư</Text>
-            
+            <Text style={styles.sectionTitle}>{t("Gia sư")}</Text>
+
             <View style={styles.sectionContent}>
              
               <ProfileItem
                 icon={<Star size={20} color={colors.primary} />}
-                title="Đánh giá"
-                subtitle="Xem đánh giá từ học viên"
+                title={t("Đánh giá")}
+                subtitle={t("Xem đánh giá từ học viên")}
                 onPress={() => {}}
               />
             </View>
@@ -126,13 +139,13 @@ export default function ProfileScreen() {
 
         {role?.roleName === "Student" && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Học viên</Text>
-            
+            <Text style={styles.sectionTitle}>{t("Học viên")}</Text>
+
             <View style={styles.sectionContent}>
               <ProfileItem
                 icon={<BookOpen size={20} color={colors.primary} />}
-                title="Danh sách hoá đơn"
-                subtitle="Xem các hoá đơn của bạn"
+                title={t("Danh sách hoá đơn")}
+                subtitle={t("Xem các hoá đơn của bạn")}
                 onPress={() => router.push("/(app)/invoice/invoices")}
               />
             </View>
@@ -140,39 +153,39 @@ export default function ProfileScreen() {
         )}
         
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Hỗ trợ</Text>
-          
+          <Text style={styles.sectionTitle}>{t('Hỗ trợ')}</Text>
+
           <View style={styles.sectionContent}>
             <ProfileItem
               icon={<HelpCircle size={20} color={colors.primary} />}
-              title="Khiếu nại"
-              subtitle="Bạn gặp vấn đề gì?"
+              title={t("Khiếu nại")}
+              subtitle={t("Bạn gặp vấn đề gì?")}
               onPress={() => {handlepush("/(app)/complaint/complaints")}}
             />
             <ProfileItem
               icon={<HelpCircle size={20} color={colors.primary} />}
-              title="Trợ giúp"
-              subtitle="Câu hỏi thường gặp"
+              title={t("Trợ giúp")}
+              subtitle={t("Câu hỏi thường gặp")}
               onPress={() => {}}
             />
             
             <ProfileItem
               icon={<FileText size={20} color={colors.primary} />}
-              title="Điều khoản sử dụng"
+              title={t("Điều khoản sử dụng")}
               onPress={() => {}}
             />
-            
+
             <ProfileItem
               icon={<Settings size={20} color={colors.primary} />}
-              title="Cài đặt"
-              onPress={() => {}}
+              title={t("Cài đặt")}
+              onPress={() => {handleSettings()}}
             />
           </View>
         </View>
         
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <LogOut size={20} color={colors.danger} />
-          <Text style={styles.logoutText}>Đăng xuất</Text>
+          <Text style={styles.logoutText}>{t("Đăng xuất")}</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>

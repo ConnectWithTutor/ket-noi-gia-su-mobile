@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { View, Platform, TouchableOpacity } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Input from './Input';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   label?: string;
@@ -12,7 +13,7 @@ interface Props {
 
 const DatePicker: React.FC<Props> = ({ value, onChange, label = "Ngày sinh" }) => {
   const [show, setShow] = useState(false);
-
+const { t } = useTranslation();
   const onDateChange = (_: any, selectedDate?: Date) => {
     if (selectedDate) {
       setShow(false);
@@ -29,7 +30,7 @@ const DatePicker: React.FC<Props> = ({ value, onChange, label = "Ngày sinh" }) 
           label={label}
           value={value}
           onChangeText={() => {}} // không cho người dùng tự nhập
-          placeholder="Chọn ngày sinh"
+          placeholder={t("Chọn ngày sinh")}
           editable={false}
           containerStyle={{ marginTop: 10 }}
           textAlignVertical="top"

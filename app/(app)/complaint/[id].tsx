@@ -5,12 +5,12 @@ import { useComplaintStore } from "@/store/complaint-store";
 import Header from "@/components/ui/Header";
 import colors from "@/constants/Colors";
 import { AlertCircle, CheckCircle2, Clock } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 
 const ComplaintDetailScreen = () => {
   const { id } = useLocalSearchParams();
   const { getComplaintById, selectedComplaint, loading, error, clearError } = useComplaintStore();
-  const router = useRouter();
-
+  const { t } = useTranslation();
   useEffect(() => {
     if (id) getComplaintById(id as string);
     return () => clearError();
@@ -43,25 +43,25 @@ const ComplaintDetailScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Header title="Chi tiết khiếu nại" showBack />
+      <Header title={t("Chi tiết khiếu nại")} showBack />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.row}>
           {statusIcon}
           <Text style={[styles.status, { color: statusColor }]}>
-            {selectedComplaint.status === "Done" ? "Đã xử lý" : "Đang xử lý"}
+            {selectedComplaint.status === "Done" ? t("Đã xử lý") : t("Đang xử lý")}
           </Text>
         </View>
-        <Text style={styles.label}>Tiêu đề</Text>
+        <Text style={styles.label}>{t("Tiêu đề")}</Text>
         <Text style={styles.title}>{selectedComplaint.title}</Text>
-        <Text style={styles.label}>Nội dung</Text>
+        <Text style={styles.label}>{t("Nội dung")}</Text>
         <Text style={styles.body}>{selectedComplaint.content}</Text>
-        <Text style={styles.label}>Ngày gửi</Text>
+        <Text style={styles.label}>{t("Ngày gửi")}</Text>
         <Text style={styles.date}>
           {new Date(selectedComplaint.createdAt).toLocaleString()}
         </Text>
         {selectedComplaint.resolutionNote && (
           <>
-            <Text style={styles.label}>Phản hồi</Text>
+            <Text style={styles.label}>{t("Phản hồi")}</Text>
             <Text style={styles.response}>{selectedComplaint.resolutionNote}</Text>
           </>
         )}

@@ -1,5 +1,5 @@
 import { api } from "@/services/api";
-import {SingleItemResponse, PaginatedResponse, Address } from "@/types";
+import {SingleItemResponse, PaginatedResponse, Address, AddressCreateRequest, CreateResponse } from "@/types";
 import { API_ENDPOINTS } from "@/constants/apiEndpoints";
 export const addressApi = {
     getAddresses: async () => {
@@ -12,10 +12,16 @@ export const addressApi = {
         return api.get<SingleItemResponse<any>>(
             API_ENDPOINTS.addressById(user_request_class_id)
         );
-    },
+        },
 
-    createAddress: async (data: any) => {
-        return api.post<SingleItemResponse<any>>(
+        addressAutoComplete: async (text: string) => {
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(text)}&format=json`;
+        return api.get<[]>(url);
+        },
+
+        createAddress: async (data: AddressCreateRequest) => {
+        console.log("Creating address with data:", data);
+        return api.post<SingleItemResponse<CreateResponse>>(
             API_ENDPOINTS.createAddress,
             data
         );

@@ -9,7 +9,7 @@ import StatusBar from "@/components/ui/StatusBar";
 import { useAuthStore } from "@/store/auth-store";
 import { useStudentRequestStore } from "@/store/post-store";
 import { useTutorStore } from "@/store/tutor-store";
-import { formatDate, formatTime } from "@/utils/date-utils";
+import { useTranslation } from 'react-i18next';
 import { triggerHaptic } from "@/utils/haptics";
 import PostCard from "@/components/posts/PostCard";
 import TutorCard from "@/components/tutors/TutorCard";
@@ -17,11 +17,13 @@ import { StudentRequest, Tutor, User } from "@/types";
 import { useClassStore } from "@/store/class-store";
 import { useStatusStore } from "@/store/status-store";
 import { useUserProfileStore } from "@/store/profile-store";
+import { useSubjectStore } from "@/store/subjectStore";
 
 export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
- 
+  const { t } = useTranslation();
+ const { subjects, fetchSubjects,getSubjectById } = useSubjectStore();
       const { fetchUserById } = useUserProfileStore();
   const { classes, fetchClasses } = useClassStore();
   const {StatusesClass, fetchStatusesClass} = useStatusStore();
@@ -34,12 +36,16 @@ export default function HomeScreen() {
   } = useStudentRequestStore();
   const { users, fetchTutors } = useTutorStore();
     useEffect(() => {
-    fetchClasses();
-    fetchStatusesClass();
-    fetchRecentStudentRequests();
-    fetchStatuses
-    fetchTutors();
-  }, []);
+      (async () => {
+        await Promise.all([
+          fetchClasses(),
+          fetchStatusesClass(),
+          fetchRecentStudentRequests(),
+          fetchTutors(),
+          fetchSubjects(),
+        ]);
+      })();
+    }, []);
 
   const PendingClass = StatusesClass.find((status) => status.code === "Pending");
   const upcomingClasses = classes
@@ -125,7 +131,7 @@ export default function HomeScreen() {
   
   const handleTutorPress = (userid: string) => {
     triggerHaptic('light');
-    router.push(`/tutor/${userid}` as any);
+    router.push(`/profile/profileTutor/${userid}` );
   };
   
   const handleCreatePost = () => {
@@ -143,13 +149,13 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View>
-            <Text style={styles.greeting}>Xin chào,</Text>
+            <Text style={styles.greeting}>{t('Xin chào,')}</Text>
             <Text style={styles.userName}>{user?.fullName}</Text>
           </View>
           
           <TouchableOpacity 
             style={styles.notificationButton}
-            onPress={() => {handleNotificationPress()}}
+            onPress={() => { handleNotificationPress() }}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Bell size={24} color={colors.white} />
@@ -158,13 +164,13 @@ export default function HomeScreen() {
         
         <TouchableOpacity style={styles.searchBar} onPress={() => {handleFindClass()}}>
           <Search size={20} color={colors.textSecondary} />
-          <Text style={styles.searchText}>Tìm kiếm môn học</Text>
+          <Text style={styles.searchText}>{t('Tìm kiếm môn học')}</Text>
         </TouchableOpacity>
       </View>
       
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.featuresContainer}>
-          <Text style={styles.sectionTitle}>Dịch vụ</Text>
+          <Text style={styles.sectionTitle}>{t('Dịch vụ')}</Text>
           
           <View style={styles.featuresGrid}>
             <TouchableOpacity 
@@ -174,7 +180,7 @@ export default function HomeScreen() {
               <View style={[styles.featureIcon, { backgroundColor: colors.primaryLight }]}>
                 <Calendar size={24} color={colors.primary} />
               </View>
-              <Text style={styles.featureText}>Lịch học</Text>
+              <Text style={styles.featureText}>{t('Lịch học')}</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
@@ -184,7 +190,7 @@ export default function HomeScreen() {
               <View style={[styles.featureIcon, { backgroundColor: "#FFE0B2" }]}>
                 <School size={24} color="#FF9800" />
               </View>
-              <Text style={styles.featureText}>Lớp học</Text>
+              <Text style={styles.featureText}>{t('Lớp học')}</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
@@ -194,7 +200,7 @@ export default function HomeScreen() {
               <View style={[styles.featureIcon, { backgroundColor: "#E1F5FE" }]}>
                 <MessageSquare size={24} color="#03A9F4" />
               </View>
-              <Text style={styles.featureText}>Trò chuyện</Text>
+              <Text style={styles.featureText}>{t('Trò chuyện')}</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
@@ -204,37 +210,39 @@ export default function HomeScreen() {
               <View style={[styles.featureIcon, { backgroundColor: "#E8F5E9" }]}>
                 <FileText size={24} color="#4CAF50" />
               </View>
-              <Text style={styles.featureText}>Bài đăng</Text>
+              <Text style={styles.featureText}>{t('Bài đăng')}</Text>
             </TouchableOpacity>
           </View>
         </View>
         
         <View style={styles.recentPostsContainer}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Bài đăng mới nhất</Text>
+            <Text style={styles.sectionTitle}>{t('Bài đăng mới nhất')}</Text>
             <TouchableOpacity onPress={() => router.push("/(app)/(tabs)/posts" as any)}>
-              <Text style={styles.seeAllText}>Xem tất cả</Text>
+              <Text style={styles.seeAllText}>{t('Xem tất cả')}</Text>
             </TouchableOpacity>
           </View>
           
            {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="small" color={colors.primary} />
-              <Text style={styles.loadingText}>Đang tải bài đăng...</Text>
+              <Text style={styles.loadingText}>{t('Đang tải bài đăng...')}</Text>
             </View>
           ) : recentRequests.length > 0 ? (
             recentRequests.map((item) =>
               {
               const author = authorsMap.get(item.studentId);
               const status = getStatusById(item.status);
-              if (!author || !status) return null;
-            
+              const subject = getSubjectById(item.subjectId);
+              if (!author || !status || !subject) return null;
+
               return (
                 <PostCard
                   key={item.requestId}
                   post={item}
                   author={author}
                   status={status}
+                  subject={subject}
                   onPress={() => handlePostPress(item.requestId)}
                 />
               );
@@ -242,7 +250,7 @@ export default function HomeScreen() {
             )
           ) : (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Không có bài đăng mới</Text>
+              <Text style={styles.emptyText}>{t('Không có bài đăng mới')}</Text>
             </View>
           )}
           
@@ -251,15 +259,15 @@ export default function HomeScreen() {
             onPress={handleCreatePost}
           >
             <FileText size={18} color={colors.primary} />
-            <Text style={styles.createPostText}>Đăng bài tìm gia sư</Text>
+            <Text style={styles.createPostText}>{t('Đăng bài tìm gia sư')}</Text>
           </TouchableOpacity>
         </View>
         
         <View style={styles.upcomingClassesContainer}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Lớp học sắp tới</Text>
+            <Text style={styles.sectionTitle}>{t('Lớp học sắp tới')}</Text>
             <TouchableOpacity onPress={() => router.push("/(app)/(tabs)/class")}>
-              <Text style={styles.seeAllText}>Xem tất cả</Text>
+              <Text style={styles.seeAllText}>{t('Xem tất cả')}</Text>
             </TouchableOpacity>
           </View>
           
@@ -289,16 +297,16 @@ export default function HomeScreen() {
             ))
           ) : (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Không có lớp học sắp tới</Text>
+              <Text style={styles.emptyText}>{t('Không có lớp học sắp tới')}</Text>
             </View>
           )}
         </View>
         
         <View style={styles.recommendedTutorsContainer}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Gia sư gợi ý</Text>
+            <Text style={styles.sectionTitle}>{t('Gia sư gợi ý')}</Text>
             <TouchableOpacity onPress={() => {}}>
-              <Text style={styles.seeAllText}>Xem tất cả</Text>
+              <Text style={styles.seeAllText}>{t('Xem tất cả')}</Text>
             </TouchableOpacity>
           </View>
           
@@ -312,7 +320,7 @@ export default function HomeScreen() {
             ))
           ) : (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Không có gia sư gợi ý</Text>
+              <Text style={styles.emptyText}>{t('Không có gia sư gợi ý')}</Text>
             </View>
           )}
         </View>

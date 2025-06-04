@@ -11,11 +11,12 @@ import StatusBar from "@/components/ui/StatusBar";
 import Header from "@/components/ui/Header";
 import { useAuthStore } from "@/store/auth-store";
 import { triggerHaptic } from "@/utils/haptics";
+import { useTranslation } from "react-i18next";
 
 export default function ChangePasswordScreen() {
   const router = useRouter();
   const { changePassword, isLoading } = useAuthStore();
-  
+    const { t } = useTranslation();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -24,21 +25,20 @@ export default function ChangePasswordScreen() {
   
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
     if (!currentPassword) {
-      newErrors.currentPassword = "Vui lòng nhập mật khẩu hiện tại";
+      newErrors.currentPassword = t("Vui lòng nhập mật khẩu hiện tại");
     }
-    
+
     if (!newPassword) {
-      newErrors.newPassword = "Vui lòng nhập mật khẩu mới";
+      newErrors.newPassword = t("Vui lòng nhập mật khẩu mới");
     } else if (newPassword.length < 6) {
-      newErrors.newPassword = "Mật khẩu phải có ít nhất 6 ký tự";
+      newErrors.newPassword = t("Mật khẩu phải có ít nhất 6 ký tự");
     }
-    
+
     if (!confirmPassword) {
-      newErrors.confirmPassword = "Vui lòng xác nhận mật khẩu mới";
+      newErrors.confirmPassword = t("Vui lòng xác nhận mật khẩu mới");
     } else if (newPassword !== confirmPassword) {
-      newErrors.confirmPassword = "Mật khẩu không khớp";
+      newErrors.confirmPassword = t("Mật khẩu không khớp");
     }
     
     setErrors(newErrors);
@@ -66,7 +66,7 @@ export default function ChangePasswordScreen() {
     } catch (error) {
       setErrors({
         ...errors,
-        general: "Không thể đổi mật khẩu. Vui lòng kiểm tra mật khẩu hiện tại.",
+        general: t("Không thể đổi mật khẩu. Vui lòng kiểm tra mật khẩu hiện tại."),
       });
     }
   };
@@ -74,7 +74,7 @@ export default function ChangePasswordScreen() {
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor={colors.primary} />
-      <Header title="Đổi mật khẩu" showBack />
+      <Header title={t("Đổi mật khẩu")} showBack />
       
       <ScrollView 
         contentContainerStyle={styles.content}
@@ -83,36 +83,36 @@ export default function ChangePasswordScreen() {
         <View style={styles.formContainer}>
           {success ? (
             <View style={styles.successContainer}>
-              <Text style={styles.successTitle}>Thành công!</Text>
+              <Text style={styles.successTitle}>{t("Thành công!")}</Text>
               <Text style={styles.successMessage}>
-                Mật khẩu của bạn đã được cập nhật thành công.
+                {t("Mật khẩu của bạn đã được cập nhật thành công.")}
               </Text>
             </View>
           ) : (
             <>
               <Input
-                label="Mật khẩu hiện tại"
-                placeholder="Nhập mật khẩu hiện tại"
+                label={t("Mật khẩu hiện tại")}
+                placeholder={t("Nhập mật khẩu hiện tại")}
                 value={currentPassword}
                 onChangeText={setCurrentPassword}
                 secureTextEntry
                 icon={<Lock size={20} color={colors.textSecondary} />}
                 error={errors.currentPassword}
               />
-              
+
               <Input
-                label="Mật khẩu mới"
-                placeholder="Nhập mật khẩu mới"
+                label={t("Mật khẩu mới")}
+                placeholder={t("Nhập mật khẩu mới")}
                 value={newPassword}
                 onChangeText={setNewPassword}
                 secureTextEntry
                 icon={<Lock size={20} color={colors.textSecondary} />}
                 error={errors.newPassword}
               />
-              
+
               <Input
-                label="Xác nhận mật khẩu mới"
-                placeholder="Nhập lại mật khẩu mới"
+                label={t("Xác nhận mật khẩu mới")}
+                placeholder={t("Nhập lại mật khẩu mới")}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry
@@ -125,7 +125,7 @@ export default function ChangePasswordScreen() {
               )}
               
               <Button
-                title="Cập nhật"
+                title={t("Cập nhật")}
                 onPress={handleChangePassword}
                 loading={isLoading}
                 fullWidth
@@ -136,7 +136,7 @@ export default function ChangePasswordScreen() {
                 style={styles.cancelButton} 
                 onPress={() => router.back()}
               >
-                <Text style={styles.cancelText}>Hủy</Text>
+                <Text style={styles.cancelText}>{t("Hủy")}</Text>
               </TouchableOpacity>
             </>
           )}

@@ -7,13 +7,12 @@ import StatusBar from "@/components/ui/StatusBar";
 import Header from "@/components/ui/Header";
 import MessageBubble from "@/components/chat/MessageBubble";
 import ChatInput from "@/components/chat/ChatInput";
-import { useChatStore } from "@/store/chat-store";
 import { formatTime } from "@/utils/date-utils";
 import { Message } from "@/types/message";
 import { triggerHaptic } from "@/utils/haptics";
-import { User } from "@/types";
 import { useAuthStore } from "@/store/auth-store";
 import { useChat } from "@/hooks/useChat";
+import { useTranslation } from "react-i18next";
 export default function ConversationScreen() {
   const { id } = useLocalSearchParams();
   const conversationId = Array.isArray(id) ? id[0] : id;
@@ -34,6 +33,7 @@ const [sendingMessage, setSendingMessage] = useState(false);
       openConversation(conversationId);
     }
   }, [conversationId])
+  const { t } = useTranslation(); 
   const flatListRef = useRef<FlatList<Message>>(null);
 ;
 
@@ -67,9 +67,9 @@ useEffect(() => {
   };
    
   const getConversationName = () => {
-   
-  
-    return "Trò chuyện";
+
+
+    return t("Trò chuyện");
     }
 return (
     <View style={styles.container}>

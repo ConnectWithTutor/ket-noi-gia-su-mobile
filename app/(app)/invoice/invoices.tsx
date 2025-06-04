@@ -11,6 +11,7 @@ const StudentInvoices = () => {
   const { payments, fetchPayments, loading, error, fetchPaymentMethods,PaymentOrder } = usePaymentStore();
   const { fetchStatusPayment , StatusesPayment } = useStatusStore();
   const { user } = useAuthStore();
+  const { t } = useTranslation();
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
   useEffect(() => {
     const fetchData = async () => {
@@ -77,10 +78,10 @@ const StudentInvoices = () => {
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor={colors.primary} />
-      <Header title="Danh sách hóa đơn" showBack />
+      <Header title={t("Danh sách hóa đơn")} showBack />
         {payments.length === 0 ? (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Text style={{ textAlign: 'center', marginTop: 20 }}>Không có hóa đơn nào</Text>
+            <Text style={{ textAlign: 'center', marginTop: 20 }}>{t("Không có hóa đơn nào")}</Text>
           </View>
         ) : (
           <ScrollView contentContainerStyle={{ padding: 16 }} >
@@ -101,6 +102,7 @@ const StudentInvoices = () => {
 import { StyleSheet } from 'react-native';
 import { useAuthStore } from '@/store/auth-store';
 import { useStatusStore } from '@/store/status-store';
+import { useTranslation } from 'react-i18next';
 const styles = StyleSheet.create({
     container: {
         flex: 1,

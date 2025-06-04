@@ -13,14 +13,17 @@ import { triggerHaptic } from "@/utils/haptics";
 import { useAuthStore } from "@/store/auth-store";
 import { useChat } from "@/hooks/useChat";
 import { User } from "@/types";
+import { useTranslation } from 'react-i18next';
 
 export default function ChatScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
+  const { t } = useTranslation();
+
   if (!user) {
     return (
       <View style={styles.container}>
-        <Text style={styles.emptyText}>Vui lòng đăng nhập để xem cuộc trò chuyện</Text>
+        <Text style={styles.emptyText}>{t('Vui lòng đăng nhập để xem cuộc trò chuyện')}</Text>
       </View>
     );
   }
@@ -68,15 +71,15 @@ const handleSelectConversation = (conversation: Conversation) => {
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor={colors.primary} />
-      <Header title="Trò Chuyện" showNotification onNotificationPress={handleNotificationPress}/>
-      
+      <Header title={t('Trò Chuyện')} showNotification onNotificationPress={handleNotificationPress}/>
+
       <View style={styles.content}>
         <View style={styles.searchContainer}>
           <View style={styles.searchInputContainer}>
             <Search size={20} color={colors.textSecondary} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Tìm kiếm tin nhắn..."
+              placeholder={t('Tìm kiếm tin nhắn...')}
               placeholderTextColor={colors.placeholder}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -88,7 +91,7 @@ const handleSelectConversation = (conversation: Conversation) => {
         <View style={styles.conversationsContainer}>
           {isLoading ? (
             <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>Đang tải...</Text>
+              <Text style={styles.loadingText}>{t('Đang tải...')}</Text>
             </View>
           ) : filteredConversations.length > 0 ? (
             <FlatList
@@ -112,7 +115,7 @@ const handleSelectConversation = (conversation: Conversation) => {
           ) : (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>
-                {searchQuery ? "Không tìm thấy kết quả" : "Không có cuộc trò chuyện nào"}
+                {searchQuery ? t('Không tìm thấy kết quả') : t('Không có cuộc trò chuyện nào')}
               </Text>
             </View>
           )}
@@ -136,8 +139,9 @@ function ConversationItem({ conversation, onPress, users, onVisible }: Conversat
     onVisible?.();
   }, []);
   const userId = useAuthStore((state) => state.user?.userId);
+  const { t } = useTranslation();
   const otherUser = users.find((u) => u.userId !== userId);
-  const displayName = otherUser?.fullName || "Không rõ người dùng";
+  const displayName = otherUser?.fullName || t('Không rõ người dùng');
   return (
     <TouchableOpacity style={styles.conversationItem} onPress={onPress}>
       <View style={styles.avatarContainer}>
@@ -166,7 +170,7 @@ function ConversationItem({ conversation, onPress, users, onVisible }: Conversat
             ]}
             numberOfLines={1}
           >
-              {conversation.lastMessage?.content || "Cuộc trò chuyện mới"}
+              {conversation.lastMessage?.content || t('Cuộc trò chuyện mới')}
           </Text>
           <ArrowRight size={16} color={colors.textSecondary} />
         </View>

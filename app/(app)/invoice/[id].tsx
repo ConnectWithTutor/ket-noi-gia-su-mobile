@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useRoute } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 
 type InvoiceDetailProps = {
     id: string;
@@ -21,21 +22,21 @@ const mockInvoice = {
 const InvoiceDetailScreen: React.FC = () => {
     const route = useRoute();
     const { id } = route.params as InvoiceDetailProps;
-
+  const { t } = useTranslation(); 
     // In real app, fetch invoice by id
     const invoice = mockInvoice; // Replace with fetched data
 
     return (
         <ScrollView style={styles.container}>
-            <Text style={styles.title}>Chi tiết hoá đơn</Text>
+            <Text style={styles.title}>{t("Chi tiết hoá đơn")}</Text>
             <View style={styles.section}>
-                <Text>Mã hoá đơn: {invoice.id}</Text>
-                <Text>Ngày lập: {invoice.date}</Text>
-                <Text>Khách hàng: {invoice.customer}</Text>
-                <Text>Trạng thái: {invoice.status}</Text>
+                <Text>{t("Mã hoá đơn")}: {invoice.id}</Text>
+                <Text>{t("Ngày lập")}: {invoice.date}</Text>
+                <Text>{t("Khách hàng")}: {invoice.customer}</Text>
+                <Text>{t("Trạng thái")}: {invoice.status}</Text>
             </View>
             <View style={styles.section}>
-                <Text style={styles.subtitle}>Danh sách dịch vụ</Text>
+                <Text style={styles.subtitle}>{t("Danh sách dịch vụ")}</Text>
                 {invoice.items.map((item, idx) => (
                     <View key={idx} style={styles.itemRow}>
                         <Text>{item.name}</Text>
@@ -47,7 +48,7 @@ const InvoiceDetailScreen: React.FC = () => {
             </View>
             <View style={styles.section}>
                 <Text style={styles.total}>
-                    Tổng cộng: {invoice.total.toLocaleString()}đ
+                    {t("Tổng cộng")}: {invoice.total.toLocaleString()}đ
                 </Text>
             </View>
         </ScrollView>

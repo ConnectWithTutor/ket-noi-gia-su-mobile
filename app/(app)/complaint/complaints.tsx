@@ -6,8 +6,8 @@ import StatusBar from "@/components/ui/StatusBar";
 import Header from "@/components/ui/Header";
 import colors from "@/constants/Colors";
 import { AlertCircle, ChevronRight, Plus } from "lucide-react-native";
-// Import ComplaintStatus as an enum or object, not just a type
 import { ComplaintStatus } from "@/types/complaint";
+import { useTranslation } from "react-i18next";
 const ComplaintListScreen = () => {
     const {
         complaints,
@@ -17,6 +17,7 @@ const ComplaintListScreen = () => {
         pagination,
         clearError,
     } = useComplaintStore();
+    const { t } = useTranslation(); 
     const router = useRouter();
 
     useEffect(() => {
@@ -47,7 +48,7 @@ const ComplaintListScreen = () => {
     return (
     <View style={styles.container}>
         <StatusBar backgroundColor={colors.primary} />
-        <Header title="Danh sách khiếu nại" showBack showNotification />
+        <Header title={t("Danh sách khiếu nại")} showBack showNotification />
         <FlatList
             data={complaints}
             keyExtractor={(item) => item.complaintId}
@@ -69,7 +70,7 @@ const ComplaintListScreen = () => {
                                 styles.status,
                                 { color: item.status === ComplaintStatus.Done ? "#4CAF50" : "#FF9800" }
                             ]}>
-                                {item.status === ComplaintStatus.Done ? "Đã xử lý" : "Đang xử lý"}
+                                {item.status === ComplaintStatus.Done ? t("Đã xử lý") : t("Đang xử lý")}
                             </Text>
                         </View>
                         <ChevronRight size={22} color="#bbb" />
@@ -78,13 +79,13 @@ const ComplaintListScreen = () => {
             )}
             ListEmptyComponent={
                 <View style={styles.center}>
-                    <Text>Không có khiếu nại nào.</Text>
+                    <Text>{t("Không có khiếu nại nào.")}</Text>
                 </View>
             }
         />
         
         <Text style={styles.pagination}>
-            Trang {pagination.page} / {pagination.totalPages}
+            {t("Trang {{page}} / {{totalPages}}", { page: pagination.page, totalPages: pagination.totalPages })}
         </Text>
         <TouchableOpacity
             style={styles.fab}

@@ -60,7 +60,7 @@ export const useChatStore = create<ChatState>()(
           const conversations = await apiChat.conversations.getAll(userId);
           set({ conversations, isLoading: false });
         } catch (error) {
-          console.error('Lỗi khi lấy danh sách cuộc trò chuyện:', error);
+          console.log('Lỗi khi lấy danh sách cuộc trò chuyện:', error);
           set({ 
             error: error instanceof Error ? error.message : 'Không thể lấy danh sách cuộc trò chuyện', 
             isLoading: false 
@@ -83,7 +83,7 @@ export const useChatStore = create<ChatState>()(
           
           webSocketService.subscribeToConversation(conversationId);
         } catch (error) {
-          console.error('Lỗi khi lấy tin nhắn:', error);
+          console.log('Lỗi khi lấy tin nhắn:', error);
           set({ 
             error: error instanceof Error ? error.message : 'Không thể lấy tin nhắn', 
             isLoading: false 
@@ -98,7 +98,7 @@ export const useChatStore = create<ChatState>()(
           set({ isLoading: false });
           return participants;
         } catch (error) {
-          console.error('Lỗi khi lấy thành viên:', error);
+          console.log('Lỗi khi lấy thành viên:', error);
           set({ 
             error: error instanceof Error ? error.message : 'Không thể lấy thành viên', 
             isLoading: false 
@@ -148,7 +148,7 @@ export const useChatStore = create<ChatState>()(
             });
           
         } catch (error) {
-          console.error('Lỗi khi gửi tin nhắn:', error);
+          console.log('Lỗi khi gửi tin nhắn:', error);
           set({ 
             error: error instanceof Error ? error.message : 'Không thể gửi tin nhắn'
           });
@@ -184,7 +184,7 @@ export const useChatStore = create<ChatState>()(
           
           return conversationWithParticipants;
         } catch (error) {
-          console.error('Lỗi khi tạo cuộc trò chuyện:', error);
+          console.log('Lỗi khi tạo cuộc trò chuyện:', error);
           set({ 
             error: error instanceof Error ? error.message : 'Không thể tạo cuộc trò chuyện', 
             isLoading: false 
@@ -199,7 +199,7 @@ export const useChatStore = create<ChatState>()(
           set({ isLoading: false });
           return conversation || null;
         } catch (error) {
-          console.error('Lỗi khi tìm kiếm cuộc trò chuyện:', error);
+          console.log('Lỗi khi tìm kiếm cuộc trò chuyện:', error);
           set({ 
             error: error instanceof Error ? error.message : 'Không thể tìm kiếm cuộc trò chuyện', 
             isLoading: false 
@@ -220,7 +220,7 @@ export const useChatStore = create<ChatState>()(
           }));
           
         } catch (error) {
-          console.error('Lỗi khi thêm thành viên:', error);
+          console.log('Lỗi khi thêm thành viên:', error);
           set({ 
             error: error instanceof Error ? error.message : 'Không thể thêm thành viên', 
             isLoading: false 
@@ -277,7 +277,7 @@ export const useChatStore = create<ChatState>()(
           
           return;
         } catch (error) {
-          console.error('Lỗi khi kết nối WebSocket:', error);
+          console.log('Lỗi khi kết nối WebSocket:', error);
           set({ 
             error: error instanceof Error ? error.message : 'Không thể kết nối WebSocket'
           });

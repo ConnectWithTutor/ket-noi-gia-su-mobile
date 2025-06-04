@@ -17,6 +17,7 @@ interface ClassState {
 interface ClassStore extends ClassState {
   fetchClasses: () => Promise<void>;
   fetchClassById: (id: string) => Promise<Class | null>;
+  fetchClassesByUserId: (userId: string) => Promise<void>;
   findBestClasses: (params: {
     keyword: string;
     limit: number;
@@ -74,6 +75,25 @@ export const useClassStore = create<ClassStore>()(
             isLoading: false 
           });
           return null;
+        }
+      },
+      fetchClassesByUserId: async (userId: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await classApi.getClassByUser(userId);
+          if (response.data) {
+            set({ classes: response.data, isLoading: false });
+          } else {
+            set({
+              error: "Không tìm thấy lớp học của người dùng.",
+              isLoading: false,
+            });
+          }
+        } catch (error) {
+          set({
+            error: "Không thể tải lớp học của người dùng. Vui lòng thử lại sau.",
+            isLoading: false,
+          });
         }
       },
       findBestClasses: async ({

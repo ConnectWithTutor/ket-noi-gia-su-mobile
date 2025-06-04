@@ -10,9 +10,11 @@ import NotificationBadge from '@/components/ui/NotificationBadge';
 import { triggerHaptic } from '@/utils/haptics';
 import { useAuthStore } from '@/store/auth-store';
 import {useChatStore } from '@/store/chat-store';
+import { useTranslation } from 'react-i18next';
 export default function TabsLayout() {
   const router = useRouter();
   const { notifications } = useNotificationStore();
+   const { t } = useTranslation();
   const { user } = useAuthStore();
   const { connectWebSocket } = useChatStore();
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -63,42 +65,42 @@ useEffect(() => {
       <Tabs.Screen
       name="home"
       options={{
-        title: 'Trang chủ',
+        title: t('Trang chủ'),
         tabBarIcon: ({ color }) => <Home size={24} color={color} />,
       }}
       />
      <Tabs.Screen
        name="schedule"
        options={{
-        title: 'Lịch học',
+        title: t('Lịch học'),
         tabBarIcon: ({ color }) => <Calendar size={24} color={color} />,
       }}
       />
       <Tabs.Screen
       name="posts"
       options={{
-        title: 'Bài viết',
+        title: t('Bài viết'),
         tabBarIcon: ({ color }) => <FileText size={24} color={color} />,
       }}
       />
       <Tabs.Screen
       name="chat"
       options={{
-        title: 'Tin nhắn',
+        title: t('Tin nhắn'),
         tabBarIcon: ({ color }) => <MessageSquare size={24} color={color} />,
       }}
       />
       <Tabs.Screen
       name="class"
       options={{
-        title: 'Lớp học',
+        title: t('Lớp học'),
         tabBarIcon: ({ color }) => <School size={24} color={color} />,
       }}
       />
       <Tabs.Screen
       name="profile"
       options={{
-        title: 'Cá nhân',
+        title: t('Cá nhân'),
         tabBarIcon: ({ color }) => <User size={24} color={color} />,
       }}
       />

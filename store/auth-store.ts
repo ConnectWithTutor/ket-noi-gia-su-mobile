@@ -8,6 +8,8 @@ import {
   RegisterRequest, 
   User 
 } from "@/types";
+import { api } from "@/services/api";
+import { usersApi } from "@/api/user";
 
 interface AuthState {
   user: User | null;
@@ -36,7 +38,6 @@ export const useAuthStore = create<AuthState>()(
       login: async (credentials) => {
         set({ isLoading: true, error: null });
         try {
-          
           const response = await authApi.login(credentials);
           if (response.access_token) {
             const token = response.access_token;
@@ -60,15 +61,22 @@ export const useAuthStore = create<AuthState>()(
           } else {
             set({
               isLoading: false,
-              error: "Login failed",
+              error: "Sai email hoặc mật khẩu",
             });
           }
         } catch (error: any) {
-          set({
-            isLoading: false,
-            error: error.message || "Login failed",
-          });
-        }
+          let message = "Đăng nhập thất bại";
+          // Nếu lỗi trả về từ API là user not found hoặc sai mật khẩu
+          console.log("Login error:", error);
+          if (
+            
+            error?.detail === "User not found" ||
+            error?.detail === "Incorrect password"
+          ) {
+            message = "Sai email hoặc mật khẩu";
+          }
+          set({ isLoading: false, error: message });
+              }
       },
       
       register: async (userData) => {
@@ -101,7 +109,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           await authApi.logout();
         } catch (error) {
-          console.error("Logout error:", error);
+          console.log("Logout error:", error);
         } finally {
           await AsyncStorage.removeItem("auth_token");
           set({
@@ -114,18 +122,26 @@ export const useAuthStore = create<AuthState>()(
         }
       },
       
-      updateUser: (userData) => {
+      updateUser: async (userData) => {
         const currentUser = get().user;
         if (currentUser) {
-          set({
-            user: {
-              ...currentUser,
-              ...userData,
-            },
-          });
+          const updatedUser = await usersApi.updateProfile(
+            currentUser.userId,
+            userData
+          );
+          if (updatedUser) {
+            set({
+              user: {
+                ...currentUser,
+                ...userData,
+              },
+            });
+          } else {
+            set({ error: "Failed to update user data" });
+          }
         }
       },
-      
+
       clearError: () => set({ error: null }),
       
       checkAuth: async () => {

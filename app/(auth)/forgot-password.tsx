@@ -9,6 +9,7 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import AuthHeader from "@/components/auth/AuthHeader";
 import { triggerHaptic } from "@/utils/haptics";
+import { useTranslation } from "react-i18next";
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
@@ -16,20 +17,20 @@ export default function ForgotPasswordScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-
+const { t } = useTranslation(); 
   const handleResetPassword = async () => {
     triggerHaptic('medium');
     
     if (!email) {
-      setError("Vui lòng nhập email");
+      setError(t("Vui lòng nhập email"));
       return;
     }
     
     if (!/\S+@\S+\.\S+/.test(email)) {
-      setError("Email không hợp lệ");
+      setError(t("Email không hợp lệ"));
       return;
     }
-    
+
     setIsLoading(true);
     setError("");
     
@@ -38,7 +39,7 @@ export default function ForgotPasswordScreen() {
       await new Promise((resolve) => setTimeout(resolve, 1500));
       setSuccess(true);
     } catch (error) {
-      setError("Không thể gửi email khôi phục. Vui lòng thử lại sau.");
+      setError(t("Không thể gửi email khôi phục. Vui lòng thử lại sau."));
     } finally {
       setIsLoading(false);
     }
@@ -50,8 +51,8 @@ export default function ForgotPasswordScreen() {
       keyboardShouldPersistTaps="handled"
     >
       <View style={styles.container}>
-        <AuthHeader title="Kết Nối Gia Sư" />
-        
+        <AuthHeader title={t("Kết Nối Gia Sư")} />
+
         <View style={styles.formContainer}>
           <TouchableOpacity 
             style={styles.backButton} 
@@ -60,17 +61,17 @@ export default function ForgotPasswordScreen() {
           >
             <ArrowLeft size={24} color={colors.text} />
           </TouchableOpacity>
-          
-          <Text style={styles.title}>Quên mật khẩu</Text>
+
+          <Text style={styles.title}>{t("Quên mật khẩu")}</Text>
           
           {!success ? (
             <>
               <Text style={styles.description}>
-                Nhập email của bạn và chúng tôi sẽ gửi hướng dẫn để đặt lại mật khẩu.
+                {t("Nhập email của bạn và chúng tôi sẽ gửi hướng dẫn để đặt lại mật khẩu.")}
               </Text>
               
               <Input
-                placeholder="Email"
+                placeholder={t("Email")}
                 value={email}
                 onChangeText={(text) => {
                   setEmail(text);
@@ -83,7 +84,7 @@ export default function ForgotPasswordScreen() {
               />
               
               <Button
-                title="Gửi hướng dẫn"
+                title={t("Gửi hướng dẫn")}
                 onPress={handleResetPassword}
                 loading={isLoading}
                 fullWidth
@@ -93,11 +94,11 @@ export default function ForgotPasswordScreen() {
           ) : (
             <>
               <Text style={styles.successText}>
-                Chúng tôi đã gửi email hướng dẫn đặt lại mật khẩu đến {email}. Vui lòng kiểm tra hộp thư của bạn.
+                {t("Chúng tôi đã gửi email hướng dẫn đặt lại mật khẩu đến {{email}}. Vui lòng kiểm tra hộp thư của bạn.", { email })}
               </Text>
-              
+
               <Button
-                title="Quay lại đăng nhập"
+                title={t("Quay lại đăng nhập")}
                 onPress={() => router.replace("/")}
                 variant="outline"
                 fullWidth

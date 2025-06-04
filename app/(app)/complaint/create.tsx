@@ -8,6 +8,7 @@ import colors from "@/constants/Colors";
 import { ScrollView } from "react-native-gesture-handler";
 import { useAuthStore } from "@/store/auth-store";
 import { ComplaintStatus } from "@/types/complaint";
+import { useTranslation } from "react-i18next";
 const CreateComplaintScreen = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -16,23 +17,24 @@ const CreateComplaintScreen = () => {
   const { createComplaint, fetchComplaintTypes,fetchComplaints, complaintTypes } = useComplaintStore();
   const router = useRouter();
     const { user } = useAuthStore();
+    const { t } = useTranslation(); 
   useEffect(() => {
     fetchComplaintTypes();
   }, []);
 
   const handleSubmit = async () => {
     if (!title.trim() || !content.trim() || !complaintTypeId) {
-      Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin.");
+      Alert.alert(t("Lỗi"), t("Vui lòng nhập đầy đủ thông tin."));
       return;
     }
     setLoading(true);
     try {
       await createComplaint({ userId: user?.userId, title, content, complaintTypeId, status: ComplaintStatus.Pending });
       await fetchComplaints(); // Refresh complaints list
-      Alert.alert("Thành công", "Khiếu nại đã được gửi.");
+      Alert.alert(t("Thành công"), t("Khiếu nại đã được gửi."));
       router.back();
     } catch (error) {
-      Alert.alert("Lỗi", "Không thể gửi khiếu nại. Vui lòng thử lại.");
+      Alert.alert(t("Lỗi"), t("Không thể gửi khiếu nại. Vui lòng thử lại."));
     } finally {
       setLoading(false);
     }
@@ -40,16 +42,16 @@ const CreateComplaintScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Header title="Tạo khiếu nại" showBack />
+      <Header title={t("Tạo khiếu nại")} showBack />
       <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <Text style={styles.label}>Loại khiếu nại</Text>
+        <Text style={styles.label}>{t("Loại khiếu nại")}</Text>
         <View style={styles.pickerWrapper}>
             <Picker
             selectedValue={complaintTypeId}
             onValueChange={(itemValue) => setComplaintTypeId(itemValue)}
             style={styles.picker}
             >
-            <Picker.Item label="Chọn loại khiếu nại" value=""  />
+            <Picker.Item label={t("Chọn loại khiếu nại")} value=""  />
             {complaintTypes.map((type) => (
                 <Picker.Item
                 key={type.complaintTypeId}
@@ -64,24 +66,24 @@ const CreateComplaintScreen = () => {
             </Text>
             )}
         </View>
-        <Text style={styles.label}>Tiêu đề</Text>
+        <Text style={styles.label}>{t("Tiêu đề")}</Text>
         <TextInput
           style={styles.input}
-          placeholder="Nhập tiêu đề khiếu nại"
+          placeholder={t("Nhập tiêu đề khiếu nại")}
           value={title}
           onChangeText={setTitle}
         />
-        <Text style={styles.label}>Nội dung</Text>
+        <Text style={styles.label}>{t("Nội dung")}</Text>
         <TextInput
           style={[styles.input, { height: 100 }]}
-          placeholder="Nhập nội dung khiếu nại"
+          placeholder={t("Nhập nội dung khiếu nại")}
           value={content}
           onChangeText={setContent}
           multiline
           textAlignVertical="top"
         />
         <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={loading}>
-          <Text style={styles.buttonText}>{loading ? "Đang gửi..." : "Gửi khiếu nại"}</Text>
+          <Text style={styles.buttonText}>{loading ? t("Đang gửi...") : t("Gửi khiếu nại")}</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>

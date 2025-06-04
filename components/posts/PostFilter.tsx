@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Filter, X } from 'lucide-react-native';
 
 import colors from '@/constants/Colors';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/constants/Theme';
+import { useTranslation } from 'react-i18next';
+import { useSubjectStore } from '@/store/subjectStore';
 
 interface PostFilterProps {
   onFilterChange: (filters: {
@@ -18,33 +20,41 @@ export default function PostFilter({ onFilterChange }: PostFilterProps) {
   const [selectedSubject, setSelectedSubject] = useState<string | undefined>(undefined);
   const [selectedLocation, setSelectedLocation] = useState<string | undefined>(undefined);
   const [selectedStatus, setSelectedStatus] = useState<string | undefined>(undefined);
-  
-  const subjects = ['Toán', 'Lý', 'Hóa', 'Sinh', 'Văn', 'Anh', 'Sử', 'Địa'];
-  const locations = ['Quận 1', 'Quận 2', 'Quận 3', 'Quận 5', 'Quận 7', 'Quận 10'];
-  const statuses = ['Đang tìm', 'Đã đóng'];
-  
+  const { t } = useTranslation();
+
+  // Lấy danh sách môn học từ subjectStore
+  const { subjects, fetchSubjects } = useSubjectStore();
+
+  useEffect(() => {
+    fetchSubjects();
+  }, []);
+
+  // Các khu vực và trạng thái là dữ liệu tĩnh
+  const locations = [t('Quận 1'), t('Quận 2'), t('Quận 3'), t('Quận 5'), t('Quận 7'), t('Quận 10')];
+  const statuses = [t('Đang tìm'), t('Đã đóng')];
+
   const toggleFilters = () => {
     setShowFilters(!showFilters);
   };
-  
+
   const handleSubjectSelect = (subject: string) => {
     const newValue = selectedSubject === subject ? undefined : subject;
     setSelectedSubject(newValue);
     applyFilters(newValue, selectedLocation, selectedStatus);
   };
-  
+
   const handleLocationSelect = (location: string) => {
     const newValue = selectedLocation === location ? undefined : location;
     setSelectedLocation(newValue);
     applyFilters(selectedSubject, newValue, selectedStatus);
   };
-  
+
   const handleStatusSelect = (status: string) => {
     const newValue = selectedStatus === status ? undefined : status;
     setSelectedStatus(newValue);
     applyFilters(selectedSubject, selectedLocation, newValue);
   };
-  
+
   const applyFilters = (
     subject?: string,
     location?: string,
@@ -53,17 +63,17 @@ export default function PostFilter({ onFilterChange }: PostFilterProps) {
     onFilterChange({
       subject,
       location,
-      status: status === 'Đang tìm' ? 'active' : status === 'Đã đóng' ? 'closed' : undefined,
+      status: status === t('Đang tìm') ? 'active' : status === t('Đã đóng') ? 'closed' : undefined,
     });
   };
-  
+
   const clearFilters = () => {
     setSelectedSubject(undefined);
     setSelectedLocation(undefined);
     setSelectedStatus(undefined);
     onFilterChange({});
   };
-  
+
   const hasActiveFilters = selectedSubject || selectedLocation || selectedStatus;
 
   return (
@@ -75,7 +85,7 @@ export default function PostFilter({ onFilterChange }: PostFilterProps) {
           activeOpacity={0.7}
         >
           <Filter size={18} color={colors.text} />
-          <Text style={styles.filterButtonText}>Lọc</Text>
+          <Text style={styles.filterButtonText}>{t('Lọc')}</Text>
         </TouchableOpacity>
         
         {hasActiveFilters && (
@@ -85,7 +95,7 @@ export default function PostFilter({ onFilterChange }: PostFilterProps) {
             activeOpacity={0.7}
           >
             <X size={16} color={colors.textSecondary} />
-            <Text style={styles.clearButtonText}>Xóa bộ lọc</Text>
+            <Text style={styles.clearButtonText}>{t('Xóa bộ lọc')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -93,39 +103,38 @@ export default function PostFilter({ onFilterChange }: PostFilterProps) {
       {showFilters && (
         <View style={styles.filtersContainer}>
           <View style={styles.filterSection}>
-            <Text style={styles.filterTitle}>Môn học</Text>
-            <ScrollView 
-              horizontal 
+            <Text style={styles.filterTitle}>{t('Môn học')}</Text>
+            <ScrollView
+              horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.filterOptionsContainer}
             >
               {subjects.map((subject) => (
                 <TouchableOpacity
-                  key={subject}
+                  key={subject.subjectId}
                   style={[
                     styles.filterOption,
-                    selectedSubject === subject && styles.selectedFilterOption,
+                    selectedSubject === subject.subjectName_vi && styles.selectedFilterOption,
                   ]}
-                  onPress={() => handleSubjectSelect(subject)}
+                  onPress={() => handleSubjectSelect(subject.subjectName_vi)}
                   activeOpacity={0.7}
                 >
                   <Text
                     style={[
                       styles.filterOptionText,
-                      selectedSubject === subject && styles.selectedFilterOptionText,
+                      selectedSubject === subject.subjectName_vi && styles.selectedFilterOptionText,
                     ]}
                   >
-                    {subject}
+                    {subject.subjectName_vi}
                   </Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
           </View>
-          
           <View style={styles.filterSection}>
-            <Text style={styles.filterTitle}>Khu vực</Text>
-            <ScrollView 
-              horizontal 
+            <Text style={styles.filterTitle}>{t('Khu vực')}</Text>
+            <ScrollView
+              horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.filterOptionsContainer}
             >
@@ -151,11 +160,10 @@ export default function PostFilter({ onFilterChange }: PostFilterProps) {
               ))}
             </ScrollView>
           </View>
-          
           <View style={styles.filterSection}>
-            <Text style={styles.filterTitle}>Trạng thái</Text>
-            <ScrollView 
-              horizontal 
+            <Text style={styles.filterTitle}>{t('Trạng thái')}</Text>
+            <ScrollView
+              horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.filterOptionsContainer}
             >

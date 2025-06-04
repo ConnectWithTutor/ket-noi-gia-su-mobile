@@ -11,6 +11,7 @@ import { useTutorApplicationStore } from '@/store/tutorApplicationStore';
 import { Status, TutorApplication } from '@/types';
 import { triggerHaptic } from '@/utils/haptics';
 import { useStudentRequestStore } from '@/store/post-store';
+import { useTranslation } from 'react-i18next';
 type TutorApplicationProps = {
     requestId:string;
     StatusAccepted:string;
@@ -23,17 +24,17 @@ const TutorApplicationComponent = ({  requestId, StatusAccepted,StatusRejected ,
     const {updateApplication} = useTutorApplicationStore();
     const { updateStudentRequest } = useStudentRequestStore();
     const [isLoading, setIsLoading] = React.useState(true);
-   
+   const { t } = useTranslation();
     const handleAccept = (name: string) => {
     triggerHaptic('light');
-    Alert.alert("Chấp nhận", `Bạn xác nhận chấp nhậngia sư ${name} không?`, 
+    Alert.alert(t("Chấp nhận"), t(`Bạn xác nhận chấp nhận gia sư ${name} không?`), 
         [
         {
-          text: "Hủy",
+          text: t("Hủy"),
           style: "cancel"
         },
         {
-          text: "chấp nhận",
+          text: t("Chấp nhận"),
           onPress: async () => {
             try {
              
@@ -49,36 +50,35 @@ const TutorApplicationComponent = ({  requestId, StatusAccepted,StatusRejected ,
                   status: Status?.statusId || '',
                 });
                 fetchStatusTutorApplication();
+                
               } else {
-                console.error("Tutor not found");
+                console.log("Tutor not found");
               }
             }
             catch (error) {
-              console.error("Error applying for the request:", error);
+              console.log("Error applying for the request:", error);
             }
 
             Alert.alert(
-              "Thành công",
-              `Đã chấp nhận gia sư ${name} thành công.`
+              t("Thành công"),
+              t(`Đã chấp nhận gia sư ${name} thành công.`)
             );
           }
         }
       ]
     );
-    
-    
-    };
- 
+  };
+
   const handleReject = (name: string) => {
     triggerHaptic('light');
-    Alert.alert("Từ chối", `Bạn xác nhận từ chối gia sư ${name} không?`, 
+    Alert.alert(t("Từ chối"), t(`Bạn xác nhận từ chối gia sư ${name} không?`), 
         [
         {
-          text: "Hủy",
+          text: t("Hủy"),
           style: "cancel"
         },
         {
-          text: "Từ chối",
+          text: t("Từ chối"),
           onPress: async () => {
             try {
               if (user && item.applicationId) {
@@ -152,12 +152,12 @@ if (statusCode === "Accepted" || statusCode === "Rejected") {
         >
             <View style={styles.applicationHeader}>
                 <Text style={styles.applicationTitle}>
-                    {user?.fullName || 'không có tên'} đã 
-                    {statusCode === "Accepted" ? ' được chấp nhận' : ' bị từ chối'}
+                    {user?.fullName || t('không có tên')} đã 
+                    {statusCode === "Accepted" ? t(' được chấp nhận') : t(' bị từ chối')}
                 </Text>
             </View>
             <Text style={styles.applicationDate}>
-                Đã xử lý vào ngày {formatDate(item.applicationDate)}
+                {t('Đã xử lý vào ngày')} {formatDate(item.applicationDate)}
             </Text>
         </TouchableOpacity>
     );
@@ -185,11 +185,11 @@ if (statusCode === "Accepted" || statusCode === "Rejected") {
             onPress={onPress}>
             <View style={styles.applicationHeader}>
                 <Text style={styles.applicationTitle}>
-                    {user?.fullName || 'không có tên'} đã nộp đơn ứng tuyển
+                    {user?.fullName || t('không có tên')} {t('đã nộp đơn ứng tuyển')}
                 </Text>
             </View>
             <Text style={styles.applicationDate}>
-                Đã nộp đơn vào ngày {formatDate(item.applicationDate)}
+                {t('Đã nộp đơn vào ngày')} {formatDate(item.applicationDate)}
             </Text>
             <Text> </Text>
         </TouchableOpacity>

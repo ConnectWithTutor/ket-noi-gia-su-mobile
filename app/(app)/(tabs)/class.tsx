@@ -11,12 +11,14 @@ import StatusBar from '@/components/ui/StatusBar';
 import Header from '@/components/ui/Header';
 import { Class } from '@/types/class';
 import { triggerHaptic } from '@/utils/haptics';
+import { useTranslation } from 'react-i18next'; // Thêm dòng này
 
 export default function ClassesScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { classes, isLoading, error, fetchClasses } = useClassStore();
   const [refreshing, setRefreshing] = useState(false);
+  const { t } = useTranslation(); // Thêm dòng này
 
   useEffect(() => {
     loadClasses();
@@ -27,7 +29,6 @@ export default function ClassesScreen() {
       await fetchClasses();
     }
   };
-  
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -69,20 +70,20 @@ export default function ClassesScreen() {
         <View style={styles.infoItem}>
           <BookOpen size={16} color={Colors.textSecondary} />
           <Text style={styles.infoText}>
-            {item.subjectId === '1' ? 'Tiếng Anh' : 
-             item.subjectId === '2' ? 'Toán học' : 
-             'Môn học'}
+            {item.subjectId === '1' ? t('Tiếng Anh') : 
+             item.subjectId === '2' ? t('Toán học') : 
+             t('Môn học')}
           </Text>
         </View>
         <View style={styles.infoItem}>
           <Users size={16} color={Colors.textSecondary} />
-          <Text style={styles.infoText}>{item.maxStudents} học viên</Text>
+          <Text style={styles.infoText}>{item.maxStudents} {t('học viên')}</Text>
         </View>
       </View>
       <View style={styles.infoRow}>
         <View style={styles.infoItem}>
           <Clock size={16} color={Colors.textSecondary} />
-          <Text style={styles.infoText}>{item.sessions} buổi</Text>
+          <Text style={styles.infoText}>{item.sessions} {t('buổi')}</Text>
         </View>
         <View style={styles.infoItem}>
           <MapPin size={16} color={Colors.textSecondary} />
@@ -91,19 +92,19 @@ export default function ClassesScreen() {
       </View>
       <View style={styles.footer}>
         <Text style={styles.price}>{item.tuitionFee.toLocaleString()}đ</Text>
-        <Text style={styles.date}>Bắt đầu: {formatDate(item.startDate)}</Text>
+        <Text style={styles.date}>{t('Bắt đầu')}: {formatDate(item.startDate)}</Text>
       </View>
     </TouchableOpacity>
   );
 
   const renderEmptyComponent = (text: string) => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>{text}</Text>
+      <Text style={styles.emptyText}>{t(text)}</Text>
       <TouchableOpacity 
         style={styles.createButton}
         onPress={() => router.push('/student-request/create')}
       >
-        <Text style={styles.createButtonText}>Tìm kiếm yêu cầu gia sư</Text>
+        <Text style={styles.createButtonText}>{t('Tìm kiếm yêu cầu gia sư')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -112,10 +113,10 @@ export default function ClassesScreen() {
     return (
       <View style={styles.container}>
         <StatusBar backgroundColor={Colors.primary} />
-        <Header title="Lớp học" />
+        <Header title={t('Lớp học')} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Đang tải lớp học...</Text>
+          <Text style={styles.loadingText}>{t('Đang tải lớp học...')}</Text>
         </View>
       </View>
     );
@@ -125,11 +126,11 @@ export default function ClassesScreen() {
     return (
       <View style={styles.container}>
         <StatusBar backgroundColor={Colors.primary} />
-        <Header title="Lớp học" />
+        <Header title={t('Lớp học')} />
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={loadClasses}>
-            <Text style={styles.retryButtonText}>Thử lại</Text>
+            <Text style={styles.retryButtonText}>{t('Thử lại')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -139,7 +140,7 @@ export default function ClassesScreen() {
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor={Colors.primary} />
-      <Header title="Lớp học" />
+      <Header title={t('Lớp học')} />
       <FlatList
         data={myClasses}
         renderItem={renderClassItem}
@@ -155,9 +156,9 @@ export default function ClassesScreen() {
           />
         }
         ListHeaderComponent={
-          <Text style={{...styles.className, marginBottom: 8}}>Lớp học của tôi</Text>
+          <Text style={{...styles.className, marginBottom: 8}}>{t('Lớp học của tôi')}</Text>
         }
-        ListEmptyComponent={renderEmptyComponent('Bạn chưa có lớp học nào')}
+        ListEmptyComponent={renderEmptyComponent( t('Bạn chưa có lớp học nào'))}
       />
       <FlatList
         data={otherClasses}
@@ -166,9 +167,9 @@ export default function ClassesScreen() {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
-          <Text style={{...styles.className, marginBottom: 8}}>Các lớp học khác</Text>
+          <Text style={{...styles.className, marginBottom: 8}}>{t('Các lớp học khác')}</Text>
         }
-        ListEmptyComponent={renderEmptyComponent('Không có lớp học khác')}
+        ListEmptyComponent={renderEmptyComponent(t('Không có lớp học khác'))}
       />
     </View>
   );

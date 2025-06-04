@@ -24,6 +24,7 @@ import { triggerHaptic } from "@/utils/haptics";
 import AuthGuard from "@/components/AuthGuard";
 import Header from "@/components/ui/Header";
 import { useAddressStore } from "@/store/address-store";
+import { useTranslation } from "react-i18next";
 
 const STUDY_TYPES = [
   { id: "online", label: "Online" },
@@ -36,6 +37,7 @@ export default function CreateStudentRequestScreen() {
   const { user } = useAuthStore();
   const { subjects, fetchSubjects } = useSubjectStore();
     const { createAddress } = useAddressStore();
+    const { t } = useTranslation();
   const [formData, setFormData] = useState<Partial<StudentRequestCreateRequest>>({
     subjectId: '',
     studyType: 'offline',
@@ -55,31 +57,30 @@ export default function CreateStudentRequestScreen() {
   
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
     if (!formData.title) {
-      newErrors.title = "Vui lòng nhập tiêu đề";
+      newErrors.title = t("Vui lòng nhập tiêu đề");
     }
-    
+
     if (!formData.description) {
-      newErrors.description = "Vui lòng nhập mô tả";
+      newErrors.description = t("Vui lòng nhập mô tả");
     }
-    
+
     if (!formData.subjectId) {
-      newErrors.subjectId = "Vui lòng chọn môn học";
+      newErrors.subjectId = t("Vui lòng chọn môn học");
     }
-    
+
     if (formData.studyType !== 'online' && !formData.location) {
-      newErrors.location = "Vui lòng nhập địa điểm";
+      newErrors.location = t("Vui lòng nhập địa điểm");
     }
-    
+
     if (!formData.preferredSchedule) {
-      newErrors.preferredSchedule = "Vui lòng nhập lịch học";
+      newErrors.preferredSchedule = t("Vui lòng nhập lịch học");
     }
-    
+
     if (!formData.tuitionFee || isNaN(Number(formData.tuitionFee)) || Number(formData.tuitionFee) <= 0) {
-      newErrors.tuitionFee = "Vui lòng nhập học phí hợp lệ";
+      newErrors.tuitionFee = t("Vui lòng nhập học phí hợp lệ");
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -91,7 +92,7 @@ export default function CreateStudentRequestScreen() {
     
     try {
       if (!user) {
-        Alert.alert("Lỗi", "Bạn cần đăng nhập để đăng bài.");
+        Alert.alert(t("Lỗi"), t("Bạn cần đăng nhập để đăng bài."));
         return;
       }
       const requestData = {
@@ -108,8 +109,8 @@ export default function CreateStudentRequestScreen() {
               fullAddress:  formData.location || '',
             });
         Alert.alert(
-          "Thành công",
-          "Đăng bài thành công!",
+          t("Thành công"),
+          t("Đăng bài thành công!"),
           [
             {
               text: "OK",
@@ -119,7 +120,7 @@ export default function CreateStudentRequestScreen() {
         );
       }
     } catch (error) {
-      Alert.alert("Lỗi", "Không thể đăng bài. Vui lòng thử lại sau.");
+      Alert.alert(t("Lỗi"), t("Không thể đăng bài. Vui lòng thử lại sau."));
     }
   };
   
@@ -139,7 +140,7 @@ export default function CreateStudentRequestScreen() {
     <AuthGuard>
       <Stack.Screen 
         options={{
-          title: "Đăng bài tìm gia sư",
+          title: t("Đăng bài tìm gia sư"),
           headerTitleAlign: "center",
         }}
       />
@@ -149,7 +150,7 @@ export default function CreateStudentRequestScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
       >
-          <Header title="Đăng bài tìm gia sư"  showBack/>
+          <Header title={t("Đăng bài tìm gia sư")}  showBack/>
         <ScrollView 
           style={styles.content} 
           showsVerticalScrollIndicator={false}
@@ -159,15 +160,15 @@ export default function CreateStudentRequestScreen() {
         
           <View style={styles.formContainer}>
             <View style={styles.formSection}>
-              <Text style={styles.sectionTitle}>Thông tin cơ bản</Text>
+              <Text style={styles.sectionTitle}>{t("Thông tin cơ bản")}</Text>
               
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Tiêu đề</Text>
+                <Text style={styles.label}>{t("Tiêu đề")}</Text>
                 <View style={[styles.inputContainer, errors.title && styles.inputError]}>
                   <FileText size={20} color={Colors.textLight} style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Nhập tiêu đề bài đăng"
+                    placeholder={t("Nhập tiêu đề bài đăng")}
                     value={formData.title}
                     onChangeText={(text) => updateFormData('title', text)}
                     maxLength={100}
@@ -177,7 +178,7 @@ export default function CreateStudentRequestScreen() {
               </View>
               
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Môn họcs</Text>
+                <Text style={styles.label}>{t("Môn học")}</Text>
                 {subjects.length > 0 ? (
                   <ScrollView 
                     horizontal 
@@ -209,7 +210,7 @@ export default function CreateStudentRequestScreen() {
                     <BookOpen size={20} color={Colors.textLight} style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
-                      placeholder="Nhập môn học (VD: Toán, Lý, Hóa...)"
+                      placeholder={t("Nhập môn học (VD: Toán, Lý, Hóa...)")}
                       value={formData.subjectId}
                       onChangeText={(text) => updateFormData('subjectId', text)}
                     />
@@ -219,12 +220,11 @@ export default function CreateStudentRequestScreen() {
                 {errors.subjectId && <Text style={styles.errorText}>{errors.subjectId}</Text>}
               </View>
             </View>
-            
             <View style={styles.formSection}>
-              <Text style={styles.sectionTitle}>Thông tin lớp học</Text>
-              
+              <Text style={styles.sectionTitle}>{t("Thông tin lớp học")}</Text>
+
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Hình thức học</Text>
+                <Text style={styles.label}>{t("Hình thức học")}</Text>
                 <View style={styles.optionsContainer}>
                   {STUDY_TYPES.map(type => (
                     <TouchableOpacity
@@ -249,12 +249,12 @@ export default function CreateStudentRequestScreen() {
               </View>
               
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Số lượng học viên</Text>
+                <Text style={styles.label}>{t("Số lượng học viên")}</Text>
                 <View style={[styles.inputContainer, errors.studentCount && styles.inputError]}>
                   <Users size={20} color={Colors.textLight} style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Nhập số lượng học viên"
+                    placeholder={t("Nhập số lượng học viên")}
                     value={formData.studentCount?.toString()}
                     onChangeText={(text) => {
                       const count = parseInt(text);
@@ -277,7 +277,7 @@ export default function CreateStudentRequestScreen() {
                     <MapPin size={20} color={Colors.textLight} style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
-                      placeholder="Nhập địa điểm học (VD: Quận 1, TP.HCM)"
+                      placeholder={t("Nhập địa điểm học (VD: Quận 1, TP.HCM)")}
                       value={formData.location}
                       onChangeText={(text) => updateFormData('location', text)}
                     />
@@ -287,12 +287,12 @@ export default function CreateStudentRequestScreen() {
               )}
               
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Lịch học</Text>
+                <Text style={styles.label}>{t("Lịch học")}</Text>
                 <View style={[styles.inputContainer, errors.preferredSchedule && styles.inputError]}>
                   <Clock size={20} color={Colors.textLight} style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Nhập lịch học (VD: Thứ 2, 4, 6 (18:00 - 20:00))"
+                    placeholder={t("Nhập lịch học (VD: Thứ 2, 4, 6 (18:00 - 20:00))")}
                     value={formData.preferredSchedule}
                     onChangeText={(text) => updateFormData('preferredSchedule', text)}
                   />
@@ -301,12 +301,12 @@ export default function CreateStudentRequestScreen() {
               </View>
               
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Học phí (VNĐ/giờ)</Text>
+                <Text style={styles.label}>{t("Học phí (VNĐ/giờ)")}:</Text>
                 <View style={[styles.inputContainer, errors.tuitionFee && styles.inputError]}>
                   <DollarSign size={20} color={Colors.textLight} style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Nhập học phí (VD: 200000)"
+                    placeholder={t("Nhập học phí (VD: 200000)")}
                     value={formData.tuitionFee}
                     onChangeText={(text) => {
                       const fee = text.replace(/[^0-9]/g, '');
@@ -321,8 +321,8 @@ export default function CreateStudentRequestScreen() {
             {/* Địa chỉ liên hệ (không bắt buộc) */}
             
             <View style={styles.formSection}>
-              <Text style={styles.sectionTitle}>Mô tả chi tiết</Text>
-              
+              <Text style={styles.sectionTitle}>{t("Mô tả chi tiết")}</Text>
+
               <View style={styles.formGroup}>
                 <View style={[
                   styles.textAreaContainer, 
@@ -330,7 +330,7 @@ export default function CreateStudentRequestScreen() {
                 ]}>
                   <TextInput
                     style={styles.textArea}
-                    placeholder="Nhập mô tả chi tiết về yêu cầu lớp học..."
+                    placeholder={t("Nhập mô tả chi tiết về yêu cầu lớp học...")}
                     value={formData.description}
                     onChangeText={(text) => updateFormData('description', text)}
                     multiline
@@ -350,7 +350,7 @@ export default function CreateStudentRequestScreen() {
               {loading ? (
                 <ActivityIndicator color="white" size="small" />
               ) : (
-                <Text style={styles.submitButtonText}>Đăng bài</Text>
+                <Text style={styles.submitButtonText}>{t("Đăng bài")}</Text>
               )}
             </TouchableOpacity>
             
@@ -358,7 +358,7 @@ export default function CreateStudentRequestScreen() {
               style={styles.cancelButton} 
               onPress={() => router.back()}
             >
-              <Text style={styles.cancelText}>Hủy</Text>
+              <Text style={styles.cancelText}>{t("Hủy")}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

@@ -26,10 +26,12 @@ import { formatDate } from '@/utils/date-utils';
 import { triggerHaptic } from '@/utils/haptics';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useStatusStore} from '@/store/status-store';
+import { useTranslation } from 'react-i18next';
 export default function CreateClassScreen() {
   const { requestId } = useLocalSearchParams<{ requestId: string }>();
   const router = useRouter();
   const { user } = useAuthStore();
+  const { t } = useTranslation();
   const { fetchStudentRequestById, selectedRequest } = useStudentRequestStore();
   const { createClass, isLoading: isCreatingClass } = useClassStore();
   const { fetchStatusesClass, StatusesClass } = useStatusStore();
@@ -64,11 +66,11 @@ export default function CreateClassScreen() {
           setIsLoading(false);
         })
         .catch((err) => {
-          setError("Không thể tải thông tin yêu cầu. Vui lòng thử lại sau.");
+          setError(t("Không thể tải thông tin yêu cầu. Vui lòng thử lại sau."));
           setIsLoading(false);
         });
     } else {
-      setError("Không tìm thấy ID yêu cầu.");
+      setError(t("Không tìm thấy ID yêu cầu."));
       setIsLoading(false);
     }
   }, [requestId]);
@@ -157,45 +159,45 @@ export default function CreateClassScreen() {
   
   const validateForm = (): boolean => {
     if (!className_vi.trim()) {
-      Alert.alert("Lỗi", "Vui lòng nhập tên lớp học (tiếng Việt)");
+      Alert.alert(t("Lỗi"), t("Vui lòng nhập tên lớp học (tiếng Việt)"));
       return false;
     }
     
     if (!className_en.trim()) {
-      Alert.alert("Lỗi", "Vui lòng nhập tên lớp học (tiếng Anh)");
+      Alert.alert(t("Lỗi"), t("Vui lòng nhập tên lớp học (tiếng Anh)"));
       return false;
     }
-    
+
     if (!studyType.trim()) {
-      Alert.alert("Lỗi", "Vui lòng chọn hình thức học");
+      Alert.alert(t("Lỗi"), t("Vui lòng chọn hình thức học"));
       return false;
     }
-    
+
     if (isNaN(parseInt(sessions)) || parseInt(sessions) <= 0) {
-      Alert.alert("Lỗi", "Số buổi học phải là số dương");
+      Alert.alert(t("Lỗi"), t("Số buổi học phải là số dương"));
       return false;
     }
-    
+
     if (isNaN(parseInt(tuitionFee)) || parseInt(tuitionFee) <= 0) {
-      Alert.alert("Lỗi", "Học phí phải là số dương");
+      Alert.alert(t("Lỗi"), t("Học phí phải là số dương"));
       return false;
     }
-    
+
     if (isNaN(parseInt(maxStudents)) || parseInt(maxStudents) <= 0) {
-      Alert.alert("Lỗi", "Số học sinh tối đa phải là số dương");
+      Alert.alert(t("Lỗi"), t("Số học sinh tối đa phải là số dương"));
       return false;
     }
-    
+
     if (weekdays.length === 0) {
-      Alert.alert("Lỗi", "Vui lòng chọn ít nhất một ngày học trong tuần");
+      Alert.alert(t("Lỗi"), t("Vui lòng chọn ít nhất một ngày học trong tuần"));
       return false;
     }
-    
+
     if (endTime <= startTime) {
-      Alert.alert("Lỗi", "Thời gian kết thúc phải sau thời gian bắt đầu");
+      Alert.alert(t("Lỗi"), t("Thời gian kết thúc phải sau thời gian bắt đầu"));
       return false;
     }
-    
+
     return true;
   };
   
@@ -208,7 +210,7 @@ export default function CreateClassScreen() {
 
       const StatusClass = StatusesClass.find(s => s.code === 'Pending');
       if (!StatusClass) {
-        Alert.alert("Lỗi", "Không tìm thấy trạng thái lớp học. Vui lòng thử lại sau.");
+        Alert.alert(t("Lỗi"), t("Không tìm thấy trạng thái lớp học. Vui lòng thử lại sau."));
         return;
       }
       // Create class
@@ -230,20 +232,20 @@ export default function CreateClassScreen() {
       const success = await createClass(classData);
         if (success) {
           Alert.alert(
-            "Thành công",
-            "Đã tạo lớp học thành công!",
+            t("Thành công"),
+            t("Đã tạo lớp học thành công!"),
             [
-              { 
-                text: "OK", 
-                onPress: () => router.push(`/class`) 
+              {
+                text: t("OK"),
+                onPress: () => router.push(`/class`)
               }
             ]
           );
       } else {
-        Alert.alert("Lỗi", "Không thể tạo lớp học. Vui lòng thử lại sau.");
+        Alert.alert(t("Lỗi"), t("Không thể tạo lớp học. Vui lòng thử lại sau."));
       }
     } catch (error) {
-      Alert.alert("Lỗi", "Đã xảy ra lỗi khi tạo lớp học. Vui lòng thử lại sau.");
+      Alert.alert(t("Lỗi"), t("Đã xảy ra lỗi khi tạo lớp học. Vui lòng thử lại sau."));
     }
   };
   
@@ -251,7 +253,7 @@ export default function CreateClassScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Đang tải...</Text>
+        <Text style={styles.loadingText}>{t("Đang tải...")}</Text>
       </View>
     );
   }
@@ -260,8 +262,8 @@ export default function CreateClassScreen() {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>{error}</Text>
-        <Button 
-          title="Quay lại"
+        <Button
+          title={t("Quay lại")}
           onPress={() => router.back()}
           style={styles.errorButton}
         />
@@ -272,29 +274,29 @@ export default function CreateClassScreen() {
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor={colors.primary} />
-      <Header title="Tạo lớp học mới" showBack />
-      
+      <Header title={t("Tạo lớp học mới")} showBack />
+
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Thông tin cơ bản</Text>
-          
+          <Text style={styles.sectionTitle}>{t("Thông tin cơ bản")}</Text>
+
           <Input
-            label="Tên lớp (Tiếng Việt)"
+            label={t("Tên lớp (Tiếng Việt)")}
             value={className_vi}
             onChangeText={setClassName_vi}
-            placeholder="Nhập tên lớp học bằng tiếng Việt"
+            placeholder={t("Nhập tên lớp học bằng tiếng Việt")}
             icon={<BookOpen size={20} color={colors.primary} />}
           />
-          
+
           <Input
-            label="Tên lớp (Tiếng Anh)"
+            label={t("Tên lớp (Tiếng Anh)")}
             value={className_en}
             onChangeText={setClassName_en}
-            placeholder="Nhập tên lớp học bằng tiếng Anh"
+            placeholder={t("Nhập tên lớp học bằng tiếng Anh")}
             icon={<BookOpen size={20} color={colors.primary} />}
           />
-          
-          <Text style={styles.label}>Hình thức học</Text>
+
+          <Text style={styles.label}>{t("Hình thức học")}</Text>
           <View style={styles.radioGroup}>
             <TouchableOpacity
               style={[
@@ -306,7 +308,7 @@ export default function CreateClassScreen() {
               <Text style={[
                 styles.radioButtonText,
                 studyType === 'offline' && styles.radioButtonTextSelected
-              ]}>Trực tiếp</Text>
+              ]}>{t("Trực tiếp")}</Text>
             </TouchableOpacity>
             
             <TouchableOpacity
@@ -319,7 +321,7 @@ export default function CreateClassScreen() {
               <Text style={[
                 styles.radioButtonText,
                 studyType === 'online' && styles.radioButtonTextSelected
-              ]}>Trực tuyến</Text>
+              ]}>{t("Trực tuyến")}</Text>
             </TouchableOpacity>
             
             <TouchableOpacity
@@ -332,7 +334,7 @@ export default function CreateClassScreen() {
               <Text style={[
                 styles.radioButtonText,
                 studyType === 'hybrid' && styles.radioButtonTextSelected
-              ]}>Kết hợp</Text>
+              ]}>{t("Kết hợp")}</Text>
             </TouchableOpacity>
           </View>
           
@@ -357,37 +359,37 @@ export default function CreateClassScreen() {
           )}
           
           <Input
-            label="Số buổi học"
+            label={t("Số buổi học")}
             value={sessions}
             onChangeText={setSessions}
-            placeholder="Nhập số buổi học"
+            placeholder={t("Nhập số buổi học")}
             keyboardType="numeric"
             icon={<Calendar size={20} color={colors.primary} />}
           />
           
           <Input
-            label="Học phí (VNĐ/giờ)"
+            label={t("Học phí (VNĐ/giờ)")}
             value={tuitionFee}
             onChangeText={setTuitionFee}
-            placeholder="Nhập học phí"
+            placeholder={t("Nhập học phí")}
             keyboardType="numeric"
             icon={<DollarSign size={20} color={colors.primary} />}
           />
           
           <Input
-            label="Số học sinh tối đa"
+            label={t("Số học sinh tối đa")}
             value={maxStudents}
             onChangeText={setMaxStudents}
-            placeholder="Nhập số học sinh tối đa"
+            placeholder={t("Nhập số học sinh tối đa")}
             keyboardType="numeric"
             icon={<Users size={20} color={colors.primary} />}
           />
           
           <Input
-            label="Mô tả lớp học"
+            label={t("Mô tả lớp học")}
             value={description}
             onChangeText={setDescription}
-            placeholder="Nhập mô tả chi tiết về lớp học"
+            placeholder={t("Nhập mô tả chi tiết về lớp học")}
             multiline
             numberOfLines={4}
             icon={<Info size={20} color={colors.primary} />}
@@ -395,9 +397,9 @@ export default function CreateClassScreen() {
         </View>
         
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Lịch học hàng tuần</Text>
-          
-          <Text style={styles.label}>Chọn ngày học trong tuần</Text>
+          <Text style={styles.sectionTitle}>{t("Lịch học hàng tuần")}</Text>
+
+          <Text style={styles.label}>{t("Chọn ngày học trong tuần")}</Text>
           <View style={styles.weekdaysContainer}>
             {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'].map((day, index) => (
               <TouchableOpacity
@@ -463,7 +465,7 @@ export default function CreateClassScreen() {
         
         <View style={styles.buttonContainer}>
           <Button
-            title="Tạo lớp học"
+            title={t("Tạo lớp học")}
             onPress={handleCreateClass}
             loading={isCreatingClass || isCreatingSchedule}
             fullWidth

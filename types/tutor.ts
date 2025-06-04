@@ -9,10 +9,18 @@ export interface Tutor {
     isApproved: boolean;
   }
 export interface TutorProfile {
+    userId: string;
      tutorId: string;
     degree: string;
     certificate: string;
     experience: string;
     description: string;
     introVideoUrl: string;
+  }
+export interface TutorUpdateRequest {
+    degree?: string;
+    certificate?: string;
+    experience?: string;
+    description?: string;
+    introVideoUrl?: string;
   }
