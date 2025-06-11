@@ -152,7 +152,7 @@ if (statusCode === "Accepted" || statusCode === "Rejected") {
         >
             <View style={styles.applicationHeader}>
                 <Text style={styles.applicationTitle}>
-                    {user?.fullName || t('không có tên')} đã 
+                    {user?.fullName + " đã " || t('không có tên') + " đã "}
                     {statusCode === "Accepted" ? t(' được chấp nhận') : t(' bị từ chối')}
                 </Text>
             </View>

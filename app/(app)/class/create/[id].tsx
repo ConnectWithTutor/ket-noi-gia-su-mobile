@@ -281,6 +281,7 @@ export default function CreateClassScreen() {
       };
 
       const classId = await createClass(classData);
+      console.log("Class created with ID:", classId);
       if (classId && selectedRequest) {
         const scheduleData = {
           classId: classId,
@@ -288,18 +289,6 @@ export default function CreateClassScreen() {
           startTime: formatTimeString(startTime),
           endTime: formatTimeString(endTime),
         };
-        await createRegistration({
-          classId: classId,
-          studentId: selectedRequest?.studentId || "",
-          registrationDate: new Date().toISOString(),
-        });
-        createAddressClass(classId);
-        const Status = statusesStudentRequest?.find(
-          (st) => st.code.toLowerCase() === "completed"
-        );
-        await updateStudentRequest(requestId, {
-          status: Status?.statusId || "",
-        });
         const schedulesCreated = await createWeeklySchedules(scheduleData);
         if (schedulesCreated) {
           Alert.alert(t("Thành công"), t("Đã tạo lớp học thành công!"), [
@@ -311,6 +300,21 @@ export default function CreateClassScreen() {
         } else {
           Alert.alert(t("Lỗi"), t("Không thể tạo lịch học. Vui lòng thử lại sau."));
         }
+        await createRegistration({
+          classId: classId,
+          studentId: selectedRequest?.studentId || "",
+          registrationDate: new Date().toISOString(),
+        });
+        if(studyType !== "Online") {
+          createAddressClass(classId);
+        }
+        const Status = statusesStudentRequest?.find(
+          (st) => st.code.toLowerCase() === "completed"
+        );
+        await updateStudentRequest(requestId, {
+          status: Status?.statusId || "",
+        });
+        
       } else {
         Alert.alert(t("Lỗi"), t("Không thể tạo lớp học. Vui lòng thử lại sau."));
       }

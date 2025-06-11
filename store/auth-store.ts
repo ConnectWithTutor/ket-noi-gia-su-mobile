@@ -17,6 +17,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  isActivated: boolean;
   
   login: (credentials: LoginRequest) => Promise<void>;
   register: (userData: RegisterRequest) => Promise<void>;
@@ -31,6 +32,7 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       user: null,
       token: null,
+      isActivated: false,
       isAuthenticated: false,
       isLoading: false,
       error: null,
@@ -44,18 +46,29 @@ export const useAuthStore = create<AuthState>()(
             await AsyncStorage.setItem("auth_token", token);
             // Fetch user data using the token
             const userResponse = await authApi.getCurrentUser();
-            if ( userResponse) {
+            const userActivated = await authApi.userActivate(userResponse?.userId || "");
+            if ( userResponse ) {
+              if (!userActivated.detail) {
               set({
                 user: userResponse,
                 token,
                 isAuthenticated: true,
                 isLoading: false,
                 error: null,
+                isActivated: userActivated.detail ? true : false,
               });
+              }
+              else {
+                set({
+                  isLoading: false,
+                  isActivated: false,
+                });
+              }
             } else {
               set({
                 isLoading: false,
                 error: userResponse || "Failed to fetch user data",
+                isActivated: true,
               });
             }
           } else {
@@ -86,6 +99,7 @@ export const useAuthStore = create<AuthState>()(
           if (response) {
            
               set({
+               
                  isLoading: false,
               });
            
@@ -194,6 +208,7 @@ export const useAuthStore = create<AuthState>()(
           return false;
         }
       },
+      
     }),
     {
       name: "auth-storage",

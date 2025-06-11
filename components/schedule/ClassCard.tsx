@@ -35,14 +35,8 @@ export default function ClassCard({
 }: ClassCardProps) {
   const { fetchUserById } = useUserProfileStore();
   const { createZoomMeeting } = useZoomStore();
-   const [zoomCreated, setZoomCreated] = useState(false);
    const { t } = useTranslation();
-  useEffect(() => {
-    const fetchData = async () => {
-      await fetchUserById(tutor);
-    };
-    fetchData();
-  }, [zoomCreated]);
+  ;
 
   const getStatusColor = () => {
     if (studyType === 'Offline')
@@ -55,7 +49,6 @@ export default function ClassCard({
     try {
       await createZoomMeeting(scheduleId);
       alert(t('Tạo Zoom thành công!'));
-      setZoomCreated(prev => !prev);
     } catch (error) {
       alert(t('Lỗi khi tạo Zoom. Vui lòng thử lại sau.'));
     }

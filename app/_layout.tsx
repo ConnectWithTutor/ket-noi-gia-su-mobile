@@ -7,6 +7,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ErrorBoundary } from "./error-boundary";
 import { useAuthStore } from "@/store/auth-store";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Provider as PaperProvider } from 'react-native-paper';
 import "@/i18n";
 export const unstable_settings = {
   initialRouteName: "(auth)",
@@ -58,7 +59,9 @@ export default function RootLayout() {
     <ErrorBoundary>
       <SafeAreaProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
+           <PaperProvider>
           <RootLayoutNav isAuthenticated={!!isAuthenticated} />
+          </PaperProvider>
         </GestureHandlerRootView>
       </SafeAreaProvider>
     </ErrorBoundary>

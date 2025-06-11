@@ -15,5 +15,8 @@ export const usersApi = {
     updateProfile: async (id: string, data: Partial<User>) => {
         return api.put<SingleItemResponse<User>>(API_ENDPOINTS.updateUser(id), data);
     },
+   userActivate : async (id: string) => {
+        return api.post<SingleItemResponse<User>>(API_ENDPOINTS.userActivate(id), {});
+    }
 
 };  

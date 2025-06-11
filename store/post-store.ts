@@ -213,7 +213,7 @@ export const useStudentRequestStore = create<StudentRequestState>((set, get) => 
     set({ loading: true, error: null });
     try {
       const response = await studentRequestsApi.updateStudentRequest(id, data);
-      if (response.success && response.data) {
+      if (response.data) {
         set(state => ({
           myRequests: state.myRequests.map(r => 
             r.requestId === id ? { ...r, ...response.data } : r

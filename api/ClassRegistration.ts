@@ -38,6 +38,12 @@ createClassRegistration: async (data: ClassRegistrationCreateRequest) => {
         data
     );
 },
+createClassRegistrationWithUsername: async (data: { classId: string; username: string }) => {
+        return api.post<SingleItemResponse<ClassRegistration>>(
+            API_ENDPOINTS.createClassRegistrationWithUsername,
+            data
+        );
+    },
 
 updateClassRegistration: async (
     registration_id: string,

@@ -18,6 +18,8 @@ import {
   SHADOWS,
   SPACING,
 } from "@/constants/Theme";
+import { Menu } from 'react-native-paper';
+import { MoreVertical } from 'lucide-react-native';
 import { useLocalSearchParams, useRouter, Link } from "expo-router";
 import { useStudentRequestStore } from "@/store/post-store";
 import { useAuthStore } from "@/store/auth-store";
@@ -77,6 +79,7 @@ export default function StudentRequestDetails() {
   const [status, setStatus] = useState<Status | null>(null);
   const { fetchUserById } = useUserProfileStore();
   const [author, setAuthor] = React.useState<User | null>(null);
+  const [menuVisible, setMenuVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
     const init = async () => {
@@ -261,6 +264,10 @@ export default function StudentRequestDetails() {
       ]
     );
   };
+  const handleEditPost = () => {
+    triggerHaptic("medium");
+    router.push(`/student-request/edit/${postId}` as any);
+  }
   const handleClosePost = async () => {
     triggerHaptic("medium");
     Alert.alert(t("Đóng bài đăng"), t("Bạn có chắc muốn đóng bài đăng này?"), [
@@ -381,7 +388,22 @@ export default function StudentRequestDetails() {
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor={colors.primary} />
-      <Header title={t("Chi tiết bài đăng")} showBack />
+      <Header title={t("Chi tiết bài đăng")} showBack 
+      rightComponent={
+    <Menu
+      visible={menuVisible}
+      onDismiss={() => setMenuVisible(false)}
+      anchor={
+        <TouchableOpacity onPress={() => setMenuVisible(true)}>
+          <MoreVertical size={24} color="#fff" />
+        </TouchableOpacity>
+      }
+    >
+      <Menu.Item onPress={handleEditPost} title="Chỉnh sửa bài viết" />
+      <Menu.Item onPress={handleClosePost} title="Đóng bài viết" />
+    </Menu>
+  }
+      />
 
       <FlatList
         data={showApplications ? displayedApplications : []}

@@ -20,7 +20,6 @@ export const addressApi = {
         },
 
         createAddress: async (data: AddressCreateRequest) => {
-        console.log("Creating address with data:", data);
         return api.post<SingleItemResponse<CreateResponse>>(
             API_ENDPOINTS.createAddress,
             data

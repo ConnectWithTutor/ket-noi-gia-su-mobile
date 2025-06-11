@@ -108,7 +108,7 @@ export const useClassStore = create<ClassStore>()(
             const userId = useAuthStore.getState().user?.userId;
             const response = await classApi.findBestClasses({ keyword, userId, limit });
           if (response.results) {
-            set({ classes: response.results, isLoading: false , message:null });
+            set({ classes: response.results.map(result => result.class_), isLoading: false , message:null });
           } else {
             set({
               message: response.message || "Không tìm thấy lớp học phù hợp.",

@@ -12,13 +12,19 @@ import { useAuthStore } from "@/store/auth-store";
 import { triggerHaptic } from "@/utils/haptics";
 import {validateEmail }  from "@/utils/validateEmail";
 import { useTranslation } from "react-i18next";
+import CustomAlertModal from "@/components/ui/AlertModal";
+
 export default function LoginScreen() {
   const router = useRouter();
-  const { login, isLoading, error } = useAuthStore();
+  const { login, isLoading, error,isActivated } = useAuthStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-const { t } = useTranslation(); 
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertOptions, setAlertOptions] = useState<{ title?: string; message?: string; buttons?: any[] }>(
+    {}
+  );
+  const { t } = useTranslation(); 
   // Thêm state cho lỗi từng trường
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -50,6 +56,25 @@ const { t } = useTranslation();
 
     try {
       await login({ email, password });
+      if (!error ) {
+        if (isActivated) {
+        setAlertOptions({
+          title: t("Thông báo"),
+          message: t("Bạn chưa kích hoạt tài khoản, vui lòng kiểm tra tài khoản email của bạn"),
+          buttons: [
+            {
+              text: "OK",
+              onPress: () => {
+                setAlertVisible(false);
+              },
+            },
+          ],
+        });
+        setAlertVisible(true);
+        return;
+        }
+      }
+      // Nếu login thành công và đã kích hoạt
       router.replace("/(app)/(tabs)/home");
     } catch (error) {
       // Không cần log lỗi ra console cho người dùng cuối
@@ -148,6 +173,13 @@ const { t } = useTranslation();
             onPress={handleFacebookLogin}
           />
         </View>
+        <CustomAlertModal
+          visible={alertVisible}
+          title={alertOptions.title}
+          message={alertOptions.message}
+          onClose={() => setAlertVisible(false)}
+          buttons={alertOptions.buttons}
+        />
       </View>
     </ScrollView>
   );

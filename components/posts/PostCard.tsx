@@ -63,7 +63,7 @@ function PostCardComponent({ post, onPress,status,author, subject }: PostCardPro
               },
             ]}
           >
-            {status.name || t('Không rõ')}
+            {status.code || t('Không rõ')}
           </Text>
         </View>
       </View>

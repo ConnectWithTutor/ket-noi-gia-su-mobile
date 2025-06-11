@@ -43,7 +43,7 @@ class WebSocketService {
         });
 
         this.client.webSocketFactory = (): IStompSocket => {
-          return new SockJS(`http://${SOCKET_URL}api/ws?userId=${this.userId}`) as IStompSocket;
+          return new SockJS(`${SOCKET_URL}api/ws?userId=${this.userId}`) as IStompSocket;
         };
 
         // Thiết lập callback

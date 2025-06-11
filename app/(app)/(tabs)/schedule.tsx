@@ -36,42 +36,49 @@ export default function ScheduleScreen() {
   const [role, setRole] = useState<Role>();
    const { fetchStatusesClass,StatusesClass } = useStatusStore();
   useEffect(() => {
-  const fetchData = async () => {
-    fetchClassesByUserId(user?.userId || "");
-     fetchStatusesClass();
-    const userRole = await getRoleById(user?.roleId || "");
-    if (userRole) {
-       setRole(userRole || null);
-    }
-    
-    const allSchedules = [];
+    const fetchData = async () => {
+      await fetchClassesByUserId(user?.userId || "");
+      await fetchStatusesClass();
+      if (user?.roleId) {
+        const userRole = await getRoleById(user.roleId);
+        if (userRole) setRole(userRole);
+      }
 
-    const classList = useClassStore.getState().classes;
-    for (const classItem of classList) {
-      getSchedulesByClass(classItem.classId);
-      fetchUserById(classItem.tutorId);
-      fetchAddressById(classItem.classId);
-      const classSchedules = useScheduleStore.getState().schedules.map(sch => ({
-        ...sch,
-        classInfo: {classItem}
-      }));
-
-      allSchedules.push(...classSchedules);
-    }
-    useScheduleStore.setState({ schedules: allSchedules });
-  };
-
-  fetchData();
-  generateWeekDates(selectedDate);
-}, []);
+      const classList = useClassStore.getState().classes;
+      const allSchedules: any[] = [];
+      for (const classItem of classList) {
+        await fetchUserById(classItem.tutorId);
+        await fetchAddressById(classItem.classId);
+        await getSchedulesByClass(classItem.classId);
+        const classSchedules = useScheduleStore.getState().schedules
+          .filter(sch => sch.classId === classItem.classId)
+          .map(sch => ({
+            ...sch,
+            classInfo: classItem,
+            tutor: usersMap[classItem.tutorId] || null,
+            address: addressMap[classItem.classId] || null,
+          }));
+        allSchedules.push(...classSchedules);
+      }
+      useScheduleStore.setState({ schedules: allSchedules });
+    };
+    fetchData();
+    generateWeekDates(selectedDate);
+  }, []);
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchClassesByUserId(user?.userId || "");
-    await fetchStatusesClass();
+     await Promise.all([
+       fetchClassesByUserId(user?.userId || ""),
+       fetchStatusesClass(),
+     ]);
     const classList = useClassStore.getState().classes;
     const allSchedules = [];
     for (const classItem of classList) {
-      await getSchedulesByClass(classItem.classId);
+       await Promise.all([
+        fetchUserById(classItem.tutorId),
+        fetchAddressById(classItem.classId),
+        getSchedulesByClass(classItem.classId)
+      ]);
       const classSchedules = await Promise.all(
         useScheduleStore.getState().schedules.map(async sch => ({
           ...sch,
@@ -80,11 +87,12 @@ export default function ScheduleScreen() {
         }))
       );
       allSchedules.push(...classSchedules);
+      
     }
     useScheduleStore.setState({ schedules: allSchedules });
     setRefreshing(false);
   };
-
+  
   const generateWeekDates = (date: Date) => {
     const currentDay = date.getDay();
     const sunday = new Date(date);
@@ -132,7 +140,7 @@ export default function ScheduleScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setViewMode(viewMode === "list" ? "calendar" : "list");
   };
-  const mergedSchedules = schedules.map(sch => ({
+  const mergedSchedules = useScheduleStore.getState().schedules.map(sch => ({
   ...sch,
   classInfo: classes.find(cls => cls.classId === sch.classId) || null,
   
@@ -146,7 +154,7 @@ const filteredClasses = mergedSchedules.filter(sch => {
   );
 });
   
-  
+
   const hasEvents = (date: Date) => {
     return classes.some(classItem => {
       const classDate = new Date(classItem.startDate);

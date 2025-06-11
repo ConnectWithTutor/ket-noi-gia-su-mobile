@@ -1,5 +1,7 @@
-export const formatDate = (dateString: string | Date): string => {
+export const formatDate = (dateString: string | Date | null | undefined): string => {
+  if (!dateString) return '';
   const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+  if (!date || isNaN(date.getTime())) return '';
   return date.toLocaleDateString('vi-VN', {
     day: '2-digit',
     month: '2-digit',
@@ -7,16 +9,20 @@ export const formatDate = (dateString: string | Date): string => {
   });
 };
 
-export const formatTime = (dateString: string | Date): string => {
+export const formatTime = (dateString: string | Date | null | undefined): string => {
+  if (!dateString) return '';
   const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+  if (!date || isNaN(date.getTime())) return '';
   return date.toLocaleTimeString('vi-VN', {
     hour: '2-digit',
     minute: '2-digit',
   });
 };
 
-export const formatDateTime = (dateString: string | Date): string => {
+export const formatDateTime = (dateString: string | Date | null | undefined): string => {
+  if (!dateString) return '';
   const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+  if (!date || isNaN(date.getTime())) return '';
   return date.toLocaleString('vi-VN', {
     day: '2-digit',
     month: '2-digit',
@@ -25,7 +31,6 @@ export const formatDateTime = (dateString: string | Date): string => {
     minute: '2-digit',
   });
 };
-
 export const getRelativeTime = (dateString: string | Date): string => {
   const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
   const now = new Date();

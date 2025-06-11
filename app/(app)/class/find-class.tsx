@@ -17,10 +17,11 @@ import { Class } from '@/types';
 import StatusBar from '@/components/ui/StatusBar';
 import Header from '@/components/ui/Header';
 import { useTranslation } from 'react-i18next';
+import { triggerHaptic } from '@/utils/haptics';
 
 const ClassSearchScreen = () => {
   const router = useRouter();
-  const { classes, fetchClasses, findBestClasses ,message,isLoading} = useClassStore();
+  const { classes, fetchClasses, findBestClasses ,message,isLoading,setSelectedClass} = useClassStore();
   const [searchTerm, setSearchTerm] = useState('');
   const { t } = useTranslation();
   useEffect(() => {
@@ -30,19 +31,25 @@ const ClassSearchScreen = () => {
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       if (searchTerm.trim()) {
+        console.log('Searching for:', searchTerm.trim());
         findBestClasses({ keyword: searchTerm.trim(), limit: 20 });
       } else {
         fetchClasses(); 
       }
+
     }, 500); 
 
     return () => clearTimeout(delayDebounce);
   }, [searchTerm]);
-
+  const handleClassPress = (obj: Class) => {
+    triggerHaptic('light');
+    setSelectedClass(obj);
+    router.push(`/class/${obj.classId}`);
+  };
   const renderItem = ({ item }: { item: Class }) => (
     <TouchableOpacity
       style={styles.classItem}
-      onPress={() => router.push(`/class/${item.classId}`)}
+      onPress={() => handleClassPress(item)}
     >
       <Text style={styles.classTitle}>{item.className_vi}</Text>
       <Text style={styles.classDate}>

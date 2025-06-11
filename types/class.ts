@@ -43,3 +43,15 @@ export interface ClassUpdateRequest {
     maxStudents?: number;
     status?: string;
 }
+
+export interface ClassSearchResult {
+    class_: Class;
+    distance_km: number;
+    similarity: number;
+    matching_score: number;
+}
+
+export interface ClassSearchResponse {
+    results: ClassSearchResult[];
+    message: string;
+}

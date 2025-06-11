@@ -1,3 +1,4 @@
+import { API_ENDPOINTS } from "@/constants/apiEndpoints";
 import { api, getAuthToken } from "@/services/api";
 import { 
   AuthResponse, 
@@ -5,13 +6,13 @@ import {
   RegisterRequest, 
   User,
   PasswordResetRequest,
-  PasswordChangeRequest
+  PasswordChangeRequest,
+  SingleItemResponse
 } from "@/types";
 
 export const authApi = {
 
   login: (credentials: LoginRequest) => {
-    
     return api.post<AuthResponse>("/auth/login", credentials);
   },
   
@@ -49,5 +50,8 @@ export const authApi = {
       oldPassword,
       newPassword
     }, { headers: { Authorization: `Bearer ${token}` } });
-  }
+  },
+  userActivate : async (id: string) => {
+          return api.post<SingleItemResponse<User>>(API_ENDPOINTS.userActivate(id), {});
+      }
 };

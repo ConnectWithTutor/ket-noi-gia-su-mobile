@@ -164,15 +164,15 @@ function ConversationItem({ conversation, onPress, users, onVisible }: Conversat
           </Text>
         </View>
         <View style={styles.messagePreview}>
-          <Text
+          {/* <Text
             style={[
               styles.messageText,
             ]}
             numberOfLines={1}
           >
               {conversation.lastMessage?.content || t('Cuộc trò chuyện mới')}
-          </Text>
-          <ArrowRight size={16} color={colors.textSecondary} />
+          </Text> */}
+          {/* <ArrowRight size={16} color={colors.textSecondary} /> */}
         </View>
       </View>
     </TouchableOpacity>

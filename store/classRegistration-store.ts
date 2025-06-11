@@ -16,6 +16,7 @@ interface ClassRegistrationState {
     fetchRegistrationsByClass: (class_id: string, page?: number, limit?: number) => Promise<void>;
     fetchRegistrationsByStudent: (student_id: string, page?: number, limit?: number) => Promise<void>;
     createRegistration: (data: ClassRegistrationCreateRequest) => Promise<boolean>;
+    createClassRegistrationWithUsername: (data: { classId: string; username: string }) => Promise<boolean>;
     updateRegistration: (id: string, data: Partial<ClassRegistrationCreateRequest>) => Promise<boolean>;
     deleteRegistration: (id: string) => Promise<boolean>;
     clearError: () => void;
@@ -106,6 +107,27 @@ export const useClassRegistrationStore = create<ClassRegistrationState>((set, ge
         } catch (e: any) {
             set({
                 error: e.message || "Failed to create registration",
+                loading: false,
+            });
+            return false;
+        }
+    },
+    createClassRegistrationWithUsername: async (data: { classId: string; username: string }) => {
+        set({ loading: true, error: null });
+        try {
+            const res = await classRegistrationApi.createClassRegistrationWithUsername(data);
+            if (!res.id) {
+                console.error("No registration ID returned",res);
+                throw new Error("User not found");
+            }
+            set(state => ({
+                total: state.total + 1,
+                loading: false,
+            }));
+            return true;
+        } catch (e: any) {
+            set({
+                error: e.message || "Failed to create registration with username",
                 loading: false,
             });
             return false;

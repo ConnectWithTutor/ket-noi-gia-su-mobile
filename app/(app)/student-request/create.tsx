@@ -6,10 +6,9 @@ import {
   ScrollView, 
   TextInput, 
   TouchableOpacity,
-  Alert,
-  KeyboardAvoidingView,
+  ActivityIndicator,
   Platform,
-  ActivityIndicator
+  KeyboardAvoidingView
 } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { BookOpen, DollarSign, MapPin, Users, Clock, FileText } from "lucide-react-native";
@@ -25,10 +24,12 @@ import AuthGuard from "@/components/AuthGuard";
 import Header from "@/components/ui/Header";
 import { useAddressStore } from "@/store/address-store";
 import { useTranslation } from "react-i18next";
+import CustomAlertModal from "@/components/ui/AlertModal";
 
 const STUDY_TYPES = [
   { id: "online", label: "Online" },
   { id: "offline", label: "Offline" },
+  { id: "hybrid", label: "Hybrid" }
 ];
 
 export default function CreateStudentRequestScreen() {
@@ -36,8 +37,8 @@ export default function CreateStudentRequestScreen() {
   const { createStudentRequest, loading } = useStudentRequestStore();
   const { user } = useAuthStore();
   const { subjects, fetchSubjects } = useSubjectStore();
-    const { createAddress } = useAddressStore();
-    const { t } = useTranslation();
+  const { createAddress } = useAddressStore();
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<Partial<StudentRequestCreateRequest>>({
     subjectId: '',
     studyType: 'offline',
@@ -50,7 +51,9 @@ export default function CreateStudentRequestScreen() {
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertOptions, setAlertOptions] = useState<{ title?: string; message?: string; buttons?: any[] }>({});
+
   useEffect(() => {
     fetchSubjects();
   }, []);
@@ -85,14 +88,18 @@ export default function CreateStudentRequestScreen() {
     return Object.keys(newErrors).length === 0;
   };
   
+  const showAlert = (title: string, message: string, buttons?: any[]) => {
+    setAlertOptions({ title, message, buttons });
+    setAlertVisible(true);
+  };
+
   const handleSubmit = async () => {
     triggerHaptic('medium');
-    
     if (!validateForm()) return;
-    
+
     try {
       if (!user) {
-        Alert.alert(t("Lỗi"), t("Bạn cần đăng nhập để đăng bài."));
+        showAlert(t("Lỗi"), t("Bạn cần đăng nhập để đăng bài."));
         return;
       }
       const requestData = {
@@ -102,13 +109,13 @@ export default function CreateStudentRequestScreen() {
         studentCount: Number(formData.studentCount),
       } as StudentRequestCreateRequest;
       const success = await createStudentRequest(requestData);
-      
+
       if (success) {
         await createAddress({
-              userId: user.userId,
-              fullAddress:  formData.location || '',
-            });
-        Alert.alert(
+          userId: user.userId,
+          fullAddress: formData.location || '',
+        });
+        showAlert(
           t("Thành công"),
           t("Đăng bài thành công!"),
           [
@@ -120,7 +127,7 @@ export default function CreateStudentRequestScreen() {
         );
       }
     } catch (error) {
-      Alert.alert(t("Lỗi"), t("Không thể đăng bài. Vui lòng thử lại sau."));
+      showAlert(t("Lỗi"), t("Không thể đăng bài. Vui lòng thử lại sau."));
     }
   };
   
@@ -136,7 +143,6 @@ export default function CreateStudentRequestScreen() {
   };
 
   return (
-    
     <AuthGuard>
       <Stack.Screen 
         options={{
@@ -144,20 +150,18 @@ export default function CreateStudentRequestScreen() {
           headerTitleAlign: "center",
         }}
       />
-      
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
       >
-          <Header title={t("Đăng bài tìm gia sư")}  showBack/>
-        <ScrollView 
-          style={styles.content} 
+        <Header title={t("Đăng bài tìm gia sư")} showBack />
+        <ScrollView
+          style={styles.content}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.scrollContent}
         >
-        
           <View style={styles.formContainer}>
             <View style={styles.formSection}>
               <Text style={styles.sectionTitle}>{t("Thông tin cơ bản")}</Text>
@@ -362,6 +366,13 @@ export default function CreateStudentRequestScreen() {
             </TouchableOpacity>
           </View>
         </ScrollView>
+        <CustomAlertModal
+          visible={alertVisible}
+          title={alertOptions.title}
+          message={alertOptions.message}
+          onClose={() => setAlertVisible(false)}
+          buttons={alertOptions.buttons}
+        />
       </KeyboardAvoidingView>
     </AuthGuard>
   );

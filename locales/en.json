@@ -405,5 +405,10 @@
   "đã nộp đơn ứng tuyển": "applied",
   "Đã nộp đơn vào ngày": "Applied on",
   "đánh giá": "review",
-  "Chọn ngày sinh": "Select birth date"
+  "Chọn ngày sinh": "Select birth date",
+  "Vui lòng nhập tên đăng nhập": "Please enter username",
+  "Vui lòng nhập tên đăng nhập học viên": "Please enter student username",
+  "Không tìm thấy học viên này. Vui lòng thử lại.": "Student not found. Please try again.",
+  "Chia sẻ lớp học": "Share class",
+  "Chức năng chia sẻ sẽ sớm được cập nhật.": "The sharing feature will be updated soon."
 }

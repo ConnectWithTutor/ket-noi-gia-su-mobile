@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PREFIX,SOCKET_URL } from '@/constants/config';
 import { Conversation, Message, User } from '@/types/';
 
-const API_URL = 'http://' + SOCKET_URL + PREFIX;
+const API_URL =SOCKET_URL + PREFIX;
 
 export const getToken = async (): Promise<string | null> => {
   try {
@@ -65,9 +65,8 @@ export const apiChat = {
       const response = await fetch(`${API_URL}/conversations/create`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ creatorUserId, type })
+        body: JSON.stringify({ type , creatorUserId })
       });
-      
       return handleResponse(response);
     },
     
@@ -79,6 +78,8 @@ export const apiChat = {
       if (response.status === 204) {
           return null;
       }
+
+      
       return handleResponse(response);
     },
      

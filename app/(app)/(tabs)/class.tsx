@@ -12,11 +12,12 @@ import Header from '@/components/ui/Header';
 import { Class } from '@/types/class';
 import { triggerHaptic } from '@/utils/haptics';
 import { useTranslation } from 'react-i18next'; // Thêm dòng này
+import { toLocaleStringVND } from '@/utils/number-utils';
 
 export default function ClassesScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const { classes, isLoading, error, fetchClasses } = useClassStore();
+  const { classes, isLoading, error, fetchClasses ,setSelectedClass} = useClassStore();
   const [refreshing, setRefreshing] = useState(false);
   const { t } = useTranslation(); // Thêm dòng này
 
@@ -36,9 +37,10 @@ export default function ClassesScreen() {
     setRefreshing(false);
   };
 
-  const handleClassPress = (classId: string) => {
+  const handleClassPress = (obj: Class) => {
     triggerHaptic('light');
-    router.push(`/class/${classId}` as any);
+    setSelectedClass(obj);
+    router.push(`/class/${obj.classId}`);
   };
 
   // Phân loại lớp học
@@ -52,20 +54,13 @@ export default function ClassesScreen() {
   const renderClassItem = ({ item }: { item: Class }) => (
     <TouchableOpacity 
       style={styles.classCard} 
-      onPress={() => handleClassPress(item.classId)}
+      onPress={() => handleClassPress(item)}
       activeOpacity={0.7}
     >
       <View style={styles.classHeader}>
         <Text style={styles.className}>{item.className_vi}</Text>
-        <View style={[styles.statusBadge, { 
-          backgroundColor: item.status === 'active' ? Colors.success : 
-                          item.status === 'completed' ? Colors.info : 
-                          item.status === 'cancelled' ? Colors.danger : 
-                          Colors.warning
-        }]}>
-        </View>
       </View>
-      {/* ...giữ nguyên các dòng khác */}
+      
       <View style={styles.infoRow}>
         <View style={styles.infoItem}>
           <BookOpen size={16} color={Colors.textSecondary} />
@@ -91,7 +86,7 @@ export default function ClassesScreen() {
         </View>
       </View>
       <View style={styles.footer}>
-        <Text style={styles.price}>{item.tuitionFee.toLocaleString()}đ</Text>
+        <Text style={styles.price}>{toLocaleStringVND(item.tuitionFee)}đ</Text>
         <Text style={styles.date}>{t('Bắt đầu')}: {formatDate(item.startDate)}</Text>
       </View>
     </TouchableOpacity>

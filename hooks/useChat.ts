@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useChatStore } from '@/store/chat-store';
 import { Message, User } from '@/types';
-import { webSocketService } from '@/services/websocket';
 export const useChat = (User: User) => {
   const {
     currentUser,

@@ -4,7 +4,7 @@ import {
   SingleItemResponse,
     Class,
     ClassCreateRequest,
-
+ClassSearchResponse
 } from "@/types";
 
 import { api } from "@/services/api";
@@ -29,11 +29,12 @@ export const classApi = {
         return api.get<SingleItemResponse<Class>>(API_ENDPOINTS.classesById(class_id));
     },
     findBestClasses: async (data?: { keyword?: string; userId?: string; limit?: number }) => {
-        return api.post<PaginatedResponse<Class>>(API_ENDPOINTS.findBestClasses, data);
+        return api.post<ClassSearchResponse>(API_ENDPOINTS.findBestClasses, data);
     },
     createClass: async (data: ClassCreateRequest) => {
         return api.post<SingleItemResponse<Class>>(API_ENDPOINTS.createClasses, data);
     },
+    
 
     updateClass: async (class_id: string, data: Partial<ClassCreateRequest>) => {
         return api.put<SingleItemResponse<Class>>(API_ENDPOINTS.updateClasses(class_id), data);

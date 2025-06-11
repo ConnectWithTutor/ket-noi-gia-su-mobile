@@ -4,7 +4,7 @@ import { router, useRouter } from 'expo-router';
 import { ArrowLeft, Bell } from 'lucide-react-native';
 import colors from '@/constants/Colors';
 import { FONT_SIZE, FONT_WEIGHT, SPACING } from '@/constants/Theme';
-
+import { Menu, Provider } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { triggerHaptic } from '@/utils/haptics';
 
@@ -28,6 +28,19 @@ export default function Header({
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
+  // Hỗ trợ truyền 1 phần tử hoặc mảng phần tử cho rightComponent
+  const renderRightComponents = () => {
+    if (!rightComponent) return null;
+    if (Array.isArray(rightComponent)) {
+      return rightComponent.map((item, idx) => (
+        <View key={idx} style={styles.rightItem}>
+          {item} 
+        </View>
+      ));
+    }
+    return <View style={styles.rightItem}>{rightComponent}</View>;
+  };
+
   return (
     <View style={[
       styles.container, 
@@ -48,7 +61,7 @@ export default function Header({
           <Text style={styles.title} numberOfLines={1}>{title}</Text>
         </View>
         <View style={styles.rightContainer}>
-          {rightComponent}
+          {renderRightComponents()}
           {showNotification && (
             <TouchableOpacity 
               style={styles.notificationButton} 
@@ -65,37 +78,44 @@ export default function Header({
 }
 
 const styles = StyleSheet.create({
-    container: {
-      backgroundColor: colors.primary,
-    },
-    content: {
-        height: 56,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: SPACING.md,
-      },
-      leftContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flex: 1,
-      },
-      rightContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-      },
-      backButton: {
-        marginRight: SPACING.sm,
-      },
-      title: {
-        fontSize: FONT_SIZE.lg,
-        fontWeight: 'bold',
-        color: colors.white,
-        flex: 1,
-      },
-      notificationButton: {
-        marginLeft: SPACING.md,
-      }
-  
+  container: {
+    backgroundColor: colors.primary,
+  },
+  content: {
+    height: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: SPACING.md,
+  },
+  leftContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  rightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  rightItem: {
+    marginLeft: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 36,
+    minHeight: 36,
+    color: colors.white,
+  },
+  backButton: {
+    marginRight: SPACING.sm,
+  },
+  title: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: 'bold',
+    color: colors.white,
+    flex: 1,
+  },
+  notificationButton: {
+    marginLeft: SPACING.md,
+  }
 });
-    

@@ -22,7 +22,6 @@ export default function PersonalInfoScreen() {
   const { createAddress,updateAddress,fetchAddressById,isLoading: isLoadingAddress } = useAddressStore();
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [formData, setFormData] = useState({
     fullName: user?.fullName || "",
     email: user?.email || "",

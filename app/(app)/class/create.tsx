@@ -5,7 +5,6 @@ import {
   StyleSheet, 
   ScrollView, 
   TouchableOpacity, 
-  Alert,
   ActivityIndicator,
   Platform
 } from 'react-native';
@@ -16,6 +15,7 @@ import StatusBar from '@/components/ui/StatusBar';
 import Header from '@/components/ui/Header';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import CustomAlertModal from '@/components/ui/AlertModal';
 import { useClassStore } from '@/store/class-store';
 import { useScheduleStore } from '@/store/schedule-store';
 import { useAuthStore } from '@/store/auth-store';
@@ -58,6 +58,18 @@ export default function CreateClassScreen() {
   const [endTime, setEndTime] = useState(new Date(new Date().setHours(new Date().getHours() + 2)));
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   
+  // Alert state
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertOptions, setAlertOptions] = useState<{
+    title?: string;
+    message?: string;
+    buttons?: any[];
+  }>({
+    title: '',
+    message: '',
+    buttons: [],
+  });
+
   useEffect(() => {
     if (requestId) {
       fetchStatusesClass();
@@ -155,46 +167,50 @@ export default function CreateClassScreen() {
     }
   };
   
+  // Thay thế Alert.alert bằng hàm này
+  const showAlert = (title: string, message: string, buttons?: any[]) => {
+    setAlertOptions({ title, message, buttons });
+    setAlertVisible(true);
+  };
 
-  
   const validateForm = (): boolean => {
     if (!className_vi.trim()) {
-      Alert.alert(t("Lỗi"), t("Vui lòng nhập tên lớp học (tiếng Việt)"));
+      showAlert(t("Lỗi"), t("Vui lòng nhập tên lớp học (tiếng Việt)"));
       return false;
     }
     
     if (!className_en.trim()) {
-      Alert.alert(t("Lỗi"), t("Vui lòng nhập tên lớp học (tiếng Anh)"));
+      showAlert(t("Lỗi"), t("Vui lòng nhập tên lớp học (tiếng Anh)"));
       return false;
     }
 
     if (!studyType.trim()) {
-      Alert.alert(t("Lỗi"), t("Vui lòng chọn hình thức học"));
+      showAlert(t("Lỗi"), t("Vui lòng chọn hình thức học"));
       return false;
     }
 
     if (isNaN(parseInt(sessions)) || parseInt(sessions) <= 0) {
-      Alert.alert(t("Lỗi"), t("Số buổi học phải là số dương"));
+      showAlert(t("Lỗi"), t("Số buổi học phải là số dương"));
       return false;
     }
 
     if (isNaN(parseInt(tuitionFee)) || parseInt(tuitionFee) <= 0) {
-      Alert.alert(t("Lỗi"), t("Học phí phải là số dương"));
+      showAlert(t("Lỗi"), t("Học phí phải là số dương"));
       return false;
     }
 
     if (isNaN(parseInt(maxStudents)) || parseInt(maxStudents) <= 0) {
-      Alert.alert(t("Lỗi"), t("Số học sinh tối đa phải là số dương"));
+      showAlert(t("Lỗi"), t("Số học sinh tối đa phải là số dương"));
       return false;
     }
 
     if (weekdays.length === 0) {
-      Alert.alert(t("Lỗi"), t("Vui lòng chọn ít nhất một ngày học trong tuần"));
+      showAlert(t("Lỗi"), t("Vui lòng chọn ít nhất một ngày học trong tuần"));
       return false;
     }
 
     if (endTime <= startTime) {
-      Alert.alert(t("Lỗi"), t("Thời gian kết thúc phải sau thời gian bắt đầu"));
+      showAlert(t("Lỗi"), t("Thời gian kết thúc phải sau thời gian bắt đầu"));
       return false;
     }
 
@@ -210,7 +226,7 @@ export default function CreateClassScreen() {
 
       const StatusClass = StatusesClass.find(s => s.code === 'Pending');
       if (!StatusClass) {
-        Alert.alert(t("Lỗi"), t("Không tìm thấy trạng thái lớp học. Vui lòng thử lại sau."));
+        showAlert(t("Lỗi"), t("Không tìm thấy trạng thái lớp học. Vui lòng thử lại sau."));
         return;
       }
       // Create class
@@ -231,7 +247,7 @@ export default function CreateClassScreen() {
       
       const success = await createClass(classData);
         if (success) {
-          Alert.alert(
+          showAlert(
             t("Thành công"),
             t("Đã tạo lớp học thành công!"),
             [
@@ -242,10 +258,10 @@ export default function CreateClassScreen() {
             ]
           );
       } else {
-        Alert.alert(t("Lỗi"), t("Không thể tạo lớp học. Vui lòng thử lại sau."));
+        showAlert(t("Lỗi"), t("Không thể tạo lớp học. Vui lòng thử lại sau."));
       }
     } catch (error) {
-      Alert.alert(t("Lỗi"), t("Đã xảy ra lỗi khi tạo lớp học. Vui lòng thử lại sau."));
+      showAlert(t("Lỗi"), t("Đã xảy ra lỗi khi tạo lớp học. Vui lòng thử lại sau."));
     }
   };
   
@@ -472,6 +488,14 @@ export default function CreateClassScreen() {
           />
         </View>
       </ScrollView>
+
+      <CustomAlertModal
+        visible={alertVisible}
+        title={alertOptions.title}
+        message={alertOptions.message}
+        onClose={() => setAlertVisible(false)}
+        buttons={alertOptions.buttons}
+      />
     </View>
   );
 }

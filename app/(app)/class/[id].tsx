@@ -6,7 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
+  TextInput,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useClassStore } from "@/store/class-store";
@@ -15,6 +15,7 @@ import Colors from "@/constants/Colors";
 
 import { SPACING, FONT_SIZE, BORDER_RADIUS, SHADOWS } from "@/constants/Theme";
 import { formatDate, formatTimeRange } from "@/utils/date-utils";
+import { toLocaleStringVND } from "@/utils/number-utils";
 import {
   BookOpen,
   Users,
@@ -39,11 +40,13 @@ import { Subject } from "@/types";
 import { useRoleStore } from "@/store/roleStore";
 import { useUserProfileStore } from "@/store/profile-store";
 import { useTranslation } from "react-i18next";
+import CustomAlertModal from "@/components/ui/AlertModal";
+
 export default function ClassDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const classId = Array.isArray(id) ? id[0] : id;
   const router = useRouter();
-  const { fetchRegistrationsByClass, registrations, createRegistration } =
+  const { fetchRegistrationsByClass, registrations, createRegistration, createClassRegistrationWithUsername, error: registrationError } =
     useClassRegistrationStore();
 const { usersMap, fetchUserById } = useUserProfileStore();
   const { getSubjectById } = useSubjectStore();
@@ -61,7 +64,22 @@ const { usersMap, fetchUserById } = useUserProfileStore();
   const { schedules, getSchedulesByClass } = useScheduleStore();
   const [showAll, setShowAll] = useState(false);
   const [showStudentList, setShowStudentList] = useState(false);
+ const [showAddStudentDialog, setShowAddStudentDialog] = useState(false);
+  const [newStudentUsername, setNewStudentUsername] = useState("");
+  const [addingStudent, setAddingStudent] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertOptions, setAlertOptions] = useState<{
+    title?: string;
+    message?: string;
+    buttons?: any[];
+  }>({
+    title: "",
+    message: "",
+    buttons: [],
+  });
+
   if(!selectedClass) {
+
     return
   }
   useEffect(() => {
@@ -97,10 +115,10 @@ useEffect(() => {
 
   const handleDeleteClass = () => {
     triggerHaptic("medium");
-    Alert.alert(
-      t("Xác nhận xóa"),
-      t("Bạn có chắc chắn muốn xóa lớp học này? Hành động này không thể hoàn tác."),
-      [
+    setAlertOptions({
+      title: t("Xác nhận xóa"),
+      message: t("Bạn có chắc chắn muốn xóa lớp học này? Hành động này không thể hoàn tác."),
+      buttons: [
         { text: t("Hủy"), style: "cancel" },
         {
           text: t("Xóa"),
@@ -109,32 +127,60 @@ useEffect(() => {
             if (classId) {
               const success = await deleteClass(classId);
               if (success) {
-                Alert.alert(t("Thành công"), t("Lớp học đã được xóa thành công"), [
-                  { text: t("OK"), onPress: () => router.back() },
-                ]);
+                setAlertOptions({
+                  title: t("Thành công"),
+                  message: t("Lớp học đã được xóa thành công"),
+                  buttons: [{ text: t("OK"), onPress: () => router.back() }],
+                });
+                setAlertVisible(true);
               }
             }
           },
         },
-      ]
-    );
+      ],
+    });
+    setAlertVisible(true);
+  };
+  const handleAddStudent = () => {
+    triggerHaptic("light");
+    setShowAddStudentDialog(true);
   };
   const handleAddSchedule = () => {
     triggerHaptic("light");
-    console.log("classId", classId);
-   router.push(`/class/schedule/create?classId=${classId}`)
+    router.push(`/class/schedule/create?classId=${classId}`);
+  };
+  const showAlert = (title: string, message: string, buttons?: any[]) => {
+    setAlertOptions({ title, message, buttons });
+    setAlertVisible(true);
+  };
+  const handleConfirmAddStudent = async () => {
+    if (!newStudentUsername.trim()) {
+      showAlert(t("Lỗi"), t("Vui lòng nhập tên đăng nhập học viên"));
+      return;
+    }
+    setAddingStudent(true);
+    const success = await createClassRegistrationWithUsername({
+      classId: selectedClass.classId,
+      username: newStudentUsername.trim(),
+    });
+    if (success) {
+      showAlert(t("Thành công"), t("Đã thêm học viên vào lớp"));
+      fetchRegistrationsByClass(selectedClass.classId);
+      setShowAddStudentDialog(false);
+      setNewStudentUsername("");
+    } else {
+      showAlert(t("Lỗi"), t("Không tìm thấy học viên này. Vui lòng thử lại."));
+    }
+    setAddingStudent(false);
   };
 
-  const handleAddStudent = () => {
-    triggerHaptic("light");
-    // router.push(`/class/student/add?classId=${classId}`);
-  };
 
   const handleShareClass = () => {
     triggerHaptic("light");
-    Alert.alert(
-      t("Chia sẻ"),
-      t("Tính năng chia sẻ sẽ được cập nhật trong phiên bản tiếp theo.")
+    showAlert(
+      t("Chia sẻ lớp học"),
+      t("Chức năng chia sẻ sẽ sớm được cập nhật."),
+      [{ text: t("Đóng"), onPress: () => setAlertVisible(false) }]
     );
   };
   const handleAddScheduleBulk = () => {
@@ -144,10 +190,10 @@ useEffect(() => {
 
   const handleMarkComplete = async () => {
     triggerHaptic("medium");
-    Alert.alert(
-      t("Xác nhận hoàn thành"),
-      t("Bạn có chắc chắn muốn đánh dấu lớp học này là đã hoàn thành?"),
-      [
+    setAlertOptions({
+      title: t("Xác nhận hoàn thành"),
+      message: t("Bạn có chắc chắn muốn đánh dấu lớp học này là đã hoàn thành?"),
+      buttons: [
         { text: t("Hủy"), style: "cancel" },
         {
           text: t("Xác nhận"),
@@ -157,7 +203,7 @@ useEffect(() => {
                 status: "completed",
               });
               if (success) {
-                Alert.alert(
+                showAlert(
                   t("Thành công"),
                   t("Lớp học đã được đánh dấu hoàn thành")
                 );
@@ -166,8 +212,9 @@ useEffect(() => {
             }
           },
         },
-      ]
-    );
+      ],
+    });
+    setAlertVisible(true);
   };
   const isUpcoming = (schedule: any) => {
     const now = new Date();
@@ -198,7 +245,8 @@ useEffect(() => {
       )
     : false;
 
-  const canJoin = isStudent && !isRegistered && selectedClass;
+  const canJoinStudent = isStudent && !isRegistered && selectedClass;
+  const canJoinTutor = isTutor && !selectedClass.tutorId
   // && Date(selectedClass.startDate) > new Date();
   if (isLoading) {
     return (
@@ -212,7 +260,6 @@ useEffect(() => {
       </View>
     );
   }
-
   if (error || !selectedClass) {
     return (
       <View style={styles.container}>
@@ -321,7 +368,7 @@ useEffect(() => {
             <DollarSign size={18} color={Colors.textSecondary} />
             <Text style={styles.infoLabel}>{t("Học phí")}</Text>
             <Text style={styles.infoValue}>
-              {selectedClass.tuitionFee.toLocaleString()}đ
+              {toLocaleStringVND(selectedClass.tuitionFee)}
             </Text>
           </View>
         </View>
@@ -348,6 +395,7 @@ useEffect(() => {
                 <Text style={styles.addButtonText}>{t("+ Thêm buổi học")}</Text>
               </TouchableOpacity>
             )}
+            
           </View>
 
           {displayedSchedules.length > 0 ? (
@@ -410,6 +458,7 @@ useEffect(() => {
                 <Text style={styles.addButtonText}>+ {t("Thêm học viên")}</Text>
               </TouchableOpacity>
             )}
+            
           </View>
 
           {registrations.length > 0 ? (
@@ -475,13 +524,13 @@ useEffect(() => {
                   <Text style={styles.actionButtonText}>{t("Chỉnh sửa")}</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
+                {/* <TouchableOpacity
                   style={[styles.actionButton, styles.deleteButton]}
                   onPress={handleDeleteClass}
                 >
                   <Trash2 size={18} color={Colors.white} />
                   <Text style={styles.actionButtonText}>{t("Xóa lớp")}</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </>
             )}
 
@@ -494,7 +543,7 @@ useEffect(() => {
             </TouchableOpacity>
           </View>
         </View>
-        {canJoin && user  && registrations.length < selectedClass.maxStudents && (
+        {canJoinStudent && user  && registrations.length < selectedClass.maxStudents && (
           <Button
             title={t("Tham gia lớp học")}
             style={{ marginTop: 16, marginBottom: 24 }} // thêm marginBottom nếu cần
@@ -505,16 +554,76 @@ useEffect(() => {
                 registrationDate: new Date().toISOString(),
               });
               if (success) {
-                Alert.alert(t("Thành công"), t("Bạn đã tham gia lớp học!"));
+                showAlert(t("Thành công"), t("Bạn đã tham gia lớp học!"));
                 fetchRegistrationsByClass(selectedClass.classId);
               } else {
-                Alert.alert(t("Lỗi"), t("Không thể tham gia lớp học."));
+                showAlert(t("Lỗi"), t("Không thể tham gia lớp học."));
               }
             }}
             fullWidth
           />
         )}
+        {/* {canJoinTutor && ( 
+          <Button
+            title={t("Đăng ký làm gia sư lớp này")}
+            style={{ marginTop: 16, marginBottom: 24 }} // thêm marginBottom nếu cần
+            onPress={async () => {
+              const success = await updateClass( selectedClass.classId {
+                ...selectedClass,
+                tutorId: user?.userId
+              });
+              if (success) {
+                showAlert(t("Thành công"), t("Bạn đã tham gia lớp học!"));
+                fetchRegistrationsByClass(selectedClass.classId);
+              } else {
+                showAlert(t("Lỗi"), t("Không thể tham gia lớp học."));
+              }
+            }}
+            fullWidth
+          />
+
+        )} */}
       </ScrollView>
+      {showAddStudentDialog && (
+        <View style={styles.dialogOverlay}>
+          <View style={styles.dialogContainer}>
+            <Text style={styles.dialogTitle}>{t("Thêm học viên")}</Text>
+            <TextInput
+              style={styles.dialogInput}
+              placeholder={t("Vui lòng nhập tên đăng nhập học viên")}
+              value={newStudentUsername}
+              onChangeText={setNewStudentUsername}
+              autoCapitalize="none"
+              autoFocus
+            />
+            <View style={styles.dialogActions}>
+              <TouchableOpacity
+                style={[styles.dialogButton, { backgroundColor: "#ccc" }]}
+                onPress={() => setShowAddStudentDialog(false)}
+                disabled={addingStudent}
+              >
+                <Text style={styles.dialogButtonText}>{t("Hủy")}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.dialogButton, { backgroundColor: Colors.primary }]}
+                onPress={handleConfirmAddStudent}
+                disabled={addingStudent}
+              >
+                <Text style={styles.dialogButtonText}>
+                  {addingStudent ? t("Đang gửi...") : t("Xác nhận")}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
+      <CustomAlertModal
+        visible={alertVisible}
+        title={alertOptions.title}
+        message={alertOptions.message}
+        onClose={() => setAlertVisible(false)}
+        buttons={alertOptions.buttons}
+      />
     </View>
   );
 }
@@ -743,4 +852,49 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginLeft: SPACING.xs,
   },
+    dialogOverlay: {
+    position: "absolute",
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 100,
+  },
+  dialogContainer: {
+    width: "85%",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 20,
+    elevation: 5,
+  },
+  dialogTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  dialogInput: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    fontSize: 16,
+  },
+  dialogActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 12,
+  },
+  dialogButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 8,
+    marginLeft: 8,
+  },
+  dialogButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+  }
 });

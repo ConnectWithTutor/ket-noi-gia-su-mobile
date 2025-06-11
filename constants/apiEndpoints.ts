@@ -20,6 +20,7 @@ export const API_ENDPOINTS = {
     users: `${API_BASE}/users/`,
     activedUsers: `${API_BASE}/users/activated`,
     notActivedUsers: `${API_BASE}/users/not-activated`,
+    userActivate: (user_id: string) => `${API_BASE}/users/activate/${user_id}`,
     userByRole: (role_id: string) => `${API_BASE}/users/${role_id}`,
     userById: (user_id: string) => `${API_BASE}/users/${user_id}`,
     userVerify: (user_id: string) => `${API_BASE}/users/activate/${user_id}`,
@@ -50,6 +51,7 @@ export const API_ENDPOINTS = {
     classesByStatus: (status_id: string) => `${API_BASE}/classes/get-by-status/${status_id}`,
     classesById: (class_id: string) => `${API_BASE}/classes/get-by-id/${class_id}`,
     createClasses: `${API_BASE}/classes/create`,
+    createClassRegistrationWithUsername: `${API_BASE}/class-registration/create-with-username`,
     updateClasses: (class_id: string) => `${API_BASE}/classes/update/${class_id}`,
     deleteClasses: (class_id: string) => `${API_BASE}/classes/delete/${class_id}`,
 
