@@ -1,25 +1,44 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useClassStore } from '@/store/class-store';
-import { useAuthStore } from '@/store/auth-store';
-import Colors from '@/constants/Colors';
-import { SPACING, FONT_SIZE, BORDER_RADIUS, SHADOWS } from '@/constants/Theme';
-import { formatDate } from '@/utils/date-utils';
-import { BookOpen, Users, Clock, MapPin } from 'lucide-react-native';
-import StatusBar from '@/components/ui/StatusBar';
-import Header from '@/components/ui/Header';
-import { Class } from '@/types/class';
-import { triggerHaptic } from '@/utils/haptics';
-import { useTranslation } from 'react-i18next'; // Thêm dòng này
-import { toLocaleStringVND } from '@/utils/number-utils';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  ActivityIndicator,
+  RefreshControl,
+  TouchableOpacity,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { useClassStore } from "@/store/class-store";
+import { useAuthStore } from "@/store/auth-store";
+import Colors from "@/constants/Colors";
+import { SPACING, FONT_SIZE, BORDER_RADIUS, SHADOWS } from "@/constants/Theme";
+import { formatDate } from "@/utils/date-utils";
+import { BookOpen, Users, Clock, MapPin } from "lucide-react-native";
+import StatusBar from "@/components/ui/StatusBar";
+import Header from "@/components/ui/Header";
+import { Class } from "@/types/class";
+import { triggerHaptic } from "@/utils/haptics";
+import { useTranslation } from "react-i18next"; // Thêm dòng này
+import { toLocaleStringVND } from "@/utils/number-utils";
+import { useSubjectStore } from "@/store/subjectStore";
 
 export default function ClassesScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const { classes, isLoading, error, fetchClasses ,setSelectedClass} = useClassStore();
+  const {
+    classes,
+    Myclasses,
+    isLoading,
+    error,
+    fetchClassesByUserId,
+    setSelectedClass,
+    fetchClasses,
+  } = useClassStore();
+  const { getSubjectById } = useSubjectStore(); 
   const [refreshing, setRefreshing] = useState(false);
-  const { t } = useTranslation(); // Thêm dòng này
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language;
 
   useEffect(() => {
     loadClasses();
@@ -27,6 +46,7 @@ export default function ClassesScreen() {
 
   const loadClasses = async () => {
     if (user?.userId) {
+      await fetchClassesByUserId(user.userId);
       await fetchClasses();
     }
   };
@@ -38,69 +58,88 @@ export default function ClassesScreen() {
   };
 
   const handleClassPress = (obj: Class) => {
-    triggerHaptic('light');
+    triggerHaptic("light");
     setSelectedClass(obj);
     router.push(`/class/${obj.classId}`);
   };
 
   // Phân loại lớp học
-  const myClasses = classes.filter(
-    (item) => item.tutorId === user?.userId 
-  );
+  const myClasses = Myclasses || [];
   const otherClasses = classes.filter(
-    (item) => item.tutorId !== user?.userId 
+    (item) => !myClasses.some((my) => my.classId === item.classId)
   );
 
-  const renderClassItem = ({ item }: { item: Class }) => (
-    <TouchableOpacity 
-      style={styles.classCard} 
-      onPress={() => handleClassPress(item)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.classHeader}>
-        <Text style={styles.className}>{item.className_vi}</Text>
-      </View>
-      
-      <View style={styles.infoRow}>
-        <View style={styles.infoItem}>
-          <BookOpen size={16} color={Colors.textSecondary} />
-          <Text style={styles.infoText}>
-            {item.subjectId === '1' ? t('Tiếng Anh') : 
-             item.subjectId === '2' ? t('Toán học') : 
-             t('Môn học')}
-          </Text>
+  const renderSection = (title: string, data: Class[], emptyText: string) => (
+    <View style={styles.sectionContainer}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      {data.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>{t(emptyText)}</Text>
+          {title === t("Lớp học của tôi") && (
+            <TouchableOpacity
+              style={styles.createButton}
+              onPress={() => router.push("/student-request/create")}
+            >
+              <Text style={styles.createButtonText}>
+                {t("Tìm kiếm yêu cầu gia sư")}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
-        <View style={styles.infoItem}>
-          <Users size={16} color={Colors.textSecondary} />
-          <Text style={styles.infoText}>{item.maxStudents} {t('học viên')}</Text>
-        </View>
-      </View>
-      <View style={styles.infoRow}>
-        <View style={styles.infoItem}>
-          <Clock size={16} color={Colors.textSecondary} />
-          <Text style={styles.infoText}>{item.sessions} {t('buổi')}</Text>
-        </View>
-        <View style={styles.infoItem}>
-          <MapPin size={16} color={Colors.textSecondary} />
-          <Text style={styles.infoText}>{item.studyType}</Text>
-        </View>
-      </View>
-      <View style={styles.footer}>
-        <Text style={styles.price}>{toLocaleStringVND(item.tuitionFee)}đ</Text>
-        <Text style={styles.date}>{t('Bắt đầu')}: {formatDate(item.startDate)}</Text>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const renderEmptyComponent = (text: string) => (
-    <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>{t(text)}</Text>
-      <TouchableOpacity 
-        style={styles.createButton}
-        onPress={() => router.push('/student-request/create')}
-      >
-        <Text style={styles.createButtonText}>{t('Tìm kiếm yêu cầu gia sư')}</Text>
-      </TouchableOpacity>
+      ) : (
+        data.map((item) => (
+          <TouchableOpacity
+            key={item.classId}
+            style={styles.classCard}
+            onPress={() => handleClassPress(item)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.classHeader}>
+              <Text style={styles.className}>
+                {currentLang === "en"
+                  ? item.className_en || item.className_vi
+                  : item.className_vi || item.className_en}
+              </Text>
+            </View>
+            <View style={styles.infoRow}>
+              <View style={styles.infoItem}>
+                <BookOpen size={16} color={Colors.textSecondary} />
+                <Text style={styles.infoText}>
+                  {currentLang === "en"
+                    ? getSubjectById(item.subjectId)?.subjectName_en || getSubjectById(item.subjectId)?.subjectName_vi
+                    : getSubjectById(item.subjectId)?.subjectName_vi || t("Môn học")}
+                </Text>
+              </View>
+              <View style={styles.infoItem}>
+                <Users size={16} color={Colors.textSecondary} />
+                <Text style={styles.infoText}>
+                  {item.maxStudents} {t("học viên")}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.infoRow}>
+              <View style={styles.infoItem}>
+                <Clock size={16} color={Colors.textSecondary} />
+                <Text style={styles.infoText}>
+                  {item.sessions} {t("buổi")}
+                </Text>
+              </View>
+              <View style={styles.infoItem}>
+                <MapPin size={16} color={Colors.textSecondary} />
+                <Text style={styles.infoText}>{item.studyType}</Text>
+              </View>
+            </View>
+            <View style={styles.footer}>
+              <Text style={styles.price}>
+                {toLocaleStringVND(item.tuitionFee)}đ
+              </Text>
+              <Text style={styles.date}>
+                {t("Bắt đầu")}: {formatDate(item.startDate)}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        ))
+      )}
     </View>
   );
 
@@ -108,10 +147,10 @@ export default function ClassesScreen() {
     return (
       <View style={styles.container}>
         <StatusBar backgroundColor={Colors.primary} />
-        <Header title={t('Lớp học')} />
+        <Header title={t("Lớp học")} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>{t('Đang tải lớp học...')}</Text>
+          <Text style={styles.loadingText}>{t("Đang tải lớp học...")}</Text>
         </View>
       </View>
     );
@@ -121,11 +160,11 @@ export default function ClassesScreen() {
     return (
       <View style={styles.container}>
         <StatusBar backgroundColor={Colors.primary} />
-        <Header title={t('Lớp học')} />
+        <Header title={t("Lớp học")} />
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={loadClasses}>
-            <Text style={styles.retryButtonText}>{t('Thử lại')}</Text>
+            <Text style={styles.retryButtonText}>{t("Thử lại")}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -135,37 +174,38 @@ export default function ClassesScreen() {
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor={Colors.primary} />
-      <Header title={t('Lớp học')} />
-      <FlatList
-        data={myClasses}
-        renderItem={renderClassItem}
-        keyExtractor={(item) => item.classId}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[Colors.primary]}
-            tintColor={Colors.primary}
-          />
-        }
-        ListHeaderComponent={
-          <Text style={{...styles.className, marginBottom: 8}}>{t('Lớp học của tôi')}</Text>
-        }
-        ListEmptyComponent={renderEmptyComponent( t('Bạn chưa có lớp học nào'))}
-      />
-      <FlatList
-        data={otherClasses}
-        renderItem={renderClassItem}
-        keyExtractor={(item) => item.classId}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        ListHeaderComponent={
-          <Text style={{...styles.className, marginBottom: 8}}>{t('Các lớp học khác')}</Text>
-        }
-        ListEmptyComponent={renderEmptyComponent(t('Không có lớp học khác'))}
-      />
+      <Header title={t("Lớp học")} />
+      <View style={{ flex: 1 }}>
+        <FlatList
+          data={[]}
+          renderItem={null}
+          keyExtractor={() => ""}
+          ListHeaderComponent={
+            <>
+              {renderSection(
+                t("Lớp học của tôi"),
+                myClasses,
+                "Bạn chưa có lớp học nào"
+              )}
+              {renderSection(
+                t("Các lớp học khác"),
+                otherClasses,
+                "Không có lớp học khác"
+              )}
+            </>
+          }
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[Colors.primary]}
+              tintColor={Colors.primary}
+            />
+          }
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContent}
+        />
+      </View>
     </View>
   );
 }
@@ -177,8 +217,8 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: SPACING.lg,
   },
   loadingText: {
@@ -188,14 +228,14 @@ const styles = StyleSheet.create({
   },
   errorContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: SPACING.lg,
   },
   errorText: {
     fontSize: FONT_SIZE.md,
     color: Colors.danger,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: SPACING.md,
   },
   retryButton: {
@@ -207,7 +247,7 @@ const styles = StyleSheet.create({
   retryButtonText: {
     color: Colors.white,
     fontSize: FONT_SIZE.md,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   listContent: {
     padding: SPACING.md,
@@ -221,14 +261,14 @@ const styles = StyleSheet.create({
     ...SHADOWS.small,
   },
   classHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: SPACING.sm,
   },
   className: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '700',
+    fontWeight: "700",
     color: Colors.text,
     flex: 1,
   },
@@ -239,16 +279,16 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '600',
+    fontWeight: "600",
     color: Colors.white,
   },
   infoRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: SPACING.xs,
   },
   infoItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginRight: SPACING.md,
     flex: 1,
   },
@@ -258,9 +298,9 @@ const styles = StyleSheet.create({
     marginLeft: SPACING.xs,
   },
   footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginTop: SPACING.sm,
     paddingTop: SPACING.sm,
     borderTopWidth: 1,
@@ -268,7 +308,7 @@ const styles = StyleSheet.create({
   },
   price: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '700',
+    fontWeight: "700",
     color: Colors.primary,
   },
   date: {
@@ -276,15 +316,15 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: SPACING.xl,
   },
   emptyText: {
     fontSize: FONT_SIZE.md,
     color: Colors.textSecondary,
     marginBottom: SPACING.md,
-    textAlign: 'center',
+    textAlign: "center",
   },
   createButton: {
     backgroundColor: Colors.primary,
@@ -295,6 +335,15 @@ const styles = StyleSheet.create({
   createButtonText: {
     color: Colors.white,
     fontSize: FONT_SIZE.md,
-    fontWeight: '600',
+    fontWeight: "600",
+  },
+  sectionContainer: {
+    marginBottom: SPACING.xl,
+  },
+  sectionTitle: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: "700",
+    color: Colors.text,
+    marginBottom: SPACING.md,
   },
 });

@@ -18,8 +18,8 @@ import {
   SHADOWS,
   SPACING,
 } from "@/constants/Theme";
-import { Menu } from 'react-native-paper';
-import { MoreVertical } from 'lucide-react-native';
+import { Menu } from "react-native-paper";
+import { MoreVertical } from "lucide-react-native";
 import { useLocalSearchParams, useRouter, Link } from "expo-router";
 import { useStudentRequestStore } from "@/store/post-store";
 import { useAuthStore } from "@/store/auth-store";
@@ -75,7 +75,7 @@ export default function StudentRequestDetails() {
   const { fetchRoles, roles } = useRoleStore();
   const [showApplications, setShowApplications] = useState(false);
   const { startChat } = useChat(user!);
-    const { t } = useTranslation();
+  const { t } = useTranslation();
   const [status, setStatus] = useState<Status | null>(null);
   const { fetchUserById } = useUserProfileStore();
   const [author, setAuthor] = React.useState<User | null>(null);
@@ -172,41 +172,49 @@ export default function StudentRequestDetails() {
   }, [isMyPost, user, roles, id]);
   const handleApply = () => {
     triggerHaptic("medium");
-    Alert.alert(t("Ứng tuyển"), t("Bạn muốn ứng tuyển vào vị trí gia sư này?"), [
-      {
-        text: t("Hủy"),
-        style: "cancel",
-      },
-      {
-        text: t("Ứng tuyển"),
-        onPress: async () => {
-          try {
-            if (user) {
-              const applicationData = {
-                requestId: postId,
-                tutorId: user?.userId,
-              };
-              await createApplication(applicationData);
-            } else {
-              console.error("Tutor not found");
-            }
-          } catch (error) {
-            console.error("Error applying for the request:", error);
-          }
-
-          Alert.alert(
-            t("Thành công"),
-            t("Đã gửi đơn ứng tuyển thành công. Người đăng sẽ liên hệ với bạn sớm.")
-          );
-          await fetchApplicationsByRequest(postId);
+    Alert.alert(
+      t("Ứng tuyển"),
+      t("Bạn muốn ứng tuyển vào vị trí gia sư này?"),
+      [
+        {
+          text: t("Hủy"),
+          style: "cancel",
         },
-      },
-    ]);
+        {
+          text: t("Ứng tuyển"),
+          onPress: async () => {
+            try {
+              if (user) {
+                const applicationData = {
+                  requestId: postId,
+                  tutorId: user?.userId,
+                };
+                await createApplication(applicationData);
+              } else {
+                console.error("Tutor not found");
+              }
+            } catch (error) {
+              console.error("Error applying for the request:", error);
+            }
+
+            Alert.alert(
+              t("Thành công"),
+              t(
+                "Đã gửi đơn ứng tuyển thành công. Người đăng sẽ liên hệ với bạn sớm."
+              )
+            );
+            await fetchApplicationsByRequest(postId);
+          },
+        },
+      ]
+    );
   };
   const handleDelete = () => {
     Alert.alert(
       t("Xác nhận xóa"),
-      t("Bạn có chắc chắn muốn xóa yêu cầu này? Hành động này không thể hoàn tác."),
+      t(
+        "Bạn có chắc chắn muốn xóa yêu cầu này? Hành động này không thể hoàn tác."
+      ),
       [
         { text: t("Hủy"), style: "cancel" },
         {
@@ -216,9 +224,11 @@ export default function StudentRequestDetails() {
             if (id) {
               const success = await deleteStudentRequest(id);
               if (success) {
-                Alert.alert(t("Thành công"), t("Yêu cầu đã được xóa thành công"), [
-                  { text: "OK", onPress: () => router.back() },
-                ]);
+                Alert.alert(
+                  t("Thành công"),
+                  t("Yêu cầu đã được xóa thành công"),
+                  [{ text: "OK", onPress: () => router.back() }]
+                );
               }
             }
           },
@@ -267,7 +277,7 @@ export default function StudentRequestDetails() {
   const handleEditPost = () => {
     triggerHaptic("medium");
     router.push(`/student-request/edit/${postId}` as any);
-  }
+  };
   const handleClosePost = async () => {
     triggerHaptic("medium");
     Alert.alert(t("Đóng bài đăng"), t("Bạn có chắc muốn đóng bài đăng này?"), [
@@ -388,21 +398,31 @@ export default function StudentRequestDetails() {
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor={colors.primary} />
-      <Header title={t("Chi tiết bài đăng")} showBack 
-      rightComponent={
-    <Menu
-      visible={menuVisible}
-      onDismiss={() => setMenuVisible(false)}
-      anchor={
-        <TouchableOpacity onPress={() => setMenuVisible(true)}>
-          <MoreVertical size={24} color="#fff" />
-        </TouchableOpacity>
-      }
-    >
-      <Menu.Item onPress={handleEditPost} title="Chỉnh sửa bài viết" />
-      <Menu.Item onPress={handleClosePost} title="Đóng bài viết" />
-    </Menu>
-  }
+      <Header
+        title={t("Chi tiết bài đăng")}
+        showBack
+        rightComponent={
+          isMyPost && status?.code !== "Completed" && (
+            <Menu
+              visible={menuVisible}
+              onDismiss={() => setMenuVisible(false)}
+              anchor={
+                <TouchableOpacity onPress={() => setMenuVisible(true)}>
+                  <MoreVertical size={24} color="#fff" />
+                </TouchableOpacity>
+              }
+            >
+              <Menu.Item
+                onPress={handleEditPost}
+                title={t("Chỉnh sửa bài viết")}
+              />
+              <Menu.Item
+                onPress={handleClosePost}
+                title={t("Đóng bài viết")}
+              />
+            </Menu>
+          )
+        }
       />
 
       <FlatList
@@ -505,90 +525,100 @@ export default function StudentRequestDetails() {
               </Text>
             </View>
 
-            {/* --- Hành động --- */}
-            <View style={styles.actionsContainer}>
-              {!isMyPost &&
-                ((isTutor && status?.code === "Pending") || hasApplied) && (
-                  <>
-                    {!hasApplied ? (
-                      <Button
-                        title={t("Ứng tuyển")}
-                        onPress={handleApply}
-                        fullWidth
-                        style={styles.applyButton}
-                      />
-                    ) : (
+            {status?.code !== "Completed" && (
+              <>
+                {/* --- Hành động --- */}
+                <View style={styles.actionsContainer}>
+                  {!isMyPost &&
+                    ((isTutor && status?.code === "Pending") || hasApplied) && (
                       <>
-                        {TutorApplicationStatus?.code === "Pending" && (
+                        {!hasApplied ? (
+                          <Button
+                            title={t("Ứng tuyển")}
+                            onPress={handleApply}
+                            fullWidth
+                            style={styles.applyButton}
+                          />
+                        ) : (
                           <>
-                            <View style={styles.alreadyAppliedContainer}>
-                              <Text style={styles.alreadyAppliedText}>
-                                {t("Bạn đã ứng tuyển vào yêu cầu này (chờ xét duyệt)")}
+                            {TutorApplicationStatus?.code === "Pending" && (
+                              <>
+                                <View style={styles.alreadyAppliedContainer}>
+                                  <Text style={styles.alreadyAppliedText}>
+                                    {t(
+                                      "Bạn đã ứng tuyển vào yêu cầu này (chờ xét duyệt)"
+                                    )}
+                                  </Text>
+                                </View>
+                                <Button
+                                  title={t("Huỷ ứng tuyển")}
+                                  onPress={handleDelete}
+                                  fullWidth
+                                  style={styles.applyButton}
+                                />
+                              </>
+                            )}
+                            {TutorApplicationStatus?.code === "Accepted" && (
+                              <>
+                                <View style={styles.alreadyAppliedContainer}>
+                                  <Text style={styles.alreadyAppliedText}>
+                                    {t("Bạn đã được chấp nhận vào yêu cầu này")}
+                                  </Text>
+                                </View>
+                                <Button
+                                  title={t("Tạo lớp học")}
+                                  onPress={() => handleCreateClass(postId)}
+                                  fullWidth
+                                  style={styles.applyButton}
+                                />
+                              </>
+                            )}
+                            {TutorApplicationStatus?.code === "Rejected" && (
+                              <View style={styles.normalAplliedContainer}>
+                                <Text style={styles.rejectedText}>
+                                  {t("Hồ sơ của bạn đã bị từ chối")}
+                                </Text>
+                              </View>
+                            )}
+                            {TutorApplicationStatus?.code === "Withdrawn" && (
+                              <View style={styles.normalAplliedContainer}>
+                                <Text style={styles.rejectedText}>
+                                  {t("Bạn đã rút đơn ứng tuyển")}
+                                </Text>
+                              </View>
+                            )}
+                            {TutorApplicationStatus?.code === "Cancelled" && (
+                              <Text style={styles.rejectedText}>
+                                {t(
+                                  "Ứng tuyển đã bị huỷ do hệ thống hoặc học viên"
+                                )}
                               </Text>
-                            </View>
-                            <Button
-                              title={t("Huỷ ứng tuyển")}
-                              onPress={handleDelete}
-                              fullWidth
-                              style={styles.applyButton}
-                            />
-                          </>
-                        )}
-                        {TutorApplicationStatus?.code === "Accepted" && (
-                          <>
-                            <View style={styles.alreadyAppliedContainer}>
-                              <Text style={styles.alreadyAppliedText}>
-                                {t("Bạn đã được chấp nhận vào yêu cầu này")}
+                            )}
+                            {myApplication?.status === "Completed" && (
+                              <Text style={styles.rejectedText}>
+                                {t("Yêu cầu đã hoàn tất")}
                               </Text>
-                            </View>
-                            <Button
-                              title={t("Tạo lớp học")}
-                              onPress={() => handleCreateClass(postId)}
-                              fullWidth
-                              style={styles.applyButton}
-                            />
+                            )}
                           </>
-                        )}
-                        {TutorApplicationStatus?.code === "Rejected" && (
-                          <View style={styles.normalAplliedContainer}>
-                            <Text style={styles.rejectedText}>
-                              {t("Hồ sơ của bạn đã bị từ chối")}
-                            </Text>
-                          </View>
-                        )}
-                        {TutorApplicationStatus?.code === "Withdrawn" && (
-                          <View style={styles.normalAplliedContainer}>
-                            <Text style={styles.rejectedText}>
-                              {t("Bạn đã rút đơn ứng tuyển")}
-                            </Text>
-                          </View>
-                        )}
-                        {TutorApplicationStatus?.code === "Cancelled" && (
-                          <Text style={styles.rejectedText}>
-                            {t("Ứng tuyển đã bị huỷ do hệ thống hoặc học viên")}
-                          </Text>
-                        )}
-                        {myApplication?.status === "Completed" && (
-                          <Text style={styles.rejectedText}>
-                            {t("Yêu cầu đã hoàn tất")}
-                          </Text>
                         )}
                       </>
                     )}
-                  </>
-                )}
-              
-              {isMyPost && (
-                <Button
-                  title={t("Đóng bài đăng")}
-                  onPress={handleClosePost}
-                  variant="outline"
-                  loading={isLoading}
-                  fullWidth
-                  style={styles.closeButton}
-                />
-              )}
-            </View>
+
+                  {isMyPost && (
+                    <Button
+                      title={t("Đóng bài đăng")}
+                      onPress={handleClosePost}
+                      variant="outline"
+                      loading={isLoading}
+                      fullWidth
+                      style={styles.closeButton}
+                    />
+                  )}
+                </View>
+              </>
+            )}
+
+            {/* --- Trạng thái --- */}
 
             {/* --- Toggle danh sách --- */}
             {isMyPost && applications.length > 0 && (
@@ -599,7 +629,9 @@ export default function StudentRequestDetails() {
                 <Text style={styles.toggleButtonText}>
                   {showApplications
                     ? t("Ẩn danh sách ứng tuyển")
-                    : t(`Hiện thị danh sách ứng tuyển (${applications.length})`)}
+                    : t(
+                        `Hiện thị danh sách ứng tuyển (${applications.length})`
+                      )}
                 </Text>
               </TouchableOpacity>
             )}

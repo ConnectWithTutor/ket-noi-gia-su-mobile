@@ -5,9 +5,12 @@ import { Class, ClassCreateRequest } from '@/types/class';
 import { ClassRegistrationCreateRequest } from '@/types/class-registration';
 import { classApi } from '@/api/class';
 import { useAuthStore } from './auth-store';
+import { Evaluation, EvaluationCreateRequest } from '@/types';
 
 interface ClassState {
   classes: Class[];
+  Myclasses: Class[];
+  Evaluations: Evaluation[];
   selectedClass: Class | null;
   isLoading: boolean;
   error: string | null;
@@ -27,12 +30,17 @@ interface ClassStore extends ClassState {
   deleteClass: (id: string) => Promise<boolean>;
   registerStudent: (registrationData: ClassRegistrationCreateRequest) => Promise<boolean>;
   setSelectedClass: (classData: Class | null) => void;
+  rateClass: (classId: string, rating1: number, rating2: number, rating3: number, comment: string) => Promise<boolean>;
+  getClassEvaluationsByUserId: (userId: string) => Promise<Evaluation[]>;
+  getAllEvaluations: () => Promise<Evaluation[]>;
 }
 
 export const useClassStore = create<ClassStore>()(
   persist(
     (set, get) => ({
       classes: [],
+      Myclasses: [],
+      Evaluations: [],
       selectedClass: null,
       isLoading: false,
       error: null,
@@ -82,7 +90,7 @@ export const useClassStore = create<ClassStore>()(
         try {
           const response = await classApi.getClassByUser(userId);
           if (response.data) {
-            set({ classes: response.data, isLoading: false });
+            set({ Myclasses: response.data, isLoading: false });
           } else {
             set({
               error: "Không tìm thấy lớp học của người dùng.",
@@ -151,12 +159,72 @@ export const useClassStore = create<ClassStore>()(
           return null;
         }
       },
-
+      rateClass: async (classId: string, rating1: number, rating2: number, rating3: number, comment: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          const Data: EvaluationCreateRequest = {
+            classId,
+            fromUserId: useAuthStore.getState().user?.userId || '',
+            criteria1: rating1,
+            criteria2: rating2,
+            criteria3: rating3,
+            comment,
+          };
+          const response = await classApi.rateClass(Data);
+          if (response.id) {
+            set((state) => ({
+              isLoading: false,
+            }));
+            return true;
+          } else {
+            set({ 
+              error: "Không thể đánh giá lớp học. Vui lòng thử lại sau.", 
+              isLoading: false 
+            });
+            return false;
+          }
+        } catch (error) {
+          set({ 
+            error: "Không thể đánh giá lớp học. Vui lòng thử lại sau.", 
+            isLoading: false 
+          });
+          return false;
+        }
+      },
+      getAllEvaluations: async () => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await classApi.getAllEvaluations();
+          if (response.data) {
+            set({ isLoading: false });
+            return response.data;
+          } else {
+            set({
+              error: "Không tìm thấy đánh giá nào.",
+              isLoading: false,
+            });
+            return [];
+          }
+        } catch (error) {
+          set({
+            error: "Không thể tải đánh giá. Vui lòng thử lại sau.",
+            isLoading: false,
+          });
+        }
+        return [];
+      },
       updateClass: async (id: string, classData: Partial<Class>) => {
         set({ isLoading: true, error: null });
         try {
-          // Simulate API call
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          
+          const response = await classApi.updateClass(id, classData);
+          if (!response) {
+            set({ 
+              error: "Không thể cập nhật lớp học. Vui lòng thử lại sau.", 
+              isLoading: false 
+            });
+            return false;
+          }
           
           set((state) => {
             const updatedClasses = state.classes.map((c) => 
@@ -181,7 +249,27 @@ export const useClassStore = create<ClassStore>()(
           return false;
         }
       },
-
+      getClassEvaluationsByUserId: async (userId: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          // Simulate API call
+          const response = await classApi.getClassEvaluationsByUserId(userId);
+          if (response.data) {
+            set({ Evaluations: response.data, isLoading: false });
+          } else {
+            set({
+              error: "Không tìm thấy đánh giá của người dùng.",
+              isLoading: false,
+            });
+          }
+        } catch (error) {
+          set({
+            error: "Không thể tải đánh giá của người dùng. Vui lòng thử lại sau.",
+            isLoading: false,
+          });
+        }
+        return [];
+      },
       deleteClass: async (id: string) => {
         set({ isLoading: true, error: null });
         try {

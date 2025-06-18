@@ -99,6 +99,10 @@ export const useClassRegistrationStore = create<ClassRegistrationState>((set, ge
         set({ loading: true, error: null });
         try {
             const res = await classRegistrationApi.createClassRegistration(data);
+            if (!res.id) {
+                console.error("No registration ID returned", res);
+                throw new Error("Failed to create registration");
+            }
             set(state => ({
                 total: state.total + 1,
                 loading: false,

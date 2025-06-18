@@ -23,7 +23,7 @@ import { useUserProfileStore } from "@/store/profile-store";
 import { useTranslation } from "react-i18next";
 export default function ScheduleScreen() {
   const { schedules, getSchedulesByClass, isLoading: isScheduleLoading } = useScheduleStore();
-  const { classes, fetchClassesByUserId, isLoading } = useClassStore();
+  const { Myclasses, fetchClassesByUserId, isLoading } = useClassStore();
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [weekDates, setWeekDates] = useState<Date[]>([]);
@@ -37,6 +37,7 @@ export default function ScheduleScreen() {
    const { fetchStatusesClass,StatusesClass } = useStatusStore();
   useEffect(() => {
     const fetchData = async () => {
+      useScheduleStore.setState({ schedules: [] });
       await fetchClassesByUserId(user?.userId || "");
       await fetchStatusesClass();
       if (user?.roleId) {
@@ -44,7 +45,7 @@ export default function ScheduleScreen() {
         if (userRole) setRole(userRole);
       }
 
-      const classList = useClassStore.getState().classes;
+      const classList = Myclasses || [];
       const allSchedules: any[] = [];
       for (const classItem of classList) {
         await fetchUserById(classItem.tutorId);
@@ -67,20 +68,23 @@ export default function ScheduleScreen() {
   }, []);
   const onRefresh = async () => {
     setRefreshing(true);
-     await Promise.all([
-       fetchClassesByUserId(user?.userId || ""),
-       fetchStatusesClass(),
-     ]);
-    const classList = useClassStore.getState().classes;
+    useScheduleStore.setState({ schedules: [] });
+    await Promise.all([
+      fetchClassesByUserId(user?.userId || ""),
+      fetchStatusesClass(),
+    ]);
+    const classList = Myclasses || [];
     const allSchedules = [];
+    setRefreshing(false);
     for (const classItem of classList) {
        await Promise.all([
         fetchUserById(classItem.tutorId),
         fetchAddressById(classItem.classId),
         getSchedulesByClass(classItem.classId)
       ]);
+      
       const classSchedules = await Promise.all(
-        useScheduleStore.getState().schedules.map(async sch => ({
+        schedules.map(async sch => ({
           ...sch,
           classInfo: classItem,
           tutor: await fetchUserById(classItem.tutorId) || null,
@@ -90,7 +94,7 @@ export default function ScheduleScreen() {
       
     }
     useScheduleStore.setState({ schedules: allSchedules });
-    setRefreshing(false);
+    
   };
   
   const generateWeekDates = (date: Date) => {
@@ -142,7 +146,7 @@ export default function ScheduleScreen() {
   };
   const mergedSchedules = useScheduleStore.getState().schedules.map(sch => ({
   ...sch,
-  classInfo: classes.find(cls => cls.classId === sch.classId) || null,
+  classInfo: Myclasses.find(cls => cls.classId === sch.classId) || null,
   
 }));
 const filteredClasses = mergedSchedules.filter(sch => {
@@ -156,7 +160,7 @@ const filteredClasses = mergedSchedules.filter(sch => {
   
 
   const hasEvents = (date: Date) => {
-    return classes.some(classItem => {
+    return Myclasses.some(classItem => {
       const classDate = new Date(classItem.startDate);
       return (
         classDate.getDate() === date.getDate() &&
@@ -262,7 +266,6 @@ const filteredClasses = mergedSchedules.filter(sch => {
             </View>
           ) : filteredClasses.length > 0 ? (
             filteredClasses.map((classItem) => (
-              
               <ClassCard
                 key={classItem.classId}
                 scheduleId={classItem.scheduleId}

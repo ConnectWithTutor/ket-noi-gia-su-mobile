@@ -410,5 +410,24 @@
   "Vui lòng nhập tên đăng nhập học viên": "Please enter student username",
   "Không tìm thấy học viên này. Vui lòng thử lại.": "Student not found. Please try again.",
   "Chia sẻ lớp học": "Share class",
-  "Chức năng chia sẻ sẽ sớm được cập nhật.": "The sharing feature will be updated soon."
+  "Chức năng chia sẻ sẽ sớm được cập nhật.": "The sharing feature will be updated soon.",
+  "Chỉnh sửa bài đăng": "Edit post",
+  "Đánh giá lớp học": "Rate class",
+  
+  "Đánh giá trải nghiệm lớp học": "Rate your class experience",
+  "Chất lượng giảng dạy": "Teaching quality",
+  "Thái độ & hỗ trợ": "Attitude & support",
+  "Mức độ hài lòng về lớp học": "Satisfaction with the class",
+  "Nhận xét (không bắt buộc)": "Comment (optional)",
+  "Nhập nhận xét của bạn...": "Enter your comment...",
+  "Gửi đánh giá": "Submit review",
+  "Bạn cần đăng nhập để đánh giá.": "You need to log in to review.",
+  "Vui lòng chấm điểm từ 1 đến 5 cho tất cả tiêu chí.": "Please rate all criteria from 1 to 5.",
+  "Cảm ơn bạn đã đánh giá lớp học!": "Thank you for reviewing the class!",
+  "Không thể gửi đánh giá. Vui lòng thử lại sau.": "Cannot submit review. Please try again later.",
+  "Tệ": "Bad",
+  "Chưa tốt": "Not good",
+  "Bình thường": "Average",
+  "Tốt": "Good",
+  "Vô cùng tốt": "Excellent"
 }

@@ -60,7 +60,7 @@ export default function HomeScreen() {
     (statusId: string) => statusesStudentRequest.find(s => s.statusId === statusId) || null,
     [statusesStudentRequest]
   );
-  const recommendedTutors = users.slice(0, 4);
+  const recommendedTutors = users.slice(0, 2);
    const handlePostPress = useCallback(
       (requestId: string) => {
         triggerHaptic("light");
@@ -108,11 +108,13 @@ export default function HomeScreen() {
         router.push("/(app)/(tabs)/schedule" as any);
         break;
       case "tutors":
-        router.push("/(app)/(tabs)/posts" as any);
+        router.push("/(app)/tutors" as any);
         break;
       case "chat":
         router.push("/(app)/(tabs)/chat" as any);
         break;
+      case "classes":
+        router.push("/(app)/(tabs)/class" as any);
       case "posts":
         router.push("/(app)/(tabs)/posts" as any);
         break;
@@ -185,7 +187,7 @@ export default function HomeScreen() {
             
             <TouchableOpacity 
               style={styles.featureItem} 
-              onPress={() => handleFeaturePress("tutors")}
+              onPress={() => handleFeaturePress("classes")}
             >
               <View style={[styles.featureIcon, { backgroundColor: "#FFE0B2" }]}>
                 <School size={24} color="#FF9800" />
@@ -305,7 +307,7 @@ export default function HomeScreen() {
         <View style={styles.recommendedTutorsContainer}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>{t('Gia sư gợi ý')}</Text>
-            <TouchableOpacity onPress={() => {}}>
+            <TouchableOpacity onPress={() => handleFeaturePress("tutors")}>
               <Text style={styles.seeAllText}>{t('Xem tất cả')}</Text>
             </TouchableOpacity>
           </View>

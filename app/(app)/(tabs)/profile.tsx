@@ -64,7 +64,9 @@ export default function ProfileScreen() {
   const handlePersonalInfo = () => {
     handlepush("/personal-info");
   };
-
+  const handleEvaluation = () => {
+    handlepush("/evaluation");
+  };
   const handleNotifications = () => {
     handlepush("/notifications");
   };
@@ -131,7 +133,7 @@ export default function ProfileScreen() {
                 icon={<Star size={20} color={colors.primary} />}
                 title={t("Đánh giá")}
                 subtitle={t("Xem đánh giá từ học viên")}
-                onPress={() => {}}
+                onPress={handleEvaluation}
               />
             </View>
           </View>

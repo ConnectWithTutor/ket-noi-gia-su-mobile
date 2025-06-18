@@ -33,7 +33,7 @@ export default function ClassCard({
   studyType,
   role
 }: ClassCardProps) {
-  const { fetchUserById } = useUserProfileStore();
+  
   const { createZoomMeeting } = useZoomStore();
    const { t } = useTranslation();
   ;
@@ -93,7 +93,7 @@ export default function ClassCard({
               }
             }}
           >
-            <Text style={{ color: colors.white, fontWeight: 'bold' }}>Tham gia lớp học</Text>
+            <Text style={{ color: colors.white, fontWeight: 'bold' }}>{t('Tham gia lớp học')}</Text>
           </TouchableOpacity>
         ) : null}
 
@@ -108,7 +108,7 @@ export default function ClassCard({
             }}
             onPress={handleCreateZoom}
           >
-          <Text style={{ color: colors.white, fontWeight: 'bold' }}>Tạo Zoom</Text>
+          <Text style={{ color: colors.white, fontWeight: 'bold' }}>{t('Tạo Zoom')}</Text>
           </TouchableOpacity>
         ) : null}
       </View>

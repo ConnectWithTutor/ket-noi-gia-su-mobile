@@ -19,6 +19,7 @@ interface TutorStore extends TutorState {
   fetchTutors: () => Promise<void>;
   getTutorById: (id: string) => Promise<TutorProfile | undefined>;
   searchTutors: (query: string) => Promise<User[] | undefined>;
+  clearError: () => void;
 }
 
 export const useTutorStore = create<TutorStore>()(
@@ -33,7 +34,7 @@ export const useTutorStore = create<TutorStore>()(
         set({ isLoading: true, error: null });
         
         try {
-            const res =  await usersApi.getAllUsers();
+            const res =  await usersApi.getAllActivedUsers();
             const role = await rolesApi.getRoles();
             
             if (!res || !role) {
@@ -45,7 +46,8 @@ export const useTutorStore = create<TutorStore>()(
             const tutorRole = roles.find((r: Role) => r.roleName === 'Tutor');
             const mockTutors = users
               .filter((user: User) => user.roleId === tutorRole?.roleId)
-          set({ users: mockTutors, isLoading: false });
+              .map((user: User) => ({ ...user, isSelected: false }));
+            set({ users: mockTutors, isLoading: false });
         } catch (error) {
           set({ 
             error: "Không thể tải danh sách gia sư. Vui lòng thử lại sau.", 
@@ -88,6 +90,7 @@ export const useTutorStore = create<TutorStore>()(
           });
         }
       },
+      clearError: () => set({ error: null }),
     }),
     {
       name: 'tutor-storage',

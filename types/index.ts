@@ -20,3 +20,4 @@ export * from './conversation';
 export * from './conversation-participant';
 export * from './payment';
 export * from './complaint';
+export * from './evaluation';

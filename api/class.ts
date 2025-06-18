@@ -4,7 +4,9 @@ import {
   SingleItemResponse,
     Class,
     ClassCreateRequest,
-ClassSearchResponse
+ClassSearchResponse,
+Evaluation,
+EvaluationCreateRequest
 } from "@/types";
 
 import { api } from "@/services/api";
@@ -34,8 +36,16 @@ export const classApi = {
     createClass: async (data: ClassCreateRequest) => {
         return api.post<SingleItemResponse<Class>>(API_ENDPOINTS.createClasses, data);
     },
-    
 
+    rateClass: async (data: EvaluationCreateRequest) => {
+        return api.post<SingleItemResponse<Evaluation>>(API_ENDPOINTS.rateClasses, data);
+    },
+    getClassEvaluationsByUserId: async (user_id: string, page = 1, limit = 10) => {
+        return api.get<PaginatedResponse<Evaluation>>(`${API_ENDPOINTS.getClassEvaluationsByRecipientId(user_id)}?page=${page}&limit=${limit}`);
+    },
+    getAllEvaluations: async (page = 1, limit = 30) => {
+        return api.get<PaginatedResponse<Evaluation>>(`${API_ENDPOINTS.getAllEvaluations}?page=${page}&limit=${limit}`);
+    },
     updateClass: async (class_id: string, data: Partial<ClassCreateRequest>) => {
         return api.put<SingleItemResponse<Class>>(API_ENDPOINTS.updateClasses(class_id), data);
     },

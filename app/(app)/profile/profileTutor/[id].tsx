@@ -19,7 +19,8 @@ import {
   MessageSquare, 
   Share2, 
   Award, 
-  Briefcase 
+  Briefcase,
+  User
 } from "lucide-react-native";
 
 import colors from "@/constants/Colors";
@@ -34,6 +35,7 @@ import { TutorProfile } from "@/types";
 import { useAuthStore } from "@/store/auth-store";
 import { useChat } from "@/hooks/useChat";
 import { useTranslation } from "react-i18next";
+import { useClassStore } from "@/store/class-store";
 
 export default function TutorProfileScreen() {
   const { id } = useLocalSearchParams();
@@ -45,6 +47,7 @@ export default function TutorProfileScreen() {
   const [tutor, setTutor] = useState<TutorProfile | undefined>();
   const [userTutor, setUserTutor] = useState<any>(null);
   const { fetchUserById } = useUserProfileStore();
+  const { getClassEvaluationsByUserId, Evaluations } = useClassStore();
   const { t } = useTranslation();
   useEffect(() => {
     const fetchTutorData = async () => {
@@ -64,7 +67,17 @@ export default function TutorProfileScreen() {
     };
 
     fetchTutorData();
+    getClassEvaluationsByUserId(userId);
   }, [userId]);
+  // Tính ratingVote
+  const ratingVote = React.useMemo(() => {
+    if (!Evaluations || Evaluations.length === 0) return null;
+    const totalScore = Evaluations.reduce(
+      (sum, ev) => sum + (ev.criteria1 + ev.criteria2 + ev.criteria3) / 3,
+      0
+    );
+    return (totalScore / Evaluations.length).toFixed(1);
+  }, [Evaluations]);
   
   if (!tutor) {
     return null;
@@ -84,7 +97,6 @@ export default function TutorProfileScreen() {
       );
     }
   };
-  
   const handleShare = () => {
     triggerHaptic('light');
     Alert.alert(
@@ -109,28 +121,31 @@ export default function TutorProfileScreen() {
           <View style={styles.ratingContainer}>
             <Star size={18} color="#FFB400" fill="#FFB400" />
             <Text style={styles.rating}>
-              {tutor.degree} 
+              {ratingVote ? ratingVote : t("Chưa có đánh giá")}
             </Text>
           </View>
-          
-         
-        </View>
-        
-        <View style={styles.infoCard}>
-          <View style={styles.infoRow}>
-            <View style={styles.infoItem}>
-              <MapPin size={18} color={colors.textSecondary} />
-              <Text style={styles.infoLabel}>{t("Khu vực:")}</Text>
-              <Text style={styles.infoValue}>{userTutor?.address}</Text>
+          <View style={styles.sectionHeader}>
+            <MapPin size={18} color={colors.primary} />
+            <Text style={styles.sectionTitle}>{userTutor?.address}</Text>
             </View>
-          </View>
         </View>
-        
+
+       
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t("Giới thiệu")}</Text>
+          <View style={styles.sectionHeader}>
+            <User size={20} color={colors.primary} />
+            <Text style={styles.sectionTitle}>{t("Giới thiệu")}</Text>
+          </View>
           <Text style={styles.bioText}>{tutor.description}</Text>
         </View>
-        
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Award size={20} color={colors.primary} />
+            <Text style={styles.sectionTitle}>{t("Bằng cấp")}</Text>
+          </View>
+          <Text style={styles.bioText}>{tutor.degree}</Text>
+        </View>
+
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Award size={20} color={colors.primary} />

@@ -54,7 +54,9 @@ export const API_ENDPOINTS = {
     createClassRegistrationWithUsername: `${API_BASE}/class-registration/create-with-username`,
     updateClasses: (class_id: string) => `${API_BASE}/classes/update/${class_id}`,
     deleteClasses: (class_id: string) => `${API_BASE}/classes/delete/${class_id}`,
-
+    rateClasses:  `${API_BASE}/evaluation/create`,
+    getClassEvaluationsByRecipientId: (user_id: string) => `${API_BASE}/evaluation/get-by-recipient/${user_id}`,
+    getAllEvaluations: `${API_BASE}/evaluation`,
     // Student Request
     studentRequest: `${API_BASE}/student-request`,
     studentRequestById: (id:string) => `${API_BASE}/student-request/${id}`,

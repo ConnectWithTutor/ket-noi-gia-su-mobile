@@ -44,10 +44,11 @@ const { t } = useTranslation();
 
   const data = useMemo(() => (showMyRequests ? myRequests : requests), [showMyRequests, myRequests, requests]);
   useEffect(() => {
-    fetchStudentRequests();
-    fetchStatuses();
+    (async () => {
+      await fetchStudentRequests();
+       await fetchStatuses();
+    })();
   }, []);
-
   useEffect(() => {
     if (showMyRequests && user?.userId) {
       fetchMyStudentRequests(user.userId);
@@ -128,7 +129,10 @@ const renderSeparator = useCallback(() => <View style={styles.separator} />, [])
   const status = getStatusById(item.status);
   // Lấy subject trực tiếp từ mảng subjects
   const subject = subjects.find(s => s.subjectId === item.subjectId);
-  if (!author || !status || !subject) return null;
+  if (!author || !status || !subject) 
+    
+      return null;
+    
 
   return (
     <PostCard

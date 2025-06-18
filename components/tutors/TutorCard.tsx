@@ -13,50 +13,51 @@ interface TutorCardProps {
 }
 
 export default function TutorCard({ user, onPress }: TutorCardProps) {
-  const {getTutorById} = useTutorStore();
-   const { t } = useTranslation();
+  const { getTutorById } = useTutorStore();
+  const { t } = useTranslation();
   const [tutor, setTutor] = React.useState<TutorProfile | null>(null);
+
   useEffect(() => {
-    getTutorById(user.userId);
+    let isMounted = true;
     const fetchTutor = async () => {
-      const tutorData = await getTutorById(user.userId);
-      if (tutorData) {
-        setTutor(tutorData);
+      try {
+        const tutorData = await getTutorById(user.userId);
+        if (isMounted) setTutor(tutorData ?? null);
+      } catch (e) {
+        if (isMounted) setTutor(null);
       }
     };
-
     fetchTutor();
-
+    return () => { isMounted = false; };
   }, [user.userId]);
-  if (!tutor) {
-    return null;
-  }
 
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.8}>
       <View style={styles.header}>
-        <Image 
-          source={{ uri: user.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80' }} 
-          style={styles.avatar} 
+        <Image
+          source={{ uri: user.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80' }}
+          style={styles.avatar}
         />
         <View style={styles.headerInfo}>
           <Text style={styles.name}>{user.fullName}</Text>
           <View style={styles.ratingContainer}>
-            <Star size={14} color="#FFB400" fill="#FFB400" />
-            <Text style={styles.rating}>
-              {tutor.degree} ({tutor.degree} {t('đánh giá')})
-            </Text>
+            {tutor ? (
+              <Text style={styles.rating}>
+                {tutor.degree} ({tutor.degree} {t('đánh giá')})
+              </Text>
+            ) : (
+              <Text style={styles.rating}>{t("Chưa có thông tin chi tiết")}</Text>
+            )}
           </View>
         </View>
       </View>
-      
-      
-      <Text style={styles.bio} numberOfLines={2}>{tutor.experience}</Text>
-      
+      <Text style={styles.bio} numberOfLines={2}>
+        {tutor ? tutor.experience : t("Chưa có mô tả")}
+      </Text>
       <View style={styles.infoContainer}>
         <View style={styles.infoItem}>
           <MapPin size={16} color={colors.textSecondary} />
-          <Text style={styles.infoText}>{user.address}</Text>
+          <Text style={styles.infoText}>{user.address || t("Chưa có địa chỉ")}</Text>
         </View>
       </View>
     </TouchableOpacity>

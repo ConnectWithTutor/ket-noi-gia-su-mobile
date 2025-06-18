@@ -19,7 +19,8 @@ interface PostCardProps {
 }
 
 function PostCardComponent({ post, onPress,status,author, subject }: PostCardProps) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+const currentLang = i18n.language;
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.8}>
       <View style={styles.header}>
@@ -95,7 +96,11 @@ function PostCardComponent({ post, onPress,status,author, subject }: PostCardPro
       
       <View style={styles.footer}>
         <View style={styles.subjectBadge}>
-          <Text style={styles.subjectText}>{subject?.subjectName_vi}</Text>
+          <Text style={styles.subjectText}>
+        {currentLang === "en"
+          ? subject?.subjectName_vi || subject?.subjectName_vi
+          : subject?.subjectName_en || subject?.subjectName_en}
+      </Text>
         </View>
       </View>
     </TouchableOpacity>

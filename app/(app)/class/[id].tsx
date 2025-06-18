@@ -36,11 +36,12 @@ import Button from "@/components/ui/Button";
 import { useScheduleStore } from "@/store/schedule-store";
 import { useClassRegistrationStore } from "@/store/classRegistration-store";
 import { useSubjectStore } from "@/store/subjectStore";
-import { Subject } from "@/types";
+import { Evaluation, Subject } from "@/types";
 import { useRoleStore } from "@/store/roleStore";
 import { useUserProfileStore } from "@/store/profile-store";
 import { useTranslation } from "react-i18next";
 import CustomAlertModal from "@/components/ui/AlertModal";
+import { useStatusStore } from "@/store/status-store";
 
 export default function ClassDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -59,8 +60,11 @@ const { usersMap, fetchUserById } = useUserProfileStore();
     fetchClassById,
     updateClass,
     deleteClass,
+    getAllEvaluations
   } = useClassStore();
-  const { t } = useTranslation();
+  const { StatusesClass,fetchStatusesClass } = useStatusStore();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language;
   const { schedules, getSchedulesByClass } = useScheduleStore();
   const [showAll, setShowAll] = useState(false);
   const [showStudentList, setShowStudentList] = useState(false);
@@ -68,6 +72,7 @@ const { usersMap, fetchUserById } = useUserProfileStore();
   const [newStudentUsername, setNewStudentUsername] = useState("");
   const [addingStudent, setAddingStudent] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
+  const [Evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [alertOptions, setAlertOptions] = useState<{
     title?: string;
     message?: string;
@@ -83,17 +88,34 @@ const { usersMap, fetchUserById } = useUserProfileStore();
     return
   }
   useEffect(() => {
-    if (classId) {
-      fetchClassById(classId);
-      getSchedulesByClass(classId);
-      fetchRegistrationsByClass(classId);
-    }
+    const fetchData = async () => {
+      if (classId) {
+        await Promise.all([
+          fetchClassById(classId),
+          getSchedulesByClass(classId),
+          fetchRegistrationsByClass(classId),
+          fetchStatusesClass(),
+
+        ]);
+      }
+    };
+    fetchData();
   }, [classId]);
   useEffect(() => {
-    if (classId) {
-      fetchClassById(classId);
-    }
-  }, [classId]);
+    const fetchEvaluation = async () => {
+      if (selectedClass) {
+        const evaluation = await getAllEvaluations();
+        setEvaluations(
+          evaluation.filter(
+            (ev) =>
+              ev.classId === selectedClass.classId &&
+              ev.fromUserId === user?.userId
+          )
+        );
+      }
+    };
+    fetchEvaluation();
+  }, [selectedClass]);
   useEffect(() => {
   if (showStudentList) {
     registrations.forEach((reg) => {
@@ -113,34 +135,7 @@ useEffect(() => {
     // router.push(`/class/edit/${classId}`);
   };
 
-  const handleDeleteClass = () => {
-    triggerHaptic("medium");
-    setAlertOptions({
-      title: t("Xác nhận xóa"),
-      message: t("Bạn có chắc chắn muốn xóa lớp học này? Hành động này không thể hoàn tác."),
-      buttons: [
-        { text: t("Hủy"), style: "cancel" },
-        {
-          text: t("Xóa"),
-          style: "destructive",
-          onPress: async () => {
-            if (classId) {
-              const success = await deleteClass(classId);
-              if (success) {
-                setAlertOptions({
-                  title: t("Thành công"),
-                  message: t("Lớp học đã được xóa thành công"),
-                  buttons: [{ text: t("OK"), onPress: () => router.back() }],
-                });
-                setAlertVisible(true);
-              }
-            }
-          },
-        },
-      ],
-    });
-    setAlertVisible(true);
-  };
+  
   const handleAddStudent = () => {
     triggerHaptic("light");
     setShowAddStudentDialog(true);
@@ -199,15 +194,20 @@ useEffect(() => {
           text: t("Xác nhận"),
           onPress: async () => {
             if (classId && selectedClass) {
-              const success = await updateClass(classId, {
-                status: "completed",
-              });
-              if (success) {
-                showAlert(
-                  t("Thành công"),
-                  t("Lớp học đã được đánh dấu hoàn thành")
-                );
-                fetchClassById(classId);
+              const statusCompleted = StatusesClass.find(
+                (status) => status.code === "completed"
+              );
+              if (statusCompleted) {
+                const success = await updateClass(classId, {
+                  status: statusCompleted.statusId
+                });
+                if (success) {
+                  showAlert(
+                    t("Thành công"),
+                    t("Lớp học đã được đánh dấu hoàn thành")
+                  );
+                  fetchClassById(classId);
+                }
               }
             }
           },
@@ -232,11 +232,12 @@ useEffect(() => {
     ? upcomingSchedules
     : upcomingSchedules.slice(0, 3);
   const userRole = roles.find((r) => r.roleId === user?.roleId)?.roleName;
-  // console.log('userRole', roles);
   const isStudent = userRole === "Student";
   const isTutor = userRole === "Tutor";
   const isOwner = isTutor && user?.userId === selectedClass.tutorId;
-
+  const statusClass = StatusesClass.find(
+    (status) => status.statusId === selectedClass.status
+  );
   const isRegistered = selectedClass
     ? registrations.some(
         (reg) =>
@@ -245,9 +246,10 @@ useEffect(() => {
       )
     : false;
 
-  const canJoinStudent = isStudent && !isRegistered && selectedClass;
-  const canJoinTutor = isTutor && !selectedClass.tutorId
-  // && Date(selectedClass.startDate) > new Date();
+  const canJoinStudent = isStudent && !isRegistered && selectedClass && registrations.length < selectedClass.maxStudents && new Date(selectedClass.startDate) > new Date();
+const canJoinTutor = isTutor && !selectedClass.tutorId && new Date(selectedClass.startDate) > new Date();
+const canEvaluate = isStudent && isRegistered && statusClass?.code === "completed" && Evaluations.length === 0;
+// const canJoinTutor = isTutor && !selectedClass.tutorId && new Date(selectedClass.startDate) > new Date();
   if (isLoading) {
     return (
       <View style={styles.container}>
@@ -291,32 +293,12 @@ useEffect(() => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.className}>{selectedClass.className_vi}</Text>
-          {/* <View
-            style={[
-              styles.statusBadge,
-              {
-                backgroundColor:
-                  selectedClass.status === "active"
-                    ? Colors.success
-                    : selectedClass.status === "completed"
-                    ? Colors.info
-                    : selectedClass.status === "cancelled"
-                    ? Colors.danger
-                    : Colors.warning,
-              },
-            ]}
-          >
-            <Text style={styles.statusText}>
-              {selectedClass.status === "active"
-                ? "Đang diễn ra"
-                : selectedClass.status === "completed"
-                ? "Đã hoàn thành"
-                : selectedClass.status === "cancelled"
-                ? "Đã hủy"
-                : "Chờ xác nhận"}
-            </Text>
-          </View> */}
+          <Text style={styles.className}>
+            {currentLang === "en"
+              ? selectedClass.className_en || selectedClass.className_vi
+              : selectedClass.className_vi || selectedClass.className_en}
+          </Text>
+          <Text>{currentLang}</Text>
         </View>
 
         <View style={styles.infoCard}>
@@ -324,7 +306,9 @@ useEffect(() => {
             <BookOpen size={18} color={Colors.textSecondary} />
             <Text style={styles.infoLabel}>{t("Môn học")}</Text>
             <Text style={styles.infoValue}>
-              {getSubjectById(selectedClass.subjectId)?.subjectName_vi || t("Chưa có môn học")}
+              {currentLang === "en"
+                ? getSubjectById(selectedClass.subjectId)?.subjectName_en || getSubjectById(selectedClass.subjectId)?.subjectName_vi
+                : getSubjectById(selectedClass.subjectId)?.subjectName_vi || t("Môn học")}
             </Text>
           </View>
 
@@ -502,9 +486,19 @@ useEffect(() => {
             </View>
           )}
         </View>
-
+        {canEvaluate && (
+          <Button
+            title={t("Đánh giá lớp học")}
+            style={{ marginTop: 16, marginBottom: 24 }}
+            onPress={() => {
+              // Mở modal đánh giá hoặc chuyển sang màn đánh giá
+              router.push(`/class/review/${selectedClass.classId}`);
+            }}
+            fullWidth
+          />
+        )}
         <View style={styles.actionsContainer}>
-          {selectedClass.status === "active" && isOwner && (
+          {statusClass?.code !== "completed" && isOwner && (
             <Button
               title={t("Đánh dấu hoàn thành")}
               onPress={handleMarkComplete}
@@ -523,17 +517,9 @@ useEffect(() => {
                   <Edit size={18} color={Colors.white} />
                   <Text style={styles.actionButtonText}>{t("Chỉnh sửa")}</Text>
                 </TouchableOpacity>
-
-                {/* <TouchableOpacity
-                  style={[styles.actionButton, styles.deleteButton]}
-                  onPress={handleDeleteClass}
-                >
-                  <Trash2 size={18} color={Colors.white} />
-                  <Text style={styles.actionButtonText}>{t("Xóa lớp")}</Text>
-                </TouchableOpacity> */}
               </>
             )}
-
+           
             <TouchableOpacity
               style={[styles.actionButton, styles.shareButton]}
               onPress={handleShareClass}
@@ -541,12 +527,13 @@ useEffect(() => {
               <Share2 size={18} color={Colors.white} />
               <Text style={styles.actionButtonText}>{t("Chia sẻ")}</Text>
             </TouchableOpacity>
+            
           </View>
         </View>
         {canJoinStudent && user  && registrations.length < selectedClass.maxStudents && (
           <Button
             title={t("Tham gia lớp học")}
-            style={{ marginTop: 16, marginBottom: 24 }} // thêm marginBottom nếu cần
+            style={{ marginTop: 16, marginBottom: 24 }} 
             onPress={async () => {
               const success = await createRegistration({
                 classId: selectedClass.classId,
@@ -563,12 +550,12 @@ useEffect(() => {
             fullWidth
           />
         )}
-        {/* {canJoinTutor && ( 
+        {canJoinTutor && ( 
           <Button
             title={t("Đăng ký làm gia sư lớp này")}
-            style={{ marginTop: 16, marginBottom: 24 }} // thêm marginBottom nếu cần
+            style={{ marginTop: 16, marginBottom: 24 }}
             onPress={async () => {
-              const success = await updateClass( selectedClass.classId {
+              const success = await updateClass(selectedClass.classId, {
                 ...selectedClass,
                 tutorId: user?.userId
               });
@@ -582,7 +569,8 @@ useEffect(() => {
             fullWidth
           />
 
-        )} */}
+        )}
+        
       </ScrollView>
       {showAddStudentDialog && (
         <View style={styles.dialogOverlay}>

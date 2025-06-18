@@ -5,7 +5,12 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "ketnoigiasu",
+    "deepLinks": [
+      "ketnoigiasu://", 
+      "https://ketnoigiasu.app"
+    ],
+
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
      "jsEngine": "jsc", 

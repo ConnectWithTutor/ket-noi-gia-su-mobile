@@ -111,10 +111,12 @@ export default function CreateStudentRequestScreen() {
       const success = await createStudentRequest(requestData);
 
       if (success) {
-        await createAddress({
-          userId: user.userId,
-          fullAddress: formData.location || '',
-        });
+        if (formData.studyType !== 'online' && formData.location) {
+          await createAddress({
+            userId: user.userId,
+            fullAddress: formData.location,
+          });
+        }
         showAlert(
           t("Thành công"),
           t("Đăng bài thành công!"),

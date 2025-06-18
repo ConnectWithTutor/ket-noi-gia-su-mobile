@@ -410,5 +410,24 @@
   "Vui lòng nhập tên đăng nhập học viên": "Vui lòng nhập tên đăng nhập học viên",
   "Không tìm thấy học viên này. Vui lòng thử lại.": "Không tìm thấy học viên này. Vui lòng thử lại.",
   "Chia sẻ lớp học": "Chia sẻ lớp học",
-  "Chức năng chia sẻ sẽ sớm được cập nhật.": "Chức năng chia sẻ sẽ sớm được cập nhật."
-}
+  "Chức năng chia sẻ sẽ sớm được cập nhật.": "Chức năng chia sẻ sẽ sớm được cập nhật.",
+  "Chỉnh sửa bài đăng": "Chỉnh sửa bài đăng",
+  "Đánh giá lớp học": "Đánh giá lớp học",
+  "Đánh giá trải nghiệm lớp học": "Đánh giá trải nghiệm lớp học",
+  "Chất lượng giảng dạy": "Chất lượng giảng dạy",
+  "Thái độ & hỗ trợ": "Thái độ & hỗ trợ",
+  "Mức độ hài lòng về lớp học": "Mức độ hài lòng về lớp học",
+  "Nhận xét (không bắt buộc)": "Nhận xét (không bắt buộc)",
+  "Nhập nhận xét của bạn...": "Nhập nhận xét của bạn...",
+  "Gửi đánh giá": "Gửi đánh giá",
+  "Bạn cần đăng nhập để đánh giá.": "Bạn cần đăng nhập để đánh giá.",
+  "Vui lòng chấm điểm từ 1 đến 5 cho tất cả tiêu chí.": "Vui lòng chấm điểm từ 1 đến 5 cho tất cả tiêu chí.",
+  "Cảm ơn bạn đã đánh giá lớp học!": "Cảm ơn bạn đã đánh giá lớp học!",
+  "Không thể gửi đánh giá. Vui lòng thử lại sau.": "Không thể gửi đánh giá. Vui lòng thử lại sau.",
+  "Tệ": "Tệ",
+  "Chưa tốt": "Chưa tốt",
+  "Bình thường": "Bình thường",
+  "Tốt": "Tốt",
+  "Vô cùng tốt": "Vô cùng tốt"
+
+  }
